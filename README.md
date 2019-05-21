@@ -3,7 +3,7 @@
 Samples and documentation for deploying EDA computing environments in AWS
 
 ## Overview
-These workshops are designed to show how the elasticity of AWS can accelerate EDA design cycles and reduce time-to-market.
+These hands-on workshops are designed to demonstrate how the elasticity of the AWS Cloud can help you accelerate EDA design cycles and reduce time-to-market.
 
 ## Workshops
 - [**EDA Workshop with IBM Spectrum LSF**](workshops/eda-workshop-lsf) - This workshop shows you how to deploy a fully functional compute cluster based on IBM Spectrum LSF.  The environment includes all resources required to run a license-free EDA verification workload on a sample design. Using standard LSF commands, you can quickly add compute capacity to satisfy verification workload demand. 
@@ -12,7 +12,7 @@ These workshops are designed to show how the elasticity of AWS can accelerate ED
 
 - [**EDA Workshop with AWS Batch**](workshops/eda-workshop-aws-batch) - This workshop demonstrates how to run EDA workloads using AWS Batch, a fully managed AWS workload and resource management service. In this workshop, you'll learn how to submit and mananage EDA workloads with AWS Batch.
 
-- [**EDA Workflows with AWs Step Functions**](workshops/eda-workshop-aws-step-functions) - This workshop shows you how to build a cloud-native, visual EDA workflow using AWS Step Functions.  
+- [**EDA Workflows with AWS Step Functions**](workshops/eda-workshop-aws-step-functions) - This workshop shows you how to build a cloud-native, visual EDA workflow using AWS Step Functions.  
 
 
 ## License Summary
