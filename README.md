@@ -1,5 +1,5 @@
 # AWS EDA Workshops
-<img align="right" width="100" src="_images/AWS_EDA_Dark_2018-08-27.png">
+<img align="right" width="100" src="shared/images/AWS_EDA_Dark_2018-08-27.png">
 Samples and documentation for deploying EDA computing environments in AWS
 
 ## Overview
