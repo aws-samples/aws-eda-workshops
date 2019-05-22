@@ -1,35 +1,35 @@
 # Deploy cluster
 
+## Workshop Architecture
 
-### Workshop Architecture
 ![diagram](images/eda-lsf-workshop-diagram-3.png "diagram")
 
 
 
-# Deployment options
+## Deployment options
 
 
 This Quick Start provides two deployment options:
 
--   **Deploy \<software\> into a new VPC (end-to-end deployment)**. This
+- **Deploy \<software\> into a new VPC (end-to-end deployment)**. This
     option builds a new AWS environment consisting of the VPC, subnets,
     NAT gateways, security groups, bastion hosts, and other
     infrastructure components, and then deploys \<software\> into this
     new VPC.
 
--   **Deploy \<software\> into an existing VPC**. This option provisions
+- **Deploy \<software\> into an existing VPC**. This option provisions
     \<software\> in your existing AWS infrastructure.
 
 The Quick Start provides separate templates for these options. It also
 lets you configure CIDR blocks, instance types, and \<software\>
 settings, as discussed later in this guide.
 
-# Deployment steps
+## Deployment steps
 
-## Step 1. Sign in to your AWS account
+### Step 1. Sign in to your AWS account
 
 
-1.  Sign in to your AWS account at <https://aws.amazon.com> with an IAM
+1. Sign in to your AWS account at <https://aws.amazon.com> with an IAM
     user role that has the necessary permissions. For details, see
     [Planning the deployment](#planning-the-deployment) earlier in this
     guide.
