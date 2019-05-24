@@ -12,7 +12,7 @@ This tutorial provides two deployment options:
 
 - **Deploy the cluster into an existing VPC**. This option provisions the cluster in an existing VPC.
 
-This tutorial provides separate templates for these options. It also lets you configure CIDR blocks, instance types, and other settings, as discussed later in this guide.
+This tutorial provides separate CloudFormation templates for these options. It also lets you configure CIDR blocks, instance types, and other settings, as discussed later in this guide.
 
 ## Deployment Steps
 
@@ -39,20 +39,14 @@ Sign in to your AWS account, and follow these instructions to subscribe:
 
 1. Repeat the steps 1 through 3 to subscribe to the [Official CentOS 7 x86_64 HVM AMI](https://aws.amazon.com/marketplace/pp/B00O7WM7QW) AMI.
 
-### Step 3. Launch the Quick Start
+### Step 3. Launch the Cluster
 
+You are responsible for the cost of the AWS services deployed by this reference deployment. For full details, see the pricing pages for each AWS service you will be using in the workshop. Prices are subject to change.
 
-**Notes** The instructions in this section reflect the older version of
-the AWS CloudFormation console. If you're using the redesigned console,
-some of the user interface elements might be different.
+>**Note**  
+The instructions in this section reflect the new AWS CloudFormation console look and feel. If you're using the classic console, some of the user interface elements might be different.
 
-You are responsible for the cost of the AWS services used while running
-this Quick Start reference deployment. There is no additional cost for
-using this Quick Start. For full details, see the pricing pages for each
-AWS service you will be using in this Quick Start. Prices are subject to
-change.
-
-1.  Sign in to your AWS account, and choose one of the following options
+1. Sign in to your AWS account, and choose one of the following options
     to launch the AWS CloudFormation template. For help choosing an
     option, see [deployment options](#_Automated_Deployment) earlier in
     this guide.
