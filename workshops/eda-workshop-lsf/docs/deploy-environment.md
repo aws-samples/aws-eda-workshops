@@ -4,66 +4,43 @@
 
 ![diagram](images/eda-lsf-workshop-diagram-3.png "diagram")
 
+## Deployment Options
 
+This tutorial provides two deployment options:
 
-## Deployment options
+- **Deploy the cluster into a new VPC (end-to-end deployment)**. This option builds a new AWS environment consisting of the VPC, subnets, NAT gateways, security groups, NFS server, LSF master, and other infrastructure components, and then deploys \<software\> into this new VPC.
 
+- **Deploy the cluster into an existing VPC**. This option provisions the cluster in an existing VPC.
 
-This Quick Start provides two deployment options:
+This tutorial provides separate templates for these options. It also lets you configure CIDR blocks, instance types, and other settings, as discussed later in this guide.
 
-- **Deploy \<software\> into a new VPC (end-to-end deployment)**. This
-    option builds a new AWS environment consisting of the VPC, subnets,
-    NAT gateways, security groups, bastion hosts, and other
-    infrastructure components, and then deploys \<software\> into this
-    new VPC.
-
-- **Deploy \<software\> into an existing VPC**. This option provisions
-    \<software\> in your existing AWS infrastructure.
-
-The Quick Start provides separate templates for these options. It also
-lets you configure CIDR blocks, instance types, and \<software\>
-settings, as discussed later in this guide.
-
-## Deployment steps
+## Deployment Steps
 
 ### Step 1. Sign in to your AWS account
 
+1. Sign in to your AWS account at <https://aws.amazon.com> with an IAM user role that includes full administrative permissions. For details, see [Planning the deployment] (#planning-the-deployment) earlier in this guide.
 
-1. Sign in to your AWS account at <https://aws.amazon.com> with an IAM
-    user role that has the necessary permissions. For details, see
-    [Planning the deployment](#planning-the-deployment) earlier in this
-    guide.
+2. Make sure that your AWS account is configured correctly, as discussed in the [Technical requirements](#technical-requirements) section.
 
-2.  Make sure that your AWS account is configured correctly, as
-    discussed in the [Technical requirements](#technical-requirements)
-    section.
+### Step 2. Subscribe to the Required AMIs
 
-## Step 2. Subscribe to the \<software\> AMI
+This workshop requires a subscription to the following AMIs in AWS Marketplace. AMIs are images that are used to boot the virtual servers (instances) in AWS. They also contain software required to run the workshop.  There is no additional cost to use these AMIs.
 
+- AWS FPGA Developer AMI
+- Official CentOS 7 x86_64 HVM AMI
 
-This workshop requires a subscription to the AMI for \<software\> in
-AWS Marketplace.
+Sign in to your AWS account, and follow these instructions to subscribe:
 
-1.  Sign in to your AWS account.
+1. Open the page for the [AWS FPGA Developer AMI](https://aws.amazon.com/marketplace/pp/B06VVYBLZZ) AMI in AWS Marketplace, and then choose **Continue to Subscribe**.
 
-1.  Open the page for the \<software\> AMI in AWS Marketplace, and then
-    choose **Continue to Subscribe**.
+1. Review the terms and conditions for software usage, and then choose **Accept Terms**. You will get a confirmation page, and an email confirmation will be sent to the account owner. For detailed subscription instructions, see the [AWS Marketplace documentation](https://aws.amazon.com/marketplace/help/200799470).
 
-2.  Review the terms and conditions for software usage, and then choose
-    **Accept Terms**.
+1. When the subscription process is complete, exit out of AWS Marketplace without further action. **Do not** click **Continue to Launch**; the workshop CloudFormation templates will deploy the AMI for you.
 
-    You will get a confirmation page, and an email confirmation will be
-    sent to the account owner. For detailed subscription instructions,
-    see the [AWS Marketplace
-    documentation](https://aws.amazon.com/marketplace/help/200799470).
+1. Repeat the steps 1 through 3 to subscribe to the [Official CentOS 7 x86_64 HVM AMI](https://aws.amazon.com/marketplace/pp/B00O7WM7QW) AMI.
 
-1.  When the subscription process is complete, exit out of AWS
-    Marketplace without further action. **Do not** provision the
-    software from AWS Marketplace---the Quick Start will deploy the AMI
-    for you.
+### Step 3. Launch the Quick Start
 
-Step 3. Launch the Quick Start
-------------------------------
 
 **Notes** The instructions in this section reflect the older version of
 the AWS CloudFormation console. If you're using the redesigned console,
