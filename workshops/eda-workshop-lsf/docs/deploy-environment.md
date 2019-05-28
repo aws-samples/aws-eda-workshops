@@ -2,9 +2,9 @@
 
 ## Overview
 
-This workshop shows you how to deploy a fully functional compute cluster based on IBM Spectrum LSF. The environment includes all resources required to run a license-free EDA verification workload on a sample design. Using standard LSF commands, you will be able to submit front-end verification workload into the queue and observe as LSF dynamically adds and removes compute resources as the jobs flow through the system.
+This workshop shows you how to deploy an elastic EDA computing cluster based on IBM Spectrum LSF. The environment includes all resources required to run a license-free EDA verification workload on a sample design. Using standard LSF commands, you will be able to submit front-end verification workload into the queue and observe as LSF dynamically adds and removes compute resources as the jobs flow through the system.
 
-This tutorial is for IT, CAD, and design engineers who are interested in running EDA workloads in the cloud using IBM's LSF Spectrum workload and resource management software.
+This tutorial is for IT, CAD, and design engineers who are interested in running EDA workloads in the cloud using IBM's Spectrum LSF workload and resource management software.
 
 ### IBM Spectrum LSF on AWS
 
@@ -22,24 +22,6 @@ This tutorial requires a license for IBM Spectrum LSF. If you have available LSF
 
 If you don’t have available LSF licenses, you can use a [trial version of LSF](https://www.ibm.com/account/reg/us-en/signup?formid=urx-31573), which allows up to 90 days of free usage in a non-production environment.
 
-## Planning the Deployment
-
-### Specialised Knowledge
-
-This tutorial assumes familiarity with networking, the Linux command line, and EDA workflows. Additionally, intermediate-level experience with NFS storage and LSF operations will be helpful.
-
-This deployment guide also requires a moderate level of familiarity with AWS services. If you’re new to AWS, visit the Getting Started Resource Center and the AWS Training and Certification website for materials and programs that can help you develop the skills to design, deploy, and operate your infrastructure and applications on the AWS Cloud.
-
-### AWS Account
-
-If you don’t already have an AWS account, create one at https://aws.amazon.com by following the on-screen instructions. Part of the sign-up process involves receiving a phone call and entering a PIN using the phone keypad.
-Your AWS account is automatically signed up for all AWS services. You are charged only for the services you use.
-
-### Technical Requirements
-
-Before you launch this tutorial, your account must be configured as specified in the following table. Otherwise, deployment might fail.
-
-
 ## Workshop Architecture
 
 Deploying this cluster in a new virtual private cloud (VPC) with default parameters builds the following EDA computing environment in the AWS Cloud.
@@ -56,6 +38,54 @@ The tutorial sets up the following:
 
 \* The template that deploys the tutorial into an existing VPC skips the components marked by asterisks and prompts you for your existing VPC configuration.
 
+## Planning the Deployment
+
+### Specialized Knowledge
+
+This tutorial assumes familiarity with networking, the Linux command line, and EDA workflows. Additionally, intermediate-level experience with NFS storage and LSF operations will be helpful.
+
+This deployment guide also requires a moderate level of familiarity with AWS services. If you’re new to AWS, visit the [Getting Started Resource Center](https://aws.amazon.com/getting-started/) and the [AWS Training and Certification website](https://aws.amazon.com/training/) for materials and programs that can help you develop the skills to design, deploy, and operate your infrastructure and applications on the AWS Cloud.
+
+### AWS Account
+
+If you don’t already have an AWS account, create one at [aws.amazon.com](https://aws.amazon.com) by following the on-screen instructions. Part of the sign-up process involves receiving a phone call and entering a PIN using the phone keypad.
+Your AWS account is automatically signed up for all AWS services. You are charged only for the services you use.
+
+### Technical Requirements
+
+Before you launch this tutorial, your account must be configured as specified in the following table. Otherwise, deployment might fail.
+
+#### Resources
+
+If necessary, request [service limit increases](https://console.aws.amazon.com/support/home#/case/create?issueType=service-limit-increase&limitType=service-code-) for the following resources. You might need to do this if you already have an existing deployment that uses these resources, and you think you might exceed the default limits with this deployment. For default limits, see the [AWS documentation](http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html).
+[AWS Trusted Advisor](https://console.aws.amazon.com/trustedadvisor/home?#/category/service-limits) offers a service limits check that displays your usage and limits for some aspects of some services.
+
+|Resource|This deployment uses|
+|:---|:---:|
+|VPCs|1|
+|Internet gateway|1|
+|NAT gateway|1|
+|IAM security groups|4|
+|IAM roles|4|
+|EFS file systems|1|
+|i3.16xlarge instance|1|
+|m5.2xlarge instance|1|
+|t3.medium instance|1|
+|c5.2xlarge instance|Up to 20|
+
+#### Regions
+
+This deployment includes Amazon Elastic File System (EFS), which isn’t currently supported in all AWS Regions. For a current list of supported regions, see [AWS Regions and Endpoints](https://docs.aws.amazon.com/general/latest/gr/rande.html#elasticfilesystem-region) in the AWS documentation.
+
+#### Key pair
+
+Make sure that at least one Amazon EC2 key pair exists in your AWS account in the region where you are planning to deploy the tutorial. Make note of the key pair name. You’ll be prompted for this information during deployment. To create a key pair, follow the [instructions in the AWS documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html).
+If you’re deploying the tutorial for testing or proof-of-concept purposes, we recommend that you create a new key pair instead of specifying a key pair that’s already being used by a production instance.
+
+#### IAM permissions
+
+To deploy the environment, you must log in to the AWS Management Console with IAM permissions for the resources and actions the templates will deploy. The AdministratorAccess managed policy within IAM provides sufficient permissions although your organization may choose to use a custom policy with more restrictions.
+
 ## Deployment Options
 
 This tutorial provides two deployment options:
@@ -70,7 +100,7 @@ This tutorial provides separate CloudFormation templates for these options. It a
 
 ### Step 1. Sign in to your AWS account
 
-1. Sign in to your AWS account at <https://aws.amazon.com> with an IAM user role that includes full administrative permissions. For details, see [Planning the deployment] (#planning-the-deployment) earlier in this guide.
+1. Sign in to your AWS account at <https://aws.amazon.com> with an IAM user role that includes full administrative permissions. For details, see [Planning the deployment](#planning-the-deployment) earlier in this guide.
 
 2. Make sure that your AWS account is configured correctly, as discussed in the [Technical requirements](#technical-requirements) section.
 
@@ -93,29 +123,30 @@ Sign in to your AWS account, and follow these instructions to subscribe:
 
 ### Step 3. Launch the Cluster
 
+**Note** The instructions in this section reflect the new version of the AWS CloudFormation console. If you’re using the original console, some of the user interface elements might be different.   You can switch to the new console by selecting **New console** from the **CloudFormation** menu.
+
 1. Sign in to your AWS account, and choose one of the following options to launch the AWS CloudFormation template. For help choosing an option, see [deployment options](#_Automated_Deployment) earlier in this guide.
 
-    **Important:** If you're deploying the cluster into an existing VPC, make sure that your VPC has two private subnets, and that the subnets aren't shared. This tutorial doesn't support [shared subnets](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-sharing.html). The Cloudformation template will create a NAT Gateway [NAT gateways](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html) in their route tables, to allow the instances to download packages and software without exposing them to the internet. You will also need the domain name option configured in the DHCP options as explained in the [Amazon VPC documentation](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html). You will be prompted for your VPC settings when you launch the workshop's CloudFormation template.
+    **Important** If you're deploying the cluster into an existing VPC, make sure that your VPC has two private subnets, and that the subnets aren't shared. This tutorial doesn't support [shared subnets](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-sharing.html). The Cloudformation template will create a [NAT gateway](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html) in their route tables to allow the instances to download packages and software without exposing them to the internet. You will also need **DNS hostnames** and **DNS resolution** configured in the VPC's DHCP options as explained in the [Amazon VPC documentation](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html). 
 
-1. Check the region that's displayed in the upper-right corner of the navigation bar, and change it if necessary. This is where the cluster infrastructure will be built. The template is launched in the US East (Ohio) Region by default.
+1. Click one of the deployment options below to load start the CloudFormation deployment process. The link will take you to the AWS CloudFormation console with the path to the deployment template preloaded.
 
     | Deploy into New VPC  | Deploy into Existing VPC |
     | :---: | :---: |
-    | [![Launch Stack](../../../shared/images/deploy_to_aws.png)](../templates/cfn.yaml)|[![Launch Stack](../../../shared/images/deploy_to_aws.png)](../templates/cfn.yaml)|
+    | [![Launch Stack](../../../shared/images/deploy_to_aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=aws-eda-lsf-full-workshop&templateURL=https://s3.amazonaws.com/aws-eda-workshop-files/templates/00-eda-lsf-full-workshop-master.yaml)|[![Launch Stack](../../../shared/images/deploy_to_aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=aws-eda-lsf-simple-workshop&templateURL=https://s3.amazonaws.com/aws-eda-workshop-files/templates/eda-lsf-simple-workshop.yaml)|
+    
+    Check the region that's displayed in the upper-right corner of the navigation bar, and change it if necessary. This is where the cluster infrastructure will be built. The template is launched in the US East (Virginia) Region by default.
+    **Note:**  This deployment includes Amazon EFS and optionally Amazon FSx for Lustre, which are not currently supported in all AWS Regions. For a current list of supported regions, see the [AWS Regions and Endpoints webpage](https://docs.aws.amazon.com/general/latest/gr/rande.html).
 
-    Each deployment takes about 30 minutes to complete.
+1. In the **Select Template** section of the **Create stack**, keep the default setting for the template URL, and then choose **Next**.
 
-    **Note:**  This deployment includes Amazon EFS and Amazon FSx for Lustre, which are not currently supported in all AWS Regions. For a current list of supported regions, see the [AWS Regions and Endpoints webpage](https://docs.aws.amazon.com/general/latest/gr/rande.html).
+1. On the **Specify stack details** page, change the stack name if needed. Review the parameters for the template. Provide values for the parameters that require input. For all other parameters, review the default settings and customize them as necessary. When you finish reviewing and customizing the parameters, choose **Next**.
 
-1. On the **Select Template** page, keep the default setting for the template URL, and then choose **Next**.
-
-1. On the **Specify Details** page, change the stack name if needed. Review the parameters for the template. Provide values for the parameters that require input. For all other parameters, review the default settings and customize them as necessary. When you finish reviewing and customizing the parameters, choose **Next**.
-
-1. On the **Options** page, you can specify [tags](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-resource-tags.html) (key-value pairs) for resources in your stack and [set advanced options](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-add-tags.html). When you're done, choose **Next**.
+1. On the **Configure stack options** page, you can specify [tags](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-resource-tags.html) (key-value pairs) for resources in your stack.  We recommend setting **key** to `env` and **value** to `aws-workshop`, or something similar.  This will help to identify resources created by this tutorial. When you're done, choose **Next**.
 
 1. On the **Review** page, review and confirm the template settings. Under **Capabilities**, select the two check boxes to acknowledge that the template will create IAM resources and that it might require the capability to auto-expand macros.
 
-1. Choose **Create** to deploy the stack.
+1. Choose **Create** to deploy the stack. Either deployment option takes about 30 minutes to complete.
 
 1. Monitor the status of the stack. When the status is **CREATE\_COMPLETE**, the cluster is ready.
 
@@ -124,4 +155,3 @@ Sign in to your AWS account, and follow these instructions to subscribe:
 Figure 2: \<software\> outputs after successful deployment
 
 ### Step 4. Test the Deployment
-
