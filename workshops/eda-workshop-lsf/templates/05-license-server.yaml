@@ -1,0 +1,292 @@
+# Start up license server instance and attach flex ENI to it.
+# Create ENI -- Type: AWS::EC2::NetworkInterface. Name flexlic01, set term protection.
+# Use user-data script to attach and configure ENI
+# Based on https://github.com/aws-quickstart/quickstart-vfx-ise/blob/develop/templates/license-server.template
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: Deploys an HA license server
+Metadata:
+  Authors:
+    Description: Matt Morris (morrmt@amazon.com)
+  License:
+    Description: |
+      Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+      Permission is hereby granted, free of charge, to any person obtaining a copy of
+      this software and associated documentation files (the "Software"), to deal in
+      the Software without restriction, including without limitation the rights to
+      use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+      the Software, and to permit persons to whom the Software is furnished to do so.
+
+      THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+      IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+      FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+      COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+      IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+      CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.'
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Region Configuration
+        Parameters:
+          - pAvailabilityZones
+
+      - Label:
+          default: Network (existing Management VPC config)
+        Parameters:
+          - pManagementVPC
+          - pMgmtAppPrivateSubnetA
+
+      - Label:
+          default: License Server Configuration
+        Parameters:
+          - pLicenseServerInstanceType
+          - pLicenseServerAmi
+          - pLicenseServerMinCapacity
+          - pLicenseServerDesiredCapacity
+          - pLicenseServerMaxCapacity
+
+Parameters:
+  pAvailabilityZones:
+    Description: The list of Availability Zones to use for the subnets in the VPC.
+      This template uses two Availability Zones from your list and preserves the logical order you specify.
+    Type: List<AWS::EC2::AvailabilityZone::Name>
+
+  pManagementVPC:
+    Description: Management VPC
+    Type: AWS::EC2::VPC::Id
+
+  pMgmtAppPrivateSubnetA:
+    Description: License Server Subnet A
+    Type: AWS::EC2::Subnet::Id
+
+  pLicenseServerInstanceType:
+    Description: Instance type for the license server
+    Type: String
+
+  pLicenseServerAmi:
+    Description: Which License Server AMI do you want to use?
+    Type: AWS::EC2::Image::Id
+
+  pLicenseServerMinCapacity:
+    Description: The minimum number of instances that can run in your auto scale group
+    Type: String
+
+  pLicenseServerDesiredCapacity:
+    Description: The desired capacity must be less than or equal to the maximum capacity
+    Type: String
+
+  pLicenseServerMaxCapacity:
+    Description: The maximum number of instances that you can run in your auto scale group
+    Type: String
+
+  pEnvironment:
+    AllowedValues:
+      - DEV
+      - TEST
+      - PROD
+    Default: DEV
+    Description: Environment (Dev, Test or Prod)
+    Type: String
+
+Resources:
+  rLicenseServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for License server Instances
+      VpcId: !Ref pManagementVPC
+      Tags:
+        - Key: Name
+          Value: license-server-sg
+        - Key: Environment
+          Value: !Ref pEnvironment
+
+  rLicenseServerInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: AttachENi
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:AttachNetworkInterface
+                Resource: '*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
+        - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+
+  rLicenseServerInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref rLicenseServerInstanceRole
+
+  rLicenseServerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 90
+
+  rLicenseServerSecondaryEni:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      GroupSet:
+        - !Ref rLicenseServerSecurityGroup
+      SubnetId: !Ref pMgmtAppPrivateSubnetA
+      Tags:
+        - Key: Name
+          Value: vfx-secondary-eni
+        - Key: Environment
+          Value: !Ref pEnvironment
+
+  rLicenseServerLaunchConfiguration:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          packages:
+            yum:
+              jq: []
+              awslogs: []
+          files:
+            /etc/awslogs/awslogs.conf:
+              content: !Sub |
+                [general]
+                state_file = /var/lib/awslogs/agent-state
+
+                [/var/log/messages]
+                file = /var/log/messages
+                log_group_name = ${rLicenseServerLogGroup}
+                log_stream_name = %INSTANCE_ID/var/log/messages
+                datetime_format = %b %d %H:%M:%S
+                initial_position = start_of_file
+            /tmp/awslog_init.sh:
+              content: !Sub |
+                #!/bin/bash -xe
+                INSTANCE_ID=$(curl -s http://instance-data/latest/meta-data/instance-id)
+                sed -i "s|%INSTANCE_ID|$INSTANCE_ID|g" /etc/awslogs/awslogs.conf
+                sed -i -e "s/region = us-east-1/region = ${AWS::Region}/g" /etc/awslogs/awscli.conf
+                systemctl enable awslogsd.service
+                systemctl start awslogsd.service
+              mode: '755'
+          commands:
+            01_check_data:
+              command: !Sub |
+                #!/bin/bash -x
+                EC2_INSTANCE_ID=$(curl -s http://instance-data/latest/meta-data/instance-id)
+
+                # Volume /dev/sdh (which will get created as /dev/xvdh on Amazon Linux)
+                DATA_STATE="unknown"
+                until [ "${!DATA_STATE}" == "attached" ]; do
+                  DATA_STATE=$(aws ec2 describe-volumes \
+                    --region ${AWS::Region} \
+                    --filters \
+                      Name=attachment.instance-id,Values=${!EC2_INSTANCE_ID} \
+                      Name=attachment.device,Values=/dev/sdh \
+                    --query Volumes[].Attachments[].State \
+                    --output text)
+                  sleep 5
+                done
+            02_mkfs:
+              command: |
+                #!/bin/bash -x
+                # Format /dev/xvdh if it does not contain a partition yet
+                if [ "$(file -b -s /dev/xvdh)" == "data" ];
+                  then mkfs -t ext4 /dev/xvdh
+                fi
+            03_mkdir:
+              command: mkdir -p /data
+            04_mount:
+              command: mount /dev/xvdh /data
+            05_fstab:
+              command: echo '/dev/xvdh /data ext4 defaults,nofail 0 2' >> /etc/fstab
+            06_attach_eni:
+              command: !Sub |
+                #!/bin/bash -x
+                EC2_INSTANCE_ID=$(curl -s http://instance-data/latest/meta-data/instance-id)
+                aws ec2 attach-network-interface --network-interface-id ${rLicenseServerSecondaryEni} --instance-id $EC2_INSTANCE_ID --device-index 1 --region ${AWS::Region}
+            07_awslogs:
+                command: /tmp/awslog_init.sh
+    Properties:
+      AssociatePublicIpAddress: false
+      ImageId: !Ref pLicenseServerAmi
+      IamInstanceProfile: !Ref rLicenseServerInstanceProfile
+      InstanceType: !Ref pLicenseServerInstanceType
+      BlockDeviceMappings:
+        - DeviceName: /dev/sdh
+          Ebs:
+            VolumeSize: 10
+            VolumeType: gp2
+            Encrypted: true
+      SecurityGroups:
+        - !Ref rLicenseServerSecurityGroup
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -x
+          yum update --security -y
+          yum update aws-cfn-bootstrap -y
+
+          /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource rLicenseServerLaunchConfiguration --region ${AWS::Region}
+          # Signal the status from cfn-init
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource rLicenseServerAutoScalingGroup --region ${AWS::Region}
+
+  rLicenseServerAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AvailabilityZones:
+        - !Select [0, !Ref pAvailabilityZones]
+      VPCZoneIdentifier:
+        - !Ref pMgmtAppPrivateSubnetA
+      LaunchConfigurationName: !Ref rLicenseServerLaunchConfiguration
+      MinSize: !Ref pLicenseServerMinCapacity
+      DesiredCapacity: !Ref pLicenseServerDesiredCapacity
+      MaxSize: !Ref pLicenseServerMaxCapacity
+      HealthCheckType: EC2
+      HealthCheckGracePeriod: 0
+      Tags:
+        - Key: Name
+          Value: vfx-license-server
+          PropagateAtLaunch: true
+        - Key: Environment
+          Value: !Ref pEnvironment
+          PropagateAtLaunch: true
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: 'PT5M'
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 0
+        MaxBatchSize: 1
+        PauseTime: 'PT2M'
+        WaitOnResourceSignals: true
+      AutoScalingReplacingUpdate:
+        WillReplace: true
+
+Outputs:
+  rLicenseServerSecurityGroup:
+    Value: !Ref rLicenseServerSecurityGroup
+    Export:
+      Name: eLicenseServerSecurityGroup
+
+  rLicenseServerInstanceRole:
+    Value: !Ref rLicenseServerInstanceRole
+
+  rLicenseServerAutoScalingGroup:
+    Value: !Ref rLicenseServerAutoScalingGroup
+
+  rLicenseServerLaunchConfiguration:
+    Value: !Ref rLicenseServerLaunchConfiguration
+
