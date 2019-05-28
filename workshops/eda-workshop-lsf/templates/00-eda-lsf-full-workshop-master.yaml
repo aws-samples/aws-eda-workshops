@@ -1,0 +1,294 @@
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: >
+  Deploys a full EDA computing infrastructure that includes a new VPC, login server,
+  LSF master, shared POSIX file system, license servers, and directory server.
+  This root stack launches a nested stack for each infrastructure component.  
+  **WARNING** This template creates AWS resources. 
+  You will be billed for the AWS resources used if you create a stack from this template.
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Network configuration
+        Parameters:
+          - VpcCIDR
+          - PublicSubnet1CIDR
+          - PrivateSubnet1CIDR
+          - VpcAz
+          - SshSource
+          - AdminKeyPair
+      - Label:
+          default: File system configuration
+        Parameters:
+          - FileSystemType
+          - FileSystemMountPoint
+          - ScratchDir
+          - ProjectDir
+      - Label:
+          default: LSF configuration
+        Parameters:
+          - LSFInstallPath
+          - LSFClusterName
+          - CustomerLSFInstallUri
+          - CustomerLSFBinsUri
+          - MasterInstanceType
+          - MasterServerAMI
+          - ComputeAMI
+      - Label:
+          default: Login server configuration
+        Parameters:
+          - LoginServerInstanceType
+          - LoginServerAMI
+
+    ParameterLabels:
+      AdminKeyPair:
+        default: EC2 KeyPair
+      SshSource:
+        default: SSH source CIDR
+      MasterInstanceType:
+        default: Master instance type
+      MasterServerAMI:
+        default: Master server AMI
+      ComputeAMI:
+        default: Compute node AMI
+      LSFClusterName:
+        default: Cluster name
+      FileSystemType:
+        default: Shared file system type
+      LSFInstallPath:
+        default: LSF install path
+      FileSystemMountPoint:
+        default: File system mount point
+      ScratchDir:
+        default: Scratch subdirectory
+      ProjectDir:
+        default: Project subdirectory
+      VpcCIDR:
+        default: VPC CIDR range
+      VpcAz:
+        default: Availability zone
+      PublicSubnet1CIDR:
+        default: CIDR block for the public subnet
+      PrivateSubnet1CIDR:
+        default: CIDR block for the private subnet
+      CustomerLSFInstallUri:
+        default: LSF trial install package
+      CustomerLSFBinsUri:
+        default: LSF trial binary package
+      LoginServerInstanceType:
+        default: Login server instance type
+      LoginServerAMI:
+        default: Login server AMI
+
+Parameters:
+  AdminKeyPair:
+    Description: "The name of an existing EC2 KeyPair to enable SSH access to the master server."
+    Type: "AWS::EC2::KeyPair::KeyName"
+    AllowedPattern: ".+"
+
+  MasterInstanceType:
+    Description: "The instance type for the master node of the cluster."
+    Type: String
+    Default: "m5.2xlarge"
+    AllowedValues:
+      - m4.xlarge
+      - m4.2xlarge
+      - m5.xlarge
+      - m5.2xlarge
+
+  MasterServerAMI:
+    Description: "The AMI for the master server. Amazon Linux 2 is recommended."
+    Type: String
+    Default: ALinux2
+    AllowedValues:
+      - ALinux2
+
+  ComputeAMI:
+    Description: >
+      'FPGADev' provides a prepackaged, license-free EDA development environment and example verification workload.
+      Choose 'CentOS' if you intend to run your own workloads in this environment.
+      NOTE: You must first subscribe to these AMIs in the AWS Marketplace.  See included documentation for details.
+    Type: String
+    Default: FPGADev15
+    AllowedValues:
+      - FPGADev15
+      - CentOS75
+      - RHEL7
+      - ALinux
+
+  LSFClusterName:
+    Description: The name of the computing environment.  This will also be the name of the LSF cluster.
+    Type: String
+    Default: nebula
+
+  LSFInstallPath:
+    Description: The path in which to install the LSF trial software. For example, /tools/ibm/lsf.
+    Type: String
+    Default: "/tools/ibm/lsf"
+    AllowedPattern: ^/.+
+
+  FileSystemMountPoint:
+    Description: The local directory on which the NFS file system is mounted
+    Type: String
+    Default: /ec2-nfs
+    AllowedPattern: ^/.+
+
+  ScratchDir:
+    Description: The name for the runtime scratch data subdirectory
+    Type: String
+    Default: scratch
+    AllowedPattern: ^.+
+
+  ProjectDir:
+    Description: The name for the project design data subdirectory
+    Type: String
+    Default: proj
+    AllowedPattern: ^.+
+
+  FileSystemType:
+    Description: The file system type to use for runtime scratch space. Only ec2-nfs is supported at this time.
+    Type: String
+    Default: ec2-nfs
+    AllowedValues:
+      - ec2-nfs
+      - fsx-lustre (coming soon)
+
+  SshSource:
+    Description: The CIDR range that is permitted to ssh into the infrastructure instances.
+      Use your public IP address (http://checkip.amazonaws.com).
+    Type: String
+    Default: 0.0.0.0/32
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
+    ConstraintDescription: This must be a valid IP CIDR range of the form x.x.x.x/x.
+
+  LoginServerInstanceType:
+    Description: The instance type for the login server(s)
+    Type: String
+    Default: t3.medium
+    AllowedValues:
+      - t3.medium
+      - t3.xlarge
+      - m4.xlarge
+      - m4.2xlarge
+      - m5.xlarge
+      - m5.2xlarge
+
+  LoginServerAMI:
+    Description: This should be the same AMI that is used for the compute nodes. 
+      AMI (OS image) for the master server.  NOTE You must first subscribe to this 
+      AMI in the AWS Marketplace at https://aws.amazon.com/marketplace/pp/B06VVYBLZZ"
+    Type: String
+    Default: FPGADev15
+    AllowedValues:
+      - ALinux2
+      - CentOS75
+      - FPGADev15
+
+  VpcAz:
+    Description: The availability zone for this compute environment
+    Type: 'AWS::EC2::AvailabilityZone::Name'
+    Default: us-east-1a
+
+  VpcCIDR:
+    Default: 172.30.0.0/16
+    Description: The IP range in CIDR notation for this VPC. This should be a /16.
+    Type: String
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: The CIDR block parameter must be in the form x.x.x.x/16-28
+
+  PublicSubnet1CIDR:
+    Default: 172.30.32.0/24
+    Description: The login and remote desktop servers will reside in this subnet. 
+      Enter the IP range in CIDR notation for the public subnet.  This should be a /24.
+    Type: String
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: The CIDR block parameter must be in the form x.x.x.x/16-28
+
+  PrivateSubnet1CIDR:
+    Default: 172.30.0.0/19
+    Description: The LSF master and compute nodes, license servers, and NFS servers will reside in this subnet.
+      Enter the IP range in CIDR notation for the private subnet. This should be a /19.
+    Type: String
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: The CIDR block parameter must be in the form x.x.x.x/16-28
+
+  CustomerLSFInstallUri:
+    Description: The S3 URI to the LSF Eval Install package. 
+      Select object in the console and choose Copy Path and paste here.
+    Type: String
+    Default: s3://<your_bucket>/lsf10.1_lsfinstall_linux_x86_64.tar.Z
+
+  CustomerLSFBinsUri:
+    Description: The S3 URI to the LSF Eval Binaries package. 
+      Select object in the console and choose Copy Path and paste here.
+    Type: String
+    Default: s3://<your_bucket>/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z
+
+Resources:
+  NetworkStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        VpcCIDR: !Ref VpcCIDR
+        VpcAz: !Ref VpcAz
+        PublicSubnet1CIDR: !Ref PublicSubnet1CIDR
+        PrivateSubnet1CIDR: !Ref PrivateSubnet1CIDR
+        LSFClusterName: !Ref LSFClusterName
+        SshSource: !Ref SshSource
+      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/templates/01-network.yaml
+
+  LSFServiceStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: NFSServerStack
+    Properties:
+      Parameters:
+        MasterInstanceType: !Ref MasterInstanceType
+        MasterServerAMI: !Ref MasterServerAMI
+        ComputeAMI: !Ref ComputeAMI
+        LSFClusterName: !Ref LSFClusterName
+        LSFInstallPath: !Ref LSFInstallPath
+        FileSystemMountPoint: !Ref FileSystemMountPoint
+        ScratchDir: !Ref ScratchDir
+        ProjectDir: !Ref ProjectDir
+        CustomerLSFInstallUri: !Ref CustomerLSFInstallUri
+        CustomerLSFBinsUri: !Ref CustomerLSFBinsUri
+        AdminKeyPair: !Ref AdminKeyPair
+      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/templates/02-lsf-master.yaml
+
+  NFSServerStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: NetworkStack
+    Properties:
+      Parameters:
+        LSFClusterName: !Ref LSFClusterName
+        AdminKeyPair: !Ref AdminKeyPair
+        SshSource: !Ref SshSource
+      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/templates/04-nfs_server_instanceStore_zfs.yaml
+
+  LoginServerStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: LSFServiceStack
+    Properties:
+      Parameters:
+        LoginServerInstanceType: !Ref LoginServerInstanceType
+        LoginServerAMI: !Ref LoginServerAMI
+        LSFClusterName: !Ref LSFClusterName
+        AdminKeyPair: !Ref AdminKeyPair
+        LSFInstallPath: !Ref LSFInstallPath
+        FileSystemMountPoint: !Ref FileSystemMountPoint
+        ScratchDir: !Ref ScratchDir
+        ProjectDir: !Ref ProjectDir
+      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/templates/03-login-server.yaml
+
+Outputs:
+  RootStackName:
+    Description: The name of the root CloudFormation stack
+    Value: !Ref 'AWS::StackName'
+    Export:
+      Name: !Join [ '-', [ !Ref LSFClusterName, "RootStackName" ] ]
+
+
+
+
