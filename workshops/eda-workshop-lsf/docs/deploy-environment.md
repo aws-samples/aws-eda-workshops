@@ -135,8 +135,9 @@ Sign in to your AWS account, and follow these instructions to subscribe:
     | :---: | :---: |
     | [![Launch Stack](../../../shared/images/deploy_to_aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=aws-eda-lsf-full-workshop&templateURL=https://s3.amazonaws.com/aws-eda-workshop-files/templates/00-eda-lsf-full-workshop-master.yaml)|[![Launch Stack](../../../shared/images/deploy_to_aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=aws-eda-lsf-simple-workshop&templateURL=https://s3.amazonaws.com/aws-eda-workshop-files/templates/eda-lsf-simple-workshop.yaml)|
     
-    Check the region that's displayed in the upper-right corner of the navigation bar, and change it if necessary. This is where the cluster infrastructure will be built. The template is launched in the US East (Virginia) Region by default.
-    **Note:**  This deployment includes Amazon EFS and optionally Amazon FSx for Lustre, which are not currently supported in all AWS Regions. For a current list of supported regions, see the [AWS Regions and Endpoints webpage](https://docs.aws.amazon.com/general/latest/gr/rande.html).
+    Check the region that's displayed in the upper-right corner of the navigation bar, and change it if necessary. This is where the cluster infrastructure will be built. The template is launched in the US East (N. Virginia) Region by default.
+
+    **Note**  This deployment includes Amazon EFS and optionally Amazon FSx for Lustre, which are not currently supported in all AWS Regions. For a current list of supported regions, see the [AWS Regions and Endpoints webpage](https://docs.aws.amazon.com/general/latest/gr/rande.html).
 
 1. In the **Select Template** section of the **Create stack**, keep the default setting for the template URL, and then choose **Next**.
 
@@ -144,14 +145,12 @@ Sign in to your AWS account, and follow these instructions to subscribe:
 
 1. On the **Configure stack options** page, you can specify [tags](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-resource-tags.html) (key-value pairs) for resources in your stack.  We recommend setting **key** to `env` and **value** to `aws-workshop`, or something similar.  This will help to identify resources created by this tutorial. When you're done, choose **Next**.
 
-1. On the **Review** page, review and confirm the template settings. Under **Capabilities**, select the two check boxes to acknowledge that the template will create IAM resources and that it might require the capability to auto-expand macros.
+1. On the **Review** page, review and confirm the template settings. Under **Capabilities** at the very bottom, select the two check boxes to acknowledge that the template will create IAM resources and that it might require the capability to auto-expand macros.
 
-1. Choose **Create** to deploy the stack. Either deployment option takes about 30 minutes to complete.
+1. Choose **Create stack** to deploy the stack. Either deployment option takes about 30 minutes to complete.
 
 1. Monitor the status of the stack. When the status is **CREATE\_COMPLETE**, the cluster is ready.
 
 1. Use the URLs displayed in the **Outputs** tab for the stack to view the resources that were created.
-
-Figure 2: \<software\> outputs after successful deployment
 
 ### Step 4. Test the Deployment
