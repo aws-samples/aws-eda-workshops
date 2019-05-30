@@ -104,7 +104,7 @@ This tutorial provides separate CloudFormation templates for these options. It a
 
 1. Sign in to your AWS account at <https://aws.amazon.com> with an IAM user role that includes full administrative permissions. For details, see [Planning the deployment](#planning-the-deployment) earlier in this guide.
 
-2. Make sure that your AWS account is configured correctly, as discussed in the [Technical requirements](#technical-requirements) section.
+2. Make sure that your AWS account is configured correctly, as discussed in the [AWS Account](#aws-account) section.
 
 ### Step 2. Upload LSF Software Packages
 
@@ -143,18 +143,18 @@ Sign in to your AWS account, and follow these instructions to subscribe:
     | :---: | :---: |
     | [![Launch Stack](../../../shared/images/deploy_to_aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=aws-eda-lsf-full-workshop&templateURL=https://s3.amazonaws.com/aws-eda-workshop-files/templates/00-eda-lsf-full-workshop-master.yaml)|[![Launch Stack](../../../shared/images/deploy_to_aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=aws-eda-lsf-simple-workshop&templateURL=https://s3.amazonaws.com/aws-eda-workshop-files/templates/eda-lsf-simple-workshop.yaml)|
     
-    Check the region that's displayed in the upper-right corner of the navigation bar, and change it if necessary. This is where the cluster infrastructure will be built. The template is launched in the US East (N. Virginia) Region by default.
+    Check the region that's displayed in the upper-right corner of the navigation bar, and change it if necessary. This is where the cluster infrastructure will be built. The template is launched in the **US East (N. Virginia)** Region by default.
 
     **Note**  This deployment includes Amazon EFS and optionally Amazon FSx for Lustre, which are not currently supported in all AWS Regions. For a current list of supported regions, see the [AWS Regions and Endpoints webpage](https://docs.aws.amazon.com/general/latest/gr/rande.html).
 
 1. In the **Select Template** section of the **Create stack**, keep the default setting for the template URL, and then choose **Next**.
 
-1. On the **Specify stack details** page, change the stack name if needed. Review the parameters for the template. Provide values for the following parameters in the table below. For all other parameters, it is recommended that you keep the default settings, but you can customize them as necessary.
+1. On the **Specify stack details** page, change the stack name if desired. Review the parameters for the template. Provide values for the following parameters in the table below. For all other parameters, it is recommended that you keep the default settings, but you can customize them as necessary.
 
     |Parameter|Notes|
     |---|---|
     |SSH source CIDR|Enter the internet-facing IP from which you will log into the login server|
-    |EC2 KeyPair|Select the key pair you created above|
+    |EC2 KeyPair|Select the key pair you created in your account|
     |Cluster name|Enter a name for the LSF cluster|
     |LSF trial install package|Enter the S3 protocol URL for the ``lsf10.1_lsfinstall_linux_x86_64.tar.Z`` package|
     |LSF trial binary package|Enter the S3 protocol URL for the ``lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z`` package|
