@@ -318,7 +318,7 @@ Resources:
   NFSInstance:
     Type: AWS::EC2::Instance
     Properties:
-      DisableApiTermination: true
+      DisableApiTermination: false
       IamInstanceProfile: !Ref 'RootInstanceProfile'
       ImageId: !FindInMap
         - AWSRegionAMI
