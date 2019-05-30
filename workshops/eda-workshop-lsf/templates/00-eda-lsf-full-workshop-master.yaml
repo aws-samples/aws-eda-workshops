@@ -2,7 +2,8 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: |
   Deploys a full EDA computing infrastructure that includes a new VPC, login server,
-  LSF master, shared POSIX file system, license servers, and directory server.
+  LSF master, EFS file system, and a shared NFS file system.
+  
   This root stack launches a nested stack for each infrastructure component.
   
   **WARNING** This template creates AWS resources. 
