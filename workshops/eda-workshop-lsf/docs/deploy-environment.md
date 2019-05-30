@@ -18,9 +18,7 @@ You are responsible for the cost of the AWS services used while running this ref
 
 The AWS CloudFormation template for this tutorial includes configuration parameters that you can customize. Some of these settings, such as instance type, will affect the cost of deployment. For cost estimates, see the pricing pages for each AWS service you will be using. Prices are subject to change.
 
-This tutorial requires a license for IBM Spectrum LSF. If you have available LSF licenses for your on-prem clusters, check with your IBM sale representative to be sure you are entitled to use these licenses for cloud-based LSF clusters.
-
-If you don’t have available LSF licenses, you can use a [trial version of LSF](https://www.ibm.com/account/reg/us-en/signup?formid=urx-31573), which allows up to 90 days of free usage in a non-production environment.
+This tutorial requires the [trial version](https://www.ibm.com/account/reg/us-en/signup?formid=urx-31573) of IBM Spectrum LSF, which allows up to 90 days of free usage in a non-production environment.
 
 ## Workshop Architecture
 
@@ -46,14 +44,18 @@ This tutorial assumes familiarity with networking, the Linux command line, and E
 
 This deployment guide also requires a moderate level of familiarity with AWS services. If you’re new to AWS, visit the [Getting Started Resource Center](https://aws.amazon.com/getting-started/) and the [AWS Training and Certification website](https://aws.amazon.com/training/) for materials and programs that can help you develop the skills to design, deploy, and operate your infrastructure and applications on the AWS Cloud.
 
+### IBM LSF Software
+
+The IBM Spectrum LSF software is not provided in this workshop; you will need download the [LSF trial](https://www.ibm.com/account/reg/us-en/signup?formid=urx-31573) as part of this tutorial.  Download the following packages from the trial web portal:
+
+- lsf10.1_lsfinstall_linux_x86_64.tar.Z
+- lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z
+
 ### AWS Account
 
-If you don’t already have an AWS account, create one at [aws.amazon.com](https://aws.amazon.com) by following the on-screen instructions. Part of the sign-up process involves receiving a phone call and entering a PIN using the phone keypad.
-Your AWS account is automatically signed up for all AWS services. You are charged only for the services you use.
+If you don’t already have an AWS account, create one at [aws.amazon.com](https://aws.amazon.com) by following the on-screen instructions. Part of the sign-up process involves receiving a phone call and entering a PIN using the phone keypad. Your AWS account is automatically signed up for all AWS services. You are charged only for the services you use.
 
-### Technical Requirements
-
-Before you launch this tutorial, your account must be configured as specified in the following table. Otherwise, deployment might fail.
+Before you launch this tutorial, your account must be configured as specified below. Otherwise, deployment might fail.
 
 #### Resources
 
@@ -84,7 +86,7 @@ If you’re deploying the tutorial for testing or proof-of-concept purposes, we 
 
 #### IAM permissions
 
-To deploy the environment, you must log in to the AWS Management Console with IAM permissions for the resources and actions the templates will deploy. The AdministratorAccess managed policy within IAM provides sufficient permissions although your organization may choose to use a custom policy with more restrictions.
+To deploy the environment, you must log in to the AWS Management Console with IAM permissions for the resources and actions the templates will deploy. You'll need to log in with an IAM User that has the **AdministratorAccess** managed policy within IAM provides sufficient permissions although your organization may choose to use a custom policy with more restrictions.
 
 ## Deployment Options
 
@@ -104,7 +106,13 @@ This tutorial provides separate CloudFormation templates for these options. It a
 
 2. Make sure that your AWS account is configured correctly, as discussed in the [Technical requirements](#technical-requirements) section.
 
-### Step 2. Subscribe to the Required AMIs
+### Step 2. Upload LSF Software Packages
+
+1. Upload the two LSF trial software packages to an S3 bucket in your account.
+1. Set the permission on these two objects (not the bucket) to public read. The CloudFormation scripts will download these software packages from your S3 bucket.
+1. Verify the packages are public by downloading them from your web browser using the **Object URL**.
+
+### Step 3. Subscribe to the Required AMIs
 
 This workshop requires a subscription to the following AMIs in AWS Marketplace. AMIs are images that are used to boot the virtual servers (instances) in AWS. They also contain software required to run the workshop.  There is no additional cost to use these AMIs.
 
@@ -121,7 +129,7 @@ Sign in to your AWS account, and follow these instructions to subscribe:
 
 1. Repeat the steps 1 through 3 to subscribe to the [Official CentOS 7 x86_64 HVM AMI](https://aws.amazon.com/marketplace/pp/B00O7WM7QW) AMI.
 
-### Step 3. Launch the Cluster
+### Step 4. Launch the Cluster
 
 **Note** The instructions in this section reflect the new version of the AWS CloudFormation console. If you’re using the original console, some of the user interface elements might be different.   You can switch to the new console by selecting **New console** from the **CloudFormation** menu.
 
@@ -141,7 +149,17 @@ Sign in to your AWS account, and follow these instructions to subscribe:
 
 1. In the **Select Template** section of the **Create stack**, keep the default setting for the template URL, and then choose **Next**.
 
-1. On the **Specify stack details** page, change the stack name if needed. Review the parameters for the template. Provide values for the parameters that require input. For all other parameters, review the default settings and customize them as necessary. When you finish reviewing and customizing the parameters, choose **Next**.
+1. On the **Specify stack details** page, change the stack name if needed. Review the parameters for the template. Provide values for the following parameters in the table below. For all other parameters, it is recommended that you keep the default settings, but you can customize them as necessary.
+
+    |Parameter|Notes|
+    |---|---|
+    |SSH source CIDR|Enter the internet-facing IP from which you will log into the login server|
+    |EC2 KeyPair|Select the key pair you created above|
+    |Cluster name|Enter a name for the LSF cluster|
+    |LSF trial install package|Enter the S3 protocol URL for the ``lsf10.1_lsfinstall_linux_x86_64.tar.Z`` package|
+    |LSF trial binary package|Enter the S3 protocol URL for the ``lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z`` package|
+    
+    When you finish reviewing and customizing the parameters, choose **Next**.
 
 1. On the **Configure stack options** page, you can specify [tags](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-resource-tags.html) (key-value pairs) for resources in your stack.  We recommend setting **key** to `env` and **value** to `aws-workshop`, or something similar.  This will help to identify resources created by this tutorial. When you're done, choose **Next**.
 
@@ -153,4 +171,4 @@ Sign in to your AWS account, and follow these instructions to subscribe:
 
 1. Use the URLs displayed in the **Outputs** tab for the stack to view the resources that were created.
 
-### Step 4. Test the Deployment
+### Step 5. Test the Deployment
