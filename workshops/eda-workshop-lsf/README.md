@@ -3,14 +3,14 @@
 
 ## Overview
 
-The CloudFormation templates in this demo deploy a fully functional IBM Spectrum LSF compute cluster with all resources required to run a license-free EDA verification workload on a sample design. This workshop uses the IBM Spectrum LSF Resource Connector feature to dynamically provision AWS compute instances to satisfy workload demand in the LSF queues.
+The CloudFormation templates in this workshop deploy a fully functional IBM Spectrum LSF compute cluster with all resources required to run a license-free EDA verification workload on a sample design. This workshop uses the IBM Spectrum LSF Resource Connector feature to dynamically provision AWS compute instances to satisfy workload demand in the LSF queues.
 
 ## Prerequisites
 
 The following is required to run this workshop:
 
 * An AWS account with administrative level access
-* Access to LSF installation and binary packages.  Bring your own license or obtain a trial from IBM.
+* Installation packages from the evaluation version of IBM Spectrum LSF
 * An Amazon EC2 key pair
 * A free subscription to the [AWS FPGA Developer AMI](https://aws.amazon.com/marketplace/pp/B06VVYBLZZ).
 * A free subscription to the [Official CentOS 7 x86_64 HVM AMI](https://aws.amazon.com/marketplace/pp/B00O7WM7QW).
@@ -33,7 +33,7 @@ After you deploy the Quick Start, we recommend that you enable the AWS Cost and 
 
 ### Clean up
 
-* Delete the stack
+* Delete the parent stack
 * Delete orphaned EBS volumes.  The FPGA AMI doesn't delete them on instance termination.  See `clean-fpga-ebs-vols.py` or deploy Lambda function in CFn template.
 
 
