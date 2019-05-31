@@ -175,4 +175,4 @@ Sign in to your AWS account, and follow these instructions to subscribe:
 
 ### Step 6. Run workload
 
-Move on to the next tutorial to run logic simulations in your new cloud-based, elastic LSF cluster.
+Move on to the [next tutorial](run-workload.md) to run logic simulations in your new elastic LSF cluster in the AWS cloud.
