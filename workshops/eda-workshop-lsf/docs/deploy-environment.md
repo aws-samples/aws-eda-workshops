@@ -142,7 +142,7 @@ Sign in to your AWS account, and follow these instructions to subscribe:
     | Deploy into New VPC  | Deploy into Existing VPC |
     | :---: | :---: |
     | [![Launch Stack](../../../shared/images/deploy_to_aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=aws-eda-lsf-full-workshop&templateURL=https://s3.amazonaws.com/aws-eda-workshop-files/templates/00-eda-lsf-full-workshop-master.yaml)|[![Launch Stack](../../../shared/images/deploy_to_aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=aws-eda-lsf-simple-workshop&templateURL=https://s3.amazonaws.com/aws-eda-workshop-files/templates/eda-lsf-simple-workshop.yaml)|
-    
+
     Check the region that's displayed in the upper-right corner of the navigation bar, and change it if necessary. This is where the cluster infrastructure will be built. The template is launched in the **US East (N. Virginia)** Region by default.
 
     **Note**  This deployment includes Amazon EFS and optionally Amazon FSx for Lustre, which are not currently supported in all AWS Regions. For a current list of supported regions, see the [AWS Regions and Endpoints webpage](https://docs.aws.amazon.com/general/latest/gr/rande.html).
@@ -158,7 +158,7 @@ Sign in to your AWS account, and follow these instructions to subscribe:
     |Cluster name|Enter a name for the LSF cluster|
     |LSF trial install package|Enter the S3 protocol URL for the ``lsf10.1_lsfinstall_linux_x86_64.tar.Z`` package|
     |LSF trial binary package|Enter the S3 protocol URL for the ``lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z`` package|
-    
+
     When you finish reviewing and customizing the parameters, choose **Next**.
 
 1. On the **Configure stack options** page, you can specify [tags](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-resource-tags.html) (key-value pairs) for resources in your stack.  We recommend setting **key** to `env` and **value** to `aws-workshop`, or something similar.  This will help to identify resources created by this tutorial. When you're done, choose **Next**.
@@ -172,3 +172,7 @@ Sign in to your AWS account, and follow these instructions to subscribe:
 1. Use the URLs displayed in the **Outputs** tab for the stack to view the resources that were created.
 
 ### Step 5. Test the Deployment
+
+### Step 6. Run workload
+
+Move on to the next tutorial to run logic simulations in your new cloud-based, elastic LSF cluster.
