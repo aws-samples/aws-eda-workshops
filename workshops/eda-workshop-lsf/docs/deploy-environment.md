@@ -2,9 +2,9 @@
 
 ## Overview
 
-This workshop shows you how to deploy an elastic EDA computing cluster based on IBM Spectrum LSF. The environment includes all resources required to run a license-free EDA verification workload on a sample design. Using standard LSF commands, you will be able to submit front-end verification workload into the queue and observe as LSF dynamically adds and removes compute resources as the jobs flow through the system.
+This tutorial shows you how to deploy an elastic EDA computing cluster based on the IBM Spectrum LSF workload and resource management software that is the de facto standard in EDA computing environments. The deployed environment includes all resources required to run a license-free EDA verification workload on a sample design. Using standard LSF commands, you will be able to submit front-end verification workload into the queue and observe as LSF dynamically adds and removes compute resources as the jobs flow through the system.
 
-This tutorial is for IT, CAD, and design engineers who are interested in running EDA workloads in the cloud using IBM's Spectrum LSF workload and resource management software.
+This tutorial is for IT, CAD, and design engineers who are interested in running EDA workloads in the cloud using IBM's Spectrum LSF.
 
 ### IBM Spectrum LSF on AWS
 
