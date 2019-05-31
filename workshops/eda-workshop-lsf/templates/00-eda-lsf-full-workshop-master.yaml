@@ -258,7 +258,7 @@ Resources:
         PrivateSubnet1CIDR: !Ref PrivateSubnet1CIDR
         LSFClusterName: !Ref LSFClusterName
         SshSource: !Ref SshSource
-      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/templates/01-network.yaml
+      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/templates/01-network.yaml
 
   LSFServiceStack:
     Type: AWS::CloudFormation::Stack
@@ -276,7 +276,7 @@ Resources:
         CustomerLSFInstallUri: !Ref CustomerLSFInstallUri
         CustomerLSFBinsUri: !Ref CustomerLSFBinsUri
         AdminKeyPair: !Ref AdminKeyPair
-      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/templates/02-lsf-master.yaml
+      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/templates/02-lsf-master.yaml
 
   NFSServerStack:
     Type: AWS::CloudFormation::Stack
@@ -286,7 +286,7 @@ Resources:
         LSFClusterName: !Ref LSFClusterName
         AdminKeyPair: !Ref AdminKeyPair
         SshSource: !Ref SshSource
-      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/templates/04-nfs_server_instanceStore_zfs.yaml
+      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/templates/04-nfs_server_instanceStore_zfs.yaml
 
   LoginServerStack:
     Type: AWS::CloudFormation::Stack
@@ -301,7 +301,7 @@ Resources:
         FileSystemMountPoint: !Ref FileSystemMountPoint
         ScratchDir: !Ref ScratchDir
         ProjectDir: !Ref ProjectDir
-      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/templates/03-login-server.yaml
+      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/templates/03-login-server.yaml
 
 Outputs:
   RootStackName:
