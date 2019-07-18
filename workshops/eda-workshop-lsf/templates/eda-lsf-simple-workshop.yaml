@@ -494,7 +494,7 @@ Resources:
               # Verify that LSF is up and send signal to Cloudformation
               sleep 5
               lsid
-              /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource LSFMasterInstance --region ${AWS::Region}
+              # /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource LSFMasterInstance --region ${AWS::Region}
 
               echo "*** END LSF MASTER BOOTSTRAP ***"
 
