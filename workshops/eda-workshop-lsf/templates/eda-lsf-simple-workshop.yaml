@@ -337,16 +337,16 @@ Resources:
               wget https://s3.amazonaws.com/aws-eda-workshop-files/config/lsf/awsprov_templates.json \
                 -O $LSF_ENVDIR/resource_connector/aws/conf/awsprov_templates.json
               
-              sed -i -e "s/_CFN_COMPUTE_AMI_/${LSFComputeNodeAmi}/" \
-                     -e "s/_CFN_COMPUTE_NODE_SUBNET_/${ComputeNodeSubnet}/" \
-                     -e "s/_CFN_ADMIN_KEYPAIR_/${AdminKeyPair}/" \
-                     -e "s/_CFN_COMPUTE_SECURITY_GROUP_ID_/${LSFComputeNodeSGGroupId}/" \
-                     -e "s|_CFN_LSF_COMPUTE_NODE_INSTANCE_PROFILE_ARN_|${LSFComputeNodeInstanceProfileArn}|" \
-                     -e "s/_CFN_LSF_CLUSTER_NAME_/${LSFClusterName}/" \
-                     -e "s/_CFN_EFS_FS_DNS_NAME_/$EFS_FS_DNS_NAME/" \
-                     -e "s|_CFN_LSF_INSTALL_DIR_|$LSF_INSTALL_DIR|" \
+              sed -i -e "s/%CFN_COMPUTE_AMI%/${LSFComputeNodeAmi}/" \
+                     -e "s/%CFN_COMPUTE_NODE_SUBNET%/${ComputeNodeSubnet}/" \
+                     -e "s/%CFN_ADMIN_KEYPAIR%/${AdminKeyPair}/" \
+                     -e "s/%CFN_COMPUTE_SECURITY_GROUP_ID%/${LSFComputeNodeSGGroupId}/" \
+                     -e "s|%CFN_LSF_COMPUTE_NODE_INSTANCE_PROFILE_ARN%|${LSFComputeNodeInstanceProfileArn}|" \
+                     -e "s/%CFN_LSF_CLUSTER_NAME%/${LSFClusterName}/" \
+                     -e "s/%CFN_EFS_FS_DNS_NAME%/$EFS_FS_DNS_NAME/" \
+                     -e "s|%CFN_LSF_INSTALL_DIR%|$LSF_INSTALL_DIR|" \
                   $LSF_ENVDIR/resource_connector/aws/conf/awsprov_templates.json
-              
+
               # user_data script that RC executes on compute nodes
               wget https://s3.amazonaws.com/aws-eda-workshop-files/config/lsf/user_data.sh \
                 -O $LSF_INSTALL_DIR/10.1/resource_connector/aws/scripts/user_data.sh
