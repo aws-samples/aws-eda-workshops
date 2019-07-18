@@ -211,10 +211,10 @@ Resources:
   LSFMasterInstance:
     Type: "AWS::EC2::Instance"
     DependsOn: LSFEFSMountTarget
-    CreationPolicy:
-      ResourceSignal:    
-        Count: 1
-        Timeout: PT5M
+    # CreationPolicy:
+    #   ResourceSignal:    
+    #     Count: 1
+    #     Timeout: PT5M
 
     Properties:
       InstanceType: !Ref MasterInstanceType
