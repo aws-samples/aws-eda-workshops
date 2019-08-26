@@ -222,9 +222,10 @@ Resources:
               # Add LSF admin account
               adduser -m -u 1500 $LSF_ADMIN
 
-              # Customer-provided LSF demo binaries
+              # Download customer-provided LSF binaries and entitlement file
               aws --quiet s3 cp ${CustomerLSFInstallUri} /tmp
               aws --quiet s3 cp ${CustomerLSFBinsUri} /tmp
+              aws --quiet s3 cp ${CustomerLSFEntitlementUri} /tmp
 
               cd /tmp
               tar xf lsf10.1_lsfinstall_linux_x86_64.tar.Z
@@ -240,6 +241,7 @@ Resources:
               SILENT_INSTALL="Y"
               LSF_SILENT_INSTALL_TARLIST="ALL"
               ACCEPT_LICENSE="Y"
+              LSF_ENTITLEMENT_FILE="/tmp/${CustomerLSFEntitlementUri}"
               EOF
 
               ./lsfinstall -f install.config

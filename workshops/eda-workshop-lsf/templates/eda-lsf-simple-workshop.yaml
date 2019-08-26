@@ -79,6 +79,7 @@ Metadata:
           - LSFClusterName
           - CustomerLSFInstallUri
           - CustomerLSFBinsUri
+          - CustomerLSFEntitlementUri
           - ComputeAMI
       -
         Label:
@@ -193,6 +194,11 @@ Parameters:
       Select object in the console and choose Copy Path and paste here.
     Type: "String"
     Default: "s3://<your_bucket>/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z"
+  CustomerLSFEntitlementUri:
+    Description: The S3 URI to the LSF entitlement file, lsf_std_entitlement.dat or lsf_adv_entitlement.dat.
+      Select object in the S3 console and choose Copy Path and paste here.
+    Type: String
+    Default: s3://<your_bucket>/lsf_std_entitlement.dat
   EFSPerformanceMode:
     Description: "Select the performance mode for the EFS file system."
     Type: "String"
@@ -296,9 +302,11 @@ Resources:
               # Add LSF admin account
               adduser -m -u 1500 $LSF_ADMIN
 
-              # Customer-provided LSF demo binaries
+              # Customer-provided LSF binaries and entitlement file
               aws --quiet s3 cp ${CustomerLSFInstallUri} /tmp
               aws --quiet s3 cp ${CustomerLSFBinsUri} /tmp
+              aws --quiet s3 cp ${CustomerLSFEntitlementUri} /tmp
+
 
               cd /tmp
               tar xf lsf10.1_lsfinstall_linux_x86_64.tar.Z
@@ -314,6 +322,7 @@ Resources:
               SILENT_INSTALL="Y"
               LSF_SILENT_INSTALL_TARLIST="ALL"
               ACCEPT_LICENSE="Y"
+              LSF_ENTITLEMENT_FILE="/tmp/${CustomerLSFEntitlementUri}"
               EOF
 
               ./lsfinstall -f install.config
