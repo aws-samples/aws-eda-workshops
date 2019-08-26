@@ -184,21 +184,24 @@ Parameters:
     Default: "/tools/ibm/lsf"
   CustomerLSFInstallUri:
     Description: >
-      S3 URI to the LSF Eval Install package. 
+      S3 URI to the LSF installer script package. 
       Select object in the console and choose Copy Path and paste here.
     Type: "String"
     Default: "s3://<your_bucket>/lsf10.1_lsfinstall_linux_x86_64.tar.Z"
+    AllowedPattern: ^s3\:\/\/.*\/lsf10.1_lsfinstall_linux_x86_64.tar.Z$
   CustomerLSFBinsUri:
     Description: >
-      S3 URI to the LSF Eval Binaries package. 
+      S3 URI to the LSF distribution package. This must be a full distribution and not a patch or Fix Pack package.
       Select object in the console and choose Copy Path and paste here.
     Type: "String"
     Default: "s3://<your_bucket>/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z"
+    AllowedPattern: ^s3\:\/\/.*\/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z$
   CustomerLSFEntitlementUri:
     Description: The S3 URI to the LSF entitlement file, lsf_std_entitlement.dat or lsf_adv_entitlement.dat.
       Select object in the S3 console and choose Copy Path and paste here.
     Type: String
     Default: s3://<your_bucket>/lsf_std_entitlement.dat
+    AllowedPattern: ^s3\:\/\/.*
   EFSPerformanceMode:
     Description: "Select the performance mode for the EFS file system."
     Type: "String"
@@ -256,6 +259,9 @@ Resources:
               export LSF_INSTALL_DIR_ROOT="/`echo $LSF_INSTALL_DIR | cut -d / -f2`"
               export EFS_FS_DNS_NAME="${LSFElasticFileSystem}.efs.${AWS::Region}.amazonaws.com"
               export LSF_ADMIN=lsfadmin
+              export LSF_INSTALL_PKG=`echo ${CustomerLSFInstallUri} | awk -F "/" '{print $NF}'`
+              export LSF_BIN_PKG=`echo ${CustomerLSFBinsUri} | awk -F "/" '{print $NF}'`
+              export LSF_ENTITLEMENT=`echo ${CustomerLSFEntitlementUri} | awk -F "/" '{print $NF}'`
 
               # Disable Hyperthreading
               echo "Disabling Hyperthreading"
@@ -307,10 +313,9 @@ Resources:
               aws --quiet s3 cp ${CustomerLSFBinsUri} /tmp
               aws --quiet s3 cp ${CustomerLSFEntitlementUri} /tmp
 
-
               cd /tmp
-              tar xf lsf10.1_lsfinstall_linux_x86_64.tar.Z
-              cp lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z lsf10.1_lsfinstall
+              tar xf $LSF_INSTALL_PKG
+              cp $LSF_BIN_PKG lsf10.1_lsfinstall
               cd lsf10.1_lsfinstall
 
               # Create LSF installer config file
@@ -322,7 +327,7 @@ Resources:
               SILENT_INSTALL="Y"
               LSF_SILENT_INSTALL_TARLIST="ALL"
               ACCEPT_LICENSE="Y"
-              LSF_ENTITLEMENT_FILE="/tmp/${CustomerLSFEntitlementUri}"
+              LSF_ENTITLEMENT_FILE="/tmp/$LSF_ENTITLEMENT"
               EOF
 
               ./lsfinstall -f install.config
@@ -401,53 +406,22 @@ Resources:
               # LSF RESOURCE CONNECTOR CONFIGURATION
               ######################################
 
-              # Enable the resource connector daemon, ebrokerd.
-              # Any instances providing a resource from the list is initially closed
-              # by LSF at startup, and only opened when the resource connector
-              # informs LSF that the instances have been allocated.
-              # Value should match the boolean set in LSF_LOCAL_RESOURCES
-              #
               LSB_RC_EXTERNAL_HOST_FLAG=aws
 
               # Adds 'aws' boolean to dynamic hosts
               LSF_LOCAL_RESOURCES="[resource aws] [type LINUX64]"
 
-              # The maximum number of resource instances that can be launched for any
-              # template for any resource provider in the cluster.
-              # Overrides limits set in awsprov_templates.json
-              # Default: 50
-              # This is the upper bound; throttled and further limited in policy_config.json
-              # NOTE: this might be deprecated.
               #LSB_RC_MAX_INSTANCES_PER_TEMPLATE=1000
 
-              # Specifies the default host type to use for a template if the 'type'
-              # attribute is not defined on a template in the awsprov_templates.json file.
-              # Default: X86_64
               #LSB_RC_DEFAULT_HOST_TYPE=X86_64
 
-              # How often LSF calculates demand for pending jobs and publishes this demand
-              # to the ebrokerd daemon.
-              # Default: 30s
               LSB_RC_UPDATE_INTERVAL=10
 
-              # The interval in seconds that resource connector checks host status
-              # and asynchronous request results from AWS.
-              # Default: 30 seconds
               LSB_RC_QUERY_INTERVAL=15
 
-              # Maximum time-to-live for a AWS instance. If an instance is in the cluster
-              # for the number of minutes, it will be "closed_RC". After that, if it ever goes
-              # idle, it will be terminated.
-              # Default: 0, which means "infinite"
-              # (i.e. the instance is never closed or relinquished due to these time-based policies).
               # Let LSB_RC_EXTERNAL_HOST_IDLE_TIME below shut down idle instances
               #LSB_RC_EXTERNAL_HOST_MAX_TTL=10
 
-              # LSF will terminate the AWS instance if no jobs have run on it for this
-              # number of minutes.
-              # Overridded by "billingPeriod" in hostProviders.json", but with AWS's new
-              # per-second billing, use the param below instead.
-              # Default: 60 minutes
               LSB_RC_EXTERNAL_HOST_IDLE_TIME=10
 
               # starts the mosquitto daemon, which is required for the bhosts -rc and
@@ -455,44 +429,21 @@ Resources:
               # mosquitto runs on default port 1883.
               LSF_MQ_BROKER_HOSTS=$HOSTNAME
 
-              # This parameter allows the bhosts -rc and bhosts -rconly command options to get LSF
-              # resource connector provider host information for some time after they are deprovisioned
-              # Default = 60m
               #EBROKERD_HOST_CLEAN_DELAY=60
 
               ######################################
-              # DYNAMIC HOST PARAMS
+              # DYNAMIC HOST CONFIGURATION
               ######################################
 
-              # Length of time in seconds that a dynamic host waits before sending a request to the
-              # master LIM to add the host to the cluster.
               # Keep this less than 3 seconds for smooth RC operation.
               LSF_DYNAMIC_HOST_WAIT_TIME=3
 
-              # Enables registration handling for LSF client hosts without requiring the use
-              # of DNS to resolve local hosts.
-              # If set to Y, allows LIM on the server to receive registration requests from clients
-              # that are running the lsreghost service. LIM then stores the host name and IP address
-              # theof client host in the reghostscache file. LSF daemons look for host records in this
-              # file when attempting to look up host names or IP addresses before using DNS.
               #LSF_REG_FLOAT_HOSTS=Y
 
-              # The following will prevent mbd from doing an expensive reconfig when
-              # a dynamic host leaves the system.
               #LSF_DYNAMIC_HOST_KEEP=y
 
-              # For hosts that attempted to join the cluster but failed to
-              # communicate within the LSF_DYNAMIC_HOST_WAIT_TIME period,
-              # automatically shuts down any running daemons
               #EGO_ENABLE_AUTO_DAEMON_SHUTDOWN=Y
 
-              # Specifies the length of time a dynamic host is unavailable before
-              # the master host removes it from the cluster. Each time LSF removes
-              # a dynamic host, mbatchd automatically reconfigures itself.
-              # To improve performance in very large clusters, you should disable
-              # this feature and remove unwanted hosts from the hostcache file manually.
-              # Default:  Unavailable hosts are never removed from the cluster.
-              # We enable this because hundreds of unavil hosts results in lim perf problems.
               LSF_DYNAMIC_HOST_TIMEOUT=60m
 
               EOF

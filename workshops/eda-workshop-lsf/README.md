@@ -10,7 +10,7 @@ The CloudFormation templates in this workshop deploy a fully functional IBM Spec
 The following is required to run this workshop:
 
 * An AWS account with administrative level access
-* Installation packages for IBM Spectrum LSF 10.1 Standard or Advanced Edition with Fix Pack 7 and a corresponding entitlement file.
+* Installation and full distribution packages for IBM Spectrum LSF 10.1 Standard or Advanced Edition with Fix Pack 7 or later and a corresponding entitlement file.
 * An Amazon EC2 key pair
 * A free subscription to the [AWS FPGA Developer AMI](https://aws.amazon.com/marketplace/pp/B06VVYBLZZ).
 * A free subscription to the [Official CentOS 7 x86_64 HVM AMI](https://aws.amazon.com/marketplace/pp/B00O7WM7QW).

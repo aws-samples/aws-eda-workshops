@@ -48,9 +48,9 @@ This deployment guide also requires a moderate level of familiarity with AWS ser
 
 The IBM Spectrum LSF software is not provided in this workshop; you will need to download LSF and an associated entitlment file from the IBM Passport Advantage portal to complete this tutorial.  Download the following packages from the web portal:
 
-- lsf10.1_lsfinstall_linux_x86_64.tar.Z
-- lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z
-- lsf_std_entitlement.dat or lsf_adv_entitlement.dat
+- `lsf10.1_lsfinstall_linux_x86_64.tar.Z`
+- `lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z`. This should the latest full distribution package and not a patch or Fix Pack.
+- `lsf_std_entitlement.dat` or `lsf_adv_entitlement.dat`
 
 ### AWS Account
 
@@ -162,7 +162,7 @@ Sign in to your AWS account, and follow these instructions to subscribe:
     |Cluster name|Enter a name for the LSF cluster|
     |LSF install package|Enter the S3 protocol URL for the `lsf10.1_lsfinstall_linux_x86_64.tar.Z` package|
     |LSF binary package|Enter the S3 protocol URL for the `lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z` package|
-    | LSF entitlement file|Enter the S3 protocol URL for the LSF entitlement file.  This should be either `lsf_std_entitlement.dat` or `lsf_adv_entitlement.dat`.
+    |LSF entitlement file|Enter the S3 protocol URL for the LSF entitlement file.  This should be either `lsf_std_entitlement.dat` or `lsf_adv_entitlement.dat`.
 
     When you finish reviewing and customizing the parameters, choose **Next**.
 

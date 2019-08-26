@@ -96,9 +96,9 @@ Metadata:
       PrivateSubnet1CIDR:
         default: CIDR block for the private subnet
       CustomerLSFInstallUri:
-        default: LSF trial install package
+        default: LSF install package
       CustomerLSFBinsUri:
-        default: LSF trial binary package
+        default: LSF Linux distribution package
       LoginServerInstanceType:
         default: Login server instance type
       LoginServerAMI:
@@ -237,14 +237,15 @@ Parameters:
     ConstraintDescription: The CIDR block parameter must be in the form x.x.x.x/16-28
 
   CustomerLSFInstallUri:
-    Description: The S3 URI to the LSF Install package, lsf10.1_lsfinstall_linux_x86_64.tar.Z.
+    Description: The S3 URI to the LSF installer script package, lsf10.1_lsfinstall_linux_x86_64.tar.Z.
       Select object in the S3 console and choose Copy Path and paste here.
     Type: String
     Default: s3://<your_bucket>/lsf10.1_lsfinstall_linux_x86_64.tar.Z
 
   CustomerLSFBinsUri:
-    Description: The S3 URI to the LSF Binaries package, lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z.
-      Select object in the S3 console and choose Copy Path and paste here.
+    Description: The S3 URI to the LSF Linux 2.6 kernel glibc version 2.3 distribution package,
+      lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z. This must be a full distribution and not a patch 
+      or Fix Pack package. Select object in the S3 console and choose Copy Path and paste here.
     Type: String
     Default: s3://<your_bucket>/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z
 
@@ -253,7 +254,6 @@ Parameters:
       Select object in the S3 console and choose Copy Path and paste here.
     Type: String
     Default: s3://<your_bucket>/lsf_std_entitlement.dat
-
 
 Resources:
   NetworkStack:
@@ -283,6 +283,7 @@ Resources:
         ProjectDir: !Ref ProjectDir
         CustomerLSFInstallUri: !Ref CustomerLSFInstallUri
         CustomerLSFBinsUri: !Ref CustomerLSFBinsUri
+        CustomerLSFEntitlementUri: !Ref CustomerLSFEntitlementUri
         AdminKeyPair: !Ref AdminKeyPair
       TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/templates/02-lsf-master.yaml
 
