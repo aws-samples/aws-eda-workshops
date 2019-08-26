@@ -35,12 +35,3 @@ After you deploy the Quick Start, we recommend that you enable the AWS Cost and 
 
 * Delete the parent stack
 * Delete orphaned EBS volumes.  The FPGA AMI doesn't delete them on instance termination.  See `clean-fpga-ebs-vols.py` or deploy Lambda function in CFn template.
-
-
-
-
-
-
-
-
-
