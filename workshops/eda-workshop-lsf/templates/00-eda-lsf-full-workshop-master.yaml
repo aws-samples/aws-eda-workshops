@@ -54,6 +54,7 @@ Metadata:
           - LSFClusterName
           - CustomerLSFInstallUri
           - CustomerLSFBinsUri
+          - CustomerLSFEntitlementUri
           - MasterInstanceType
           - MasterServerAMI
           - ComputeAMI
@@ -236,16 +237,23 @@ Parameters:
     ConstraintDescription: The CIDR block parameter must be in the form x.x.x.x/16-28
 
   CustomerLSFInstallUri:
-    Description: The S3 URI to the LSF Eval Install package. 
-      Select object in the console and choose Copy Path and paste here.
+    Description: The S3 URI to the LSF Install package, lsf10.1_lsfinstall_linux_x86_64.tar.Z.
+      Select object in the S3 console and choose Copy Path and paste here.
     Type: String
     Default: s3://<your_bucket>/lsf10.1_lsfinstall_linux_x86_64.tar.Z
 
   CustomerLSFBinsUri:
-    Description: The S3 URI to the LSF Eval Binaries package. 
-      Select object in the console and choose Copy Path and paste here.
+    Description: The S3 URI to the LSF Binaries package, lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z.
+      Select object in the S3 console and choose Copy Path and paste here.
     Type: String
     Default: s3://<your_bucket>/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z
+
+  CustomerLSFEntitlementUri:
+    Description: The S3 URI to the LSF entitlement file, lsf_std_entitlement.dat or lsf_adv_entitlement.dat.
+      Select object in the S3 console and choose Copy Path and paste here.
+    Type: String
+    Default: s3://<your_bucket>/lsf_std_entitlement.dat
+
 
 Resources:
   NetworkStack:
