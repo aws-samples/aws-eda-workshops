@@ -8,7 +8,7 @@ This tutorial is for IT, CAD, and design engineers who are interested in running
 
 ### IBM Spectrum LSF on AWS
 
-The Resource Connector feature for IBM Spectrum LSF enables LSF clusters to dynamically provision and deprovision right-sized AWS compute resources to satisfy pending demand in the queues. These dynamic hosts join the cluster, accept jobs, and are terminated when all demand has been satisfied.  This process happens automatically based on the Resource Connector configuration.
+The Resource Connector feature in IBM Spectrum LSF 10.1 Standard and Advanced Editions enables LSF clusters to dynamically provision and deprovision right-sized AWS compute resources to satisfy pending demand in the queues. These dynamic hosts join the cluster, accept jobs, and are terminated when all demand has been satisfied.  This process happens automatically based on the Resource Connector configuration.
 
 For more information about IBM Spectrum LSF Resource Connector, please see the [official documentation](https://www.ibm.com/support/knowledgecenter/en/SSWRJV_10.1.0/lsf_welcome/lsf_kc_resource_connector.html) on the IBM website.
 
@@ -46,16 +46,17 @@ This deployment guide also requires a moderate level of familiarity with AWS ser
 
 ### IBM LSF Software
 
-The IBM Spectrum LSF software is not provided in this workshop; you will need download the [LSF trial](https://www.ibm.com/account/reg/us-en/signup?formid=urx-31573) as part of this tutorial.  Download the following packages from the trial web portal:
+The IBM Spectrum LSF software is not provided in this workshop; you will need to download LSF and an associated entitlment file from the IBM Passport Advantage portal to complete this tutorial.  Download the following packages from the web portal:
 
 - lsf10.1_lsfinstall_linux_x86_64.tar.Z
 - lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z
+- lsf_std_entitlement.dat or lsf_adv_entitlement.dat
 
 ### AWS Account
 
 If you don’t already have an AWS account, create one at [aws.amazon.com](https://aws.amazon.com) by following the on-screen instructions. Part of the sign-up process involves receiving a phone call and entering a PIN using the phone keypad. Your AWS account is automatically signed up for all AWS services. You are charged only for the services you use.
 
-Before you launch this tutorial, your account must be configured as specified below. Otherwise, deployment might fail.
+Before you launch this tutorial, your account must be configured as specified below. Otherwise, the deployment might fail.
 
 #### Resources
 
@@ -86,7 +87,7 @@ If you’re deploying the tutorial for testing or proof-of-concept purposes, we 
 
 #### IAM permissions
 
-To deploy the environment, you must log in to the AWS Management Console with IAM permissions for the resources and actions the templates will deploy. You'll need to log in with an IAM User that has the **AdministratorAccess** managed policy within IAM provides sufficient permissions although your organization may choose to use a custom policy with more restrictions.
+To deploy the environment, you must log in to the AWS Management Console with IAM permissions for the resources and actions the templates will deploy. You'll need to log in with an IAM User that has the **AdministratorAccess** managed policy within IAM.  This managed policy provides sufficient permissions to deploy this workshop although your organization may choose to use a custom policy with more restrictions.
 
 ## Deployment Options
 
@@ -108,13 +109,13 @@ This tutorial provides separate CloudFormation templates for these options. It a
 
 ### Step 2. Upload LSF Software Packages
 
-1. Upload the two LSF trial software packages to an S3 bucket in your account.
-1. Set the permission on these two objects (not the bucket) to public read. The CloudFormation scripts will download these software packages from your S3 bucket.
-1. Verify the packages are public by downloading them from your web browser using the **Object URL**.
+1. Upload the two LSF software packages and LSF entitlement file to an S3 bucket in your account.
+1. Set the permission on these three objects (not the bucket) to public read. The CloudFormation scripts will download these objects from your S3 bucket.
+1. Verify the objects are public by downloading them from your web browser using the **Object URL**.
 
 ### Step 3. Subscribe to the Required AMIs
 
-This workshop requires a subscription to the following AMIs in AWS Marketplace. AMIs are images that are used to boot the virtual servers (instances) in AWS. They also contain software required to run the workshop.  There is no additional cost to use these AMIs.
+This workshop requires a subscription to the following AMIs in AWS Marketplace. AMIs are images that are used to boot the instances (virtual servers) in AWS. They also contain software required to run the workshop.  There is no additional cost to use these AMIs.
 
 - AWS FPGA Developer AMI
 - Official CentOS 7 x86_64 HVM AMI
@@ -128,6 +129,9 @@ Sign in to your AWS account, and follow these instructions to subscribe:
 1. When the subscription process is complete, exit out of AWS Marketplace without further action. **Do not** click **Continue to Launch**; the workshop CloudFormation templates will deploy the AMI for you.
 
 1. Repeat the steps 1 through 3 to subscribe to the [Official CentOS 7 x86_64 HVM AMI](https://aws.amazon.com/marketplace/pp/B00O7WM7QW) AMI.
+
+1. Verify the subscriptions in the [Marketplace dashboard](https://console.aws.amazon.com/marketplace/home) within the AWS Console.
+    - Click on **Manage subscriptions** to confirm that the two AMI subscriptions are active in your account.
 
 ### Step 4. Launch the Cluster
 
@@ -156,12 +160,13 @@ Sign in to your AWS account, and follow these instructions to subscribe:
     |SSH source CIDR|Enter the internet-facing IP from which you will log into the login server|
     |EC2 KeyPair|Select the key pair you created in your account|
     |Cluster name|Enter a name for the LSF cluster|
-    |LSF trial install package|Enter the S3 protocol URL for the ``lsf10.1_lsfinstall_linux_x86_64.tar.Z`` package|
-    |LSF trial binary package|Enter the S3 protocol URL for the ``lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z`` package|
+    |LSF install package|Enter the S3 protocol URL for the `lsf10.1_lsfinstall_linux_x86_64.tar.Z` package|
+    |LSF binary package|Enter the S3 protocol URL for the `lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z` package|
+    | LSF entitlement file|Enter the S3 protocol URL for the LSF entitlement file.  This should be either `lsf_std_entitlement.dat` or `lsf_adv_entitlement.dat`.
 
     When you finish reviewing and customizing the parameters, choose **Next**.
 
-1. On the **Configure stack options** page, you can specify [tags](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-resource-tags.html) (key-value pairs) for resources in your stack.  We recommend setting **key** to `env` and **value** to `aws-workshop`, or something similar.  This will help to identify resources created by this tutorial. When you're done, choose **Next**.
+1. On the **Configure stack options** page, you can specify [tags](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-resource-tags.html) (key-value pairs) for resources in your stack.  We recommend setting **key** to `env` and **value** to `aws-lsf-eda-workshop`, or something similar.  This will help to identify resources created by this tutorial. When you're done, choose **Next**.
 
 1. On the **Review** page, review and confirm the template settings. Under **Capabilities** at the very bottom, select the two check boxes to acknowledge that the template will create IAM resources and that it might require the capability to auto-expand macros.
 
