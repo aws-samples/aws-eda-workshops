@@ -2,7 +2,7 @@
 
 ## Overview
 
-This tutorial shows you how to deploy an elastic EDA computing cluster based on the IBM Spectrum LSF workload and resource management software that is the de facto standard in EDA computing environments. The deployed environment includes all resources required to run a license-free EDA verification workload on a sample design. Using standard LSF commands, you will be able to submit front-end verification workload into the queue and observe as LSF dynamically adds and removes compute resources as the jobs flow through the system.
+This tutorial shows you how to deploy an elastic EDA computing cluster on AWS based on the IBM Spectrum LSF workload and resource management software and run an EDA logic verification workload within the environment. The deployed environment installs and configures the LSF software that you provide, using your licenses, and supplies the necessary EDA software and example design data to run an example EDA verification workload on the AWS Cloud. Using standard LSF commands, you will be able to submit front-end verification workload into the queue and observe as LSF dynamically adds and removes compute resources as the jobs flow through the system.
 
 This tutorial is for IT, CAD, and design engineers who are interested in running EDA workloads in the cloud using IBM's Spectrum LSF.
 
@@ -18,7 +18,7 @@ You are responsible for the cost of the AWS services used while running this ref
 
 The AWS CloudFormation template for this tutorial includes configuration parameters that you can customize. Some of these settings, such as instance type, will affect the cost of deployment. For cost estimates, see the pricing pages for each AWS service you will be using. Prices are subject to change.
 
-This tutorial requires the [trial version](https://www.ibm.com/account/reg/us-en/signup?formid=urx-31573) of IBM Spectrum LSF, which allows up to 90 days of free usage in a non-production environment.
+IBM Spectrum LSF software and licenses are not provided by this tutorial. You must provide the licenses and full distribution packages for the software.
 
 ## Workshop Architecture
 
@@ -46,7 +46,7 @@ This deployment guide also requires a moderate level of familiarity with AWS ser
 
 ### IBM LSF Software
 
-The IBM Spectrum LSF software is not provided in this workshop; you will need to download LSF and an associated entitlment file from the IBM Passport Advantage portal to complete this tutorial.  Download the following packages from the web portal:
+The IBM Spectrum LSF software is not provided in this workshop; you will need to download LSF and an associated entitlment file from your IBM Passport Advantage portal to complete this tutorial.  Download the following packages from the web portal:
 
 - `lsf10.1_lsfinstall_linux_x86_64.tar.Z`
 - `lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z`. This should the latest full distribution package and not a patch or Fix Pack.
@@ -107,11 +107,9 @@ This tutorial provides separate CloudFormation templates for these options. It a
 
 2. Make sure that your AWS account is configured correctly, as discussed in the [AWS Account](#aws-account) section.
 
-### Step 2. Upload LSF Software Packages
+### Step 2. Upload LSF Software Packages and Entitlement File
 
-1. Upload the two LSF software packages and LSF entitlement file to an S3 bucket in your account.
-1. Set the permission on these three objects (not the bucket) to public read. The CloudFormation scripts will download these objects from your S3 bucket.
-1. Verify the objects are public by downloading them from your web browser using the **Object URL**.
+1. Upload the two required LSF software packages and the LSF entitlement file to an S3 bucket in your account.
 
 ### Step 3. Subscribe to the Required AMIs
 
@@ -137,19 +135,19 @@ Sign in to your AWS account, and follow these instructions to subscribe:
 
 **Note** The instructions in this section reflect the new version of the AWS CloudFormation console. If you’re using the original console, some of the user interface elements might be different.   You can switch to the new console by selecting **New console** from the **CloudFormation** menu.
 
-1. Sign in to your AWS account, and choose one of the following options to launch the AWS CloudFormation template. For help choosing an option, see [deployment options](#_Automated_Deployment) earlier in this guide.
+1. Sign in to your AWS account at https://aws.amazon.com with an IAM user role that includes full administrative permissions.
 
-    **Important** If you're deploying the cluster into an existing VPC, make sure that your VPC has two private subnets, and that the subnets aren't shared. This tutorial doesn't support [shared subnets](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-sharing.html). The Cloudformation template will create a [NAT gateway](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html) in their route tables to allow the instances to download packages and software without exposing them to the internet. You will also need **DNS hostnames** and **DNS resolution** configured in the VPC's DHCP options as explained in the [Amazon VPC documentation](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html). 
-
-1. Click one of the deployment options below to load start the CloudFormation deployment process. The link will take you to the AWS CloudFormation console with the path to the deployment template preloaded.
+1. Click one of the deployment options below to start the CloudFormation deployment process. The link will take you to the AWS CloudFormation console with the path to the deployment template preloaded.
 
     | Deploy into New VPC  | Deploy into Existing VPC |
     | :---: | :---: |
-    | [![Launch Stack](../../../shared/images/deploy_to_aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=aws-eda-lsf-full-workshop&templateURL=https://s3.amazonaws.com/aws-eda-workshop-files/templates/00-eda-lsf-full-workshop-master.yaml)|[![Launch Stack](../../../shared/images/deploy_to_aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=aws-eda-lsf-simple-workshop&templateURL=https://s3.amazonaws.com/aws-eda-workshop-files/templates/eda-lsf-simple-workshop.yaml)|
+    | [![Launch Stack](../../../shared/images/deploy_to_aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=aws-eda-lsf-full-workshop&templateURL=https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/templates/00-eda-lsf-full-workshop-master.yaml)|[![Launch Stack](../../../shared/images/deploy_to_aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=aws-eda-lsf-simple-workshop&templateURL=https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/templates/eda-lsf-simple-workshop.yaml)|
 
     Check the region that's displayed in the upper-right corner of the navigation bar, and change it if necessary. This is where the cluster infrastructure will be built. The template is launched in the **US East (N. Virginia)** Region by default.
 
     **Note**  This deployment includes Amazon EFS and optionally Amazon FSx for Lustre, which are not currently supported in all AWS Regions. For a current list of supported regions, see the [AWS Regions and Endpoints webpage](https://docs.aws.amazon.com/general/latest/gr/rande.html).
+
+    **Important** If you're deploying the cluster into an existing VPC, make sure that your VPC has two private subnets, and that the subnets aren't shared. This tutorial doesn't support [shared subnets](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-sharing.html). The Cloudformation template will create a [NAT gateway](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html) in their route tables to allow the instances to download packages and software without exposing them to the internet. You will also need **DNS hostnames** and **DNS resolution** configured in the VPC's DHCP options as explained in the [Amazon VPC documentation](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html). 
 
 1. In the **Select Template** section of the **Create stack**, keep the default setting for the template URL, and then choose **Next**.
 
