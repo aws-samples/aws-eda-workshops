@@ -167,7 +167,7 @@ Parameters:
     ConstraintDescription: This must be a valid IP CIDR range of the form x.x.x.x/x.
 
   LoginServerInstanceType:
-    Description: The instance type for the login server(s)
+    Description: The instance type for the login server.
     Type: String
     Default: t3.medium
     AllowedValues:

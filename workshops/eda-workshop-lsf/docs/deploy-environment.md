@@ -176,6 +176,10 @@ Sign in to your AWS account, and follow these instructions to subscribe:
 
 ### Step 5. Test the Deployment
 
+1. Log into the login server using the IP address provided in the **Outputs** tab for the stack.
+
+1. Run the `lsid` command to verify that LSF installed properly and is running.
+
 ### Step 6. Run workload
 
 Move on to the [next tutorial](run-workload.md) to run logic simulations in your new elastic LSF cluster in the AWS cloud.
