@@ -202,6 +202,7 @@ Resources:
       Roles:
         - !Ref LoginServerRole
 
-
-
-    
+Outputs:
+  LoginServerPublicIp:
+    Description: Login Server Public IP
+    Value: !GetAtt LoginServerInstance.PublicIp
