@@ -224,7 +224,9 @@ Parameters:
       Select object in the S3 console and choose Copy Path and paste here.
     Type: String
     Default: s3://<your_bucket>/lsf10.1_lsfinstall_linux_x86_64.tar.Z
-    AllowedPattern: '^s3\:\/\/.*\/lsf10.1_lsfinstall_linux_x86_64.tar.Z$'
+    AllowedPattern: ^s3\:\/\/.*\/lsf10.1_lsfinstall_linux_x86_64.tar.Z$
+    ConstraintDescription: S3 path invalid. Please verify LSF package name matches
+      the example in the parameter description.
 
   CustomerLSFBinsUri:
     Description: The S3 URI to the LSF Linux 2.6 kernel glibc version 2.3 distribution package,
@@ -233,13 +235,17 @@ Parameters:
     Type: String
     Default: s3://<your_bucket>/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z
     AllowedPattern: ^s3\:\/\/.*\/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z$
-
+    ConstraintDescription: S3 path invalid. Please verify LSF package name matches
+      the example in the parameter description.
   CustomerLSFEntitlementUri:
     Description: The S3 URI to the LSF entitlement file, lsf_std_entitlement.dat or lsf_adv_entitlement.dat.
       Select object in the S3 console and choose Copy Path and paste here.
     Type: String
     Default: s3://<your_bucket>/lsf_std_entitlement.dat
     AllowedPattern: ^s3\:\/\/.*
+    ConstraintDescription: S3 path invalid. Please verify LSF file name matches
+      the example in the parameter description.
+
 
 Resources:
   NetworkStack:
