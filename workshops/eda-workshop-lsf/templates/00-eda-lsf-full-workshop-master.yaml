@@ -246,7 +246,6 @@ Parameters:
     ConstraintDescription: S3 path invalid. Please verify LSF file name matches
       the example in the parameter description.
 
-
 Resources:
   NetworkStack:
     Type: AWS::CloudFormation::Stack

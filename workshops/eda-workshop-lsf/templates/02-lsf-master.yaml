@@ -122,10 +122,10 @@ Resources:
   LSFMasterInstance:
     Type: "AWS::EC2::Instance"
     DependsOn: LSFEFSMountTarget
-    # CreationPolicy:
-    #   ResourceSignal:    
-    #     Count: 1
-    #     Timeout: PT5M
+    CreationPolicy:
+      ResourceSignal:    
+        Count: 1
+        Timeout: PT5M
     Properties:
       InstanceType: !Ref MasterInstanceType
       ImageId:
@@ -362,7 +362,7 @@ Resources:
               # Verify that LSF is up and send signal to Cloudformation
               sleep 5
               lsid
-              # /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource LSFMasterInstance --region ${AWS::Region}
+              /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource LSFMasterInstance --region ${AWS::Region}
 
               echo "*** END LSF MASTER BOOTSTRAP ***"
 

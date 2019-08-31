@@ -12,24 +12,24 @@ This tutorial provides instructions for running an example logic simulation work
 
    `ssh -i /path/to/private_key centos@<host_ip>`
 
-1. Clone the example workload from the `aws-fpga-sa-demo` Github repo into the `/proj` directory on the NFS file system.
+1. Clone the example workload from the `aws-fpga-sa-demo` Github repo into the `proj` directory on the NFS file system. The default location is `/ec2-nfs/proj`.
 
    ```bash
-   cd /proj
+   cd /ec2-nfs/proj
    git clone https://github.com/morrmt/aws-fpga-sa-demo.git
    ```
 
 1. Change into the repo's workshop directory
 
-   `cd /proj/aws-fpga-sa-demo/eda-workshop`
+   `cd /ec2-nfs/proj/aws-fpga-sa-demo/eda-workshop`
 
 ### Step 2. Run setup job
 
 This first job will set up the runtime environment for the simulations that you will submit to LSF in Step 3 below.
 
-1. **Submit the setup job into LSF**. The `--scratch-dir` should be the path to the scratch directory you defined when launching the CloudFormation stack in the previous tutorial.
+1. **Submit the setup job into LSF**. The `--scratch-dir` should be the path to the scratch directory you defined when launching the CloudFormation stack in the previous tutorial.  The default is `/ec2-nfs/scratch`.
 
-   `bsub -R aws -J "setup" ./run-sim.sh --scratch-dir /path/to/scratch-dir`
+   `bsub -R aws -J "setup" ./run-sim.sh --scratch-dir /ec2-nfs/scratch`
 
 1. **Watch job status**. This job will generate demand to LSF Resource Connector for an EC2 instance.  Shortly after you submit the job, you should see a new "LSF Exec Host" instance in the EC2 Dashboard in the AWS console. It should take 2-5 minutes for this new instance to join the cluster and accept the job.  Use the `bjobs` command to watch the status of the job.  Once it enters the `RUN` state, move on to the next step.
 
@@ -39,7 +39,7 @@ Now we are ready to scale out the simulations.  Like with the setup job above, w
 
 1. **Submit a large job array**. This job array will spawn 100 verification jobs.  These jobs will be dispatched only after the setup job above completes successfully. Again, The `--scratch-dir` should be the path to the scratch directory you used above.
 
-   `bsub -R aws -J "regress[1-100]" -w "done(setup)" ./run-sim.sh --scratch-dir /path/to/scratch-dir`
+   `bsub -R aws -J "regress[1-100]" -w "done(setup)" ./run-sim.sh --scratch-dir /ec2-nfs/scratch`
 
 1. Check job status
 
