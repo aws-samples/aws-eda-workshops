@@ -29,12 +29,12 @@ Deploying this cluster in a new virtual private cloud (VPC) with default paramet
 The tutorial sets up the following:
 
 - A VPC configured with public and private subnets to provide you with your own virtual network on AWS.*
-- In the public subnet,a managed NAT gateway to allow outbound internet access for resources in the private subnets.
+- In the public subnet, a managed NAT gateway to allow outbound internet access for resources in the private subnets.
 - In the public subnet, a Linux login/submission host to allow inbound Secure Shell (SSH) access to the environment.
 - In the private subnet, an LSF master running IBM Spectrum LSF with the Resource Connector feature enabled, Amazon EC2 compute instances that are dynamically provisioned by LSF, and a Linux-based NFS server for runtime scratch data.
 - An Amazon Elastic File System (EFS) file system for the LSF distribution and configuration files.
 
-\* The template that deploys the tutorial into an existing VPC skips the components marked by asterisks and prompts you for your existing VPC configuration.
+> NOTE: This tutorial also provides an option to launch the cluster in an existing VPC.  The architecture will be similar to the diagram above, but it will not include a Linux-based NFS server and will instead rely on EFS as the sole shared NFS file system.
 
 ## Planning the Deployment
 
@@ -46,10 +46,10 @@ This deployment guide also requires a moderate level of familiarity with AWS ser
 
 ### IBM LSF Software
 
-The IBM Spectrum LSF software is not provided in this workshop; you will need to download LSF and an associated entitlment file from your IBM Passport Advantage portal to complete this tutorial.  Download the following packages from the web portal:
+The IBM Spectrum LSF software is not provided in this workshop; you will need to download LSF and an associated entitlement file from your IBM Passport Advantage portal to complete this tutorial.  Download the following packages from the web portal:
 
 - `lsf10.1_lsfinstall_linux_x86_64.tar.Z`
-- `lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z`. This should the latest full distribution package and not a patch or Fix Pack.
+- `lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z` This should the latest full distribution package and not a patch or Fix Pack.
 - `lsf_std_entitlement.dat` or `lsf_adv_entitlement.dat`
 
 ### AWS Account
@@ -93,9 +93,9 @@ To deploy the environment, you must log in to the AWS Management Console with IA
 
 This tutorial provides two deployment options:
 
-- **Deploy the cluster into a new VPC**. This option builds a new AWS environment consisting of the VPC, subnets, NAT gateways, security groups, NFS server, LSF master, and other infrastructure components, and then deploys LSF into this new VPC.
+- **Deploy the cluster into a new VPC**. This option builds a new AWS environment consisting of the VPC, subnets, NAT gateways, security groups, an NFS server, an LSF master, and other infrastructure components, and then deploys LSF into this new VPC.
 
-- **Deploy the cluster into an existing VPC**. This option provisions the cluster in an existing VPC.
+- **Deploy the cluster into an existing VPC**. This option provisions the cluster in an existing VPC.  Instead of a Linux-based NFS server, this environment relies on EFS for the NFS file system.
 
 This tutorial provides separate CloudFormation templates for these options. It also lets you configure CIDR blocks, instance types, and other settings, as discussed later in this guide.
 
@@ -145,7 +145,7 @@ Sign in to your AWS account, and follow these instructions to subscribe:
 
     Check the region that's displayed in the upper-right corner of the navigation bar, and change it if necessary. This is where the cluster infrastructure will be built. The template is launched in the **US East (N. Virginia)** Region by default.
 
-    **Note**  This deployment includes Amazon EFS and optionally Amazon FSx for Lustre, which are not currently supported in all AWS Regions. For a current list of supported regions, see the [AWS Regions and Endpoints webpage](https://docs.aws.amazon.com/general/latest/gr/rande.html).
+    **Note**  This deployment includes Amazon EFS, which is not currently supported in all AWS Regions. For a current list of supported regions, see the [AWS Regions and Endpoints webpage](https://docs.aws.amazon.com/general/latest/gr/rande.html).
 
     **Important** If you're deploying the cluster into an existing VPC, make sure that your VPC has two private subnets, and that the subnets aren't shared. This tutorial doesn't support [shared subnets](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-sharing.html). The Cloudformation template will create a [NAT gateway](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html) in their route tables to allow the instances to download packages and software without exposing them to the internet. You will also need **DNS hostnames** and **DNS resolution** configured in the VPC's DHCP options as explained in the [Amazon VPC documentation](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html). 
 
