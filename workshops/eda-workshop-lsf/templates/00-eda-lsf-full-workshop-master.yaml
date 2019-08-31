@@ -77,9 +77,11 @@ Metadata:
       PrivateSubnet1CIDR:
         default: CIDR block for the private subnet
       CustomerLSFInstallUri:
-        default: LSF install package
+        default: LSF install script package
       CustomerLSFBinsUri:
         default: LSF Linux distribution package
+      CustomerLSFEntitlementUri:
+        default: LSF entitlement file
       LoginServerInstanceType:
         default: Login server instance type
       LoginServerAMI:

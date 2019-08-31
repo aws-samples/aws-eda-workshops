@@ -18,7 +18,7 @@ You are responsible for the cost of the AWS services used while running this ref
 
 The AWS CloudFormation template for this tutorial includes configuration parameters that you can customize. Some of these settings, such as instance type, will affect the cost of deployment. For cost estimates, see the pricing pages for each AWS service you will be using. Prices are subject to change.
 
-IBM Spectrum LSF software and licenses are not provided by this tutorial. You must provide the licenses and full distribution packages for the software.
+IBM Spectrum LSF software and licenses are not provided by this tutorial. You must provide the licenses and full distribution packages for the software. We recommend that you verify with your IBM sales team that your LSF license terms allow you to run the software on the AWS Cloud.
 
 ## Workshop Architecture
 
