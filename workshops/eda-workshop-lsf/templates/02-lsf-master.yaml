@@ -162,8 +162,8 @@ Resources:
               export EFS_FS_DNS_NAME="${LSFElasticFileSystem}.efs.${AWS::Region}.amazonaws.com"
               export LSF_ADMIN=lsfadmin
               export LSF_INSTALL_PKG=`echo ${CustomerLSFInstallUri} | awk -F "/" '{print $NF}'`
-              export LSF_BIN_PKG=`echo ${CustomerLSFInstallUri} | awk -F "/" '{print $NF}'`
-              export LSF_ENTITLEMENT=`echo ${CustomerLSFInstallUri} | awk -F "/" '{print $NF}'`
+              export LSF_BIN_PKG=`echo ${CustomerLSFBinsUri} | awk -F "/" '{print $NF}'`
+              export LSF_ENTITLEMENT=`echo ${CustomerLSFEntitlementUri} | awk -F "/" '{print $NF}'`
 
               # Disable Hyperthreading
               echo "Disabling Hyperthreading"
