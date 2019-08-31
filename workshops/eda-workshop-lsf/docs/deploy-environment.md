@@ -176,7 +176,9 @@ Sign in to your AWS account, and follow these instructions to subscribe:
 
 ### Step 5. Test the Deployment
 
-1. Log into the login server using the IP address provided in the **Outputs** tab for the stack.
+1. Log into the login server via SSH as `centos` user using the private key from the key pair you provided in the Cloudformation stack and the IP address found in **LoginServerPublicIp** under the stack's **Outputs** tab.
+
+   `ssh -i /path/to/private_key centos@<host_ip>`
 
 1. Run the `lsid` command to verify that LSF installed properly and is running.
 

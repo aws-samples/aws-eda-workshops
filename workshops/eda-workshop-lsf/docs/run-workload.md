@@ -8,11 +8,11 @@ This tutorial provides instructions for running an example logic simulation work
 
 ### Step 1. Clone the AWS F1 FPGA Development Kit repo
 
-1. Log into the login server via SSH as `centos` user using the private key from the key pair you provided in the Cloudformation stack.
+1. Log into the login server via SSH as `centos` user using the private key from the key pair you provided in the Cloudformation stack and the IP address found in **LoginServerPublicIp** under the stack's **Outputs** tab.
 
    `ssh -i /path/to/private_key centos@<host_ip>`
 
-1. Clone the example workload from the `aws-fpga-sa-demo` Github repo into your `proj` directory on the NFS file system.
+1. Clone the example workload from the `aws-fpga-sa-demo` Github repo into the `/proj` directory on the NFS file system.
 
    ```bash
    cd /proj
@@ -21,7 +21,7 @@ This tutorial provides instructions for running an example logic simulation work
 
 1. Change into the repo's workshop directory
 
-   `cd /path/to/aws-fpga-sa-demo/eda-workshop`
+   `cd /proj/aws-fpga-sa-demo/eda-workshop`
 
 ### Step 2. Run setup job
 
@@ -52,3 +52,13 @@ Now we are ready to scale out the simulations.  Like with the setup job above, w
 1. Check cluster status
 
    `badmin showstatus`
+
+About 5 minutes after the jobs complete, LSF Resource Connector will begin terminating the idle EC2 instances.
+
+### Step 4: Clean up
+
+To help prevent unwanted charges to your AWS account, you can delete the AWS resources that you used for this tutorial.
+
+1. Delete the parent stack
+
+1. Delete orphaned EBS volumes.  The FPGA AMI doesn't delete them on instance termination.
