@@ -310,3 +310,6 @@ Outputs:
     Value: !Ref 'AWS::StackName'
     Export:
       Name: !Join [ '-', [ !Ref LSFClusterName, "RootStackName" ] ]
+  LoginServerPublicIp:
+    Description: Login Server Public IP
+    Value: !GetAtt LoginServerStack.Outputs.PublicIp
