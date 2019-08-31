@@ -312,4 +312,4 @@ Outputs:
       Name: !Join [ '-', [ !Ref LSFClusterName, "RootStackName" ] ]
   LoginServerPublicIp:
     Description: Login Server Public IP
-    Value: !GetAtt LoginServerStack.Outputs.PublicIp
+    Value: !GetAtt LoginServerStack.Outputs.LoginServerPublicIp
