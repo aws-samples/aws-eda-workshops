@@ -168,7 +168,7 @@ Sign in to your AWS account, and follow these instructions to subscribe:
 
 1. On the **Review** page, review and confirm the template settings. Under **Capabilities** at the very bottom, select the two check boxes to acknowledge that the template will create IAM resources and that it might require the capability to auto-expand macros.
 
-1. Choose **Create stack** to deploy the stack. Either deployment option takes about 30 minutes to complete.
+1. Choose **Create stack** to deploy the stack. Either deployment option takes approximately 40 minutes to complete.
 
 1. Monitor the status of the stack. When the status is **CREATE\_COMPLETE**, the cluster is ready.
 
