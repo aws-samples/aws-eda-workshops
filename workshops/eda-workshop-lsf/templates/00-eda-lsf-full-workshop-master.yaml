@@ -24,7 +24,6 @@ Metadata:
       - Label:
           default: File system configuration
         Parameters:
-          - FileSystemType
           - FileSystemMountPoint
           - ScratchDir
           - ProjectDir
@@ -58,8 +57,6 @@ Metadata:
         default: Compute node AMI
       LSFClusterName:
         default: Cluster name
-      FileSystemType:
-        default: Shared file system type
       LSFInstallPath:
         default: LSF install path
       FileSystemMountPoint:
@@ -151,14 +148,6 @@ Parameters:
     Type: String
     Default: proj
     AllowedPattern: ^.+
-
-  FileSystemType:
-    Description: The file system type to use for runtime scratch space. Only ec2-nfs is supported at this time.
-    Type: String
-    Default: ec2-nfs
-    AllowedValues:
-      - ec2-nfs
-      - fsx-lustre (coming soon)
 
   SshSource:
     Description: The CIDR range that is permitted to ssh into the infrastructure instances.
