@@ -143,7 +143,19 @@ Sign in to your AWS account, and follow these instructions to subscribe:
     | :---: | :---: |
     | [![Launch Stack](../../../shared/images/deploy_to_aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=aws-eda-lsf-full-workshop&templateURL=https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/templates/00-eda-lsf-full-workshop-master.yaml)|[![Launch Stack](../../../shared/images/deploy_to_aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=aws-eda-lsf-simple-workshop&templateURL=https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/templates/eda-lsf-simple-workshop.yaml)|
 
-    Check the region that's displayed in the upper-right corner of the navigation bar, and change it if necessary. This is where the cluster infrastructure will be built. The template is launched in the **US East (N. Virginia)** Region by default.
+    Check the region that's displayed in the upper-right corner of the navigation bar, and change it if necessary. This is where the cluster infrastructure will be built. This workshop supports the following regions:
+
+    - US East (Ohio)
+    - US East (N. Virginia)
+    - US West (N. California)
+    - US West (Oregon)
+    - Asia Pacific (Seoul)
+    - Asia Pacific (Singapore)
+    - Asia Pacific (Sydney)
+    - Asia Pacific (Tokyo)
+    - EU (Ireland)
+
+    The template is launched in the **US East (N. Virginia)** Region by default.
 
     **Note**  This deployment includes Amazon EFS, which is not currently supported in all AWS Regions. For a current list of supported regions, see the [AWS Regions and Endpoints webpage](https://docs.aws.amazon.com/general/latest/gr/rande.html).
 
