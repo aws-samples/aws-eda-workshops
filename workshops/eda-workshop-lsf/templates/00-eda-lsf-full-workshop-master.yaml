@@ -109,7 +109,7 @@ Parameters:
 
   ComputeAMI:
     Description: >
-      'FPGADev' provides a prepackaged, license-free EDA development environment and example verification workload.
+      'FPGADev' provides access to the Xilinx Vivado EDA software.  Use this when deploying the AWS EDA workshop.
       Choose 'CentOS' if you intend to run your own workloads in this environment.
       NOTE: You must first subscribe to these AMIs in the AWS Marketplace.  See included documentation for details.
     Type: String
@@ -117,8 +117,6 @@ Parameters:
     AllowedValues:
       - FPGADev15
       - CentOS75
-      - RHEL7
-      - ALinux
 
   LSFClusterName:
     Description: The name of the computing environment.  This will also be the name of the LSF cluster.
@@ -176,7 +174,6 @@ Parameters:
     Type: String
     Default: FPGADev15
     AllowedValues:
-      - ALinux2
       - CentOS75
       - FPGADev15
 
