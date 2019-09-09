@@ -46,7 +46,7 @@ This deployment guide also requires a moderate level of familiarity with AWS ser
 
 ### IBM LSF Software
 
-The IBM Spectrum LSF software is not provided in this workshop; you will need to download LSF and an associated entitlement file from your IBM Passport Advantage portal to complete this tutorial.  Download the following packages from the web portal:
+The IBM Spectrum LSF software is not provided in this workshop; you will need to download LSF 10.1 Fix Pack 8 or newer and an associated entitlement file from your IBM Passport Advantage portal to complete this tutorial.  Download the following packages from the web portal:
 
 - `lsf10.1_lsfinstall_linux_x86_64.tar.Z`
 - `lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z` This should the latest full distribution package and not a patch or Fix Pack.
