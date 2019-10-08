@@ -43,6 +43,8 @@ Metadata:
         Parameters:
           - LoginServerInstanceType
           - LoginServerAMI
+          - UserName
+          - UserPass
 
     ParameterLabels:
       AdminKeyPair:
@@ -83,6 +85,10 @@ Metadata:
         default: Login server instance type
       LoginServerAMI:
         default: Login server AMI
+      UserName:
+        default: DCV remote desktop login username
+      UserPass:
+        default: DCV remote desktop login password
 
 Parameters:
   AdminKeyPair:
@@ -223,6 +229,7 @@ Parameters:
     AllowedPattern: s3\:\/\/.*\/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z
     ConstraintDescription: S3 path invalid. Please verify LSF package name matches
       the example in the parameter description.
+
   CustomerLSFEntitlementUri:
     Description: The S3 URI to the LSF entitlement file, lsf_std_entitlement.dat or lsf_adv_entitlement.dat.
       Select object in the S3 console and choose Copy Path and paste here.
@@ -231,6 +238,23 @@ Parameters:
     AllowedPattern: s3\:\/\/.*
     ConstraintDescription: S3 path invalid. Please verify LSF file name matches
       the example in the parameter description.
+
+  UserName:
+    Default: simuser
+    Description: User name for DCV remote desktop login. Default is "simuser".
+    MinLength: '4'
+    Type: String
+
+  UserPass:
+    Default: Ch4ng3M3!
+    Description: Password for DCV remote desktop login. The default password is Ch4ng3M3!
+    MinLength: '8'
+    NoEcho: true
+    Type: String
+    AllowedPattern: ^((?=.*[a-z])(?=.*[A-Z])(?=.*[\d])|(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_])|(?=.*[a-z])(?=.*[\d])(?=.*[\W_])|(?=.*[A-Z])(?=.*[\d])(?=.*[\W_])).+$
+    ConstraintDescription: 'Password must contain at least one element from three
+      of the following sets: lowercase letters, uppercase letters, base 10 digits,
+      non-alphanumeric characters'
 
 Resources:
   NetworkStack:
@@ -287,7 +311,9 @@ Resources:
         FileSystemMountPoint: !Ref FileSystemMountPoint
         ScratchDir: !Ref ScratchDir
         ProjectDir: !Ref ProjectDir
-      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/templates/03-login-server.yaml
+        UserName: !Ref UserName
+        UserPass: !Ref UserPass
+      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/templates/03-login-server-dcv.yaml
 
 Outputs:
   RootStackName:
@@ -298,3 +324,8 @@ Outputs:
   LoginServerPublicIp:
     Description: Login Server Public IP
     Value: !GetAtt LoginServerStack.Outputs.LoginServerPublicIp
+  DCVConnection:
+    Description: Paste this IP into the DCV Client
+    Value: !GetAtt LoginServerStack.Outputs.DCVConnectionLink
+
+

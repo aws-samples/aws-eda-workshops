@@ -117,9 +117,7 @@ Parameters:
       of the following sets: lowercase letters, uppercase letters, base 10 digits,
       non-alphanumeric characters'
 
-
 Resources:
-
   InstanceWaitHandle:
     Type: AWS::CloudFormation::WaitConditionHandle
 
@@ -312,15 +310,13 @@ Resources:
               echo "false" > /tmp/wait-handle-sent
               stop_disable_svc firewalld
               stop_disable_svc libvirtd
+              echo "*** END LOGIN SERVER BOOTSTRAP. REBOOTING... ***"
               reboot
 
               }
 
               main
 
-
-
-              echo "*** END LOGIN SERVER BOOTSTRAP ***"
             -
               LSFEFSFileSystemFQDN:
                 Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"LSFEFSFileSystemFQDN" ] ]
@@ -370,3 +366,7 @@ Outputs:
   LoginServerPublicIp:
     Description: Login Server Public IP
     Value: !GetAtt LoginServerInstance.PublicIp
+  DCVConnectionLink:
+    Description: Connect to the DCV Remote Desktop with this URL
+    Value: !Sub 'https://${LoginServerInstance.PublicIp}:8443'
+
