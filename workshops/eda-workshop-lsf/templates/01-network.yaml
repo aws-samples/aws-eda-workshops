@@ -219,6 +219,10 @@ Resources:
         FromPort: 22
         ToPort: 22
         CidrIp: !Ref SshSource
+      - IpProtocol: tcp
+        FromPort: 8443
+        ToPort: 8443
+        CidrIp: !Ref SshSource
 
   NFSServerSG:
     Type: "AWS::EC2::SecurityGroup"
