@@ -84,6 +84,9 @@ Metadata:
           default: "Login Server Configuration"
         Parameters:
           - LoginServerInstanceType
+          - UserName
+          - UserPass
+
     ParameterLabels:
       VpcId:
         default: "The VPC in which to install LSF cluster resources."
@@ -108,6 +111,11 @@ Metadata:
         default: "The subnet for the LSF master server.  This subnet should have access to the internet."
       LoginServerInstanceType:
         default: ""
+      UserName:
+        default: Username for DCV login
+      UserPass:
+        default: Password for DCV login
+
 Parameters:
   VpcId:
     Description: "The VPC in which to install LSF cluster resources."
@@ -156,7 +164,7 @@ Parameters:
   LoginServerInstanceType:
     Description: "Instance type for the login server."
     Type: "String"
-    Default: "t3.medium"
+    Default: "m5.2xlarge"
     AllowedValues:
       - t3.medium
       - t3.xlarge
@@ -207,8 +215,34 @@ Parameters:
       - bursting
       - provisioned
     Default: "bursting"
+  UserName:
+    Default: simuser
+    Description: User name for DCV remote desktop login. Default is "simuser".
+    MinLength: '4'
+    Type: String
+    ConstraintDescription: Must be at least four letters in length
+  UserPass:
+    Default: Ch4ng3M3!
+    Description: Password for DCV remote desktop login. The default password is Ch4ng3M3!
+    MinLength: '8'
+    NoEcho: true
+    Type: String
+    AllowedPattern: ^((?=.*[a-z])(?=.*[A-Z])(?=.*[\d])|(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_])|(?=.*[a-z])(?=.*[\d])(?=.*[\W_])|(?=.*[A-Z])(?=.*[\d])(?=.*[\W_])).+$
+    ConstraintDescription: 'Password must contain at least one element from three
+      of the following sets: lowercase letters, uppercase letters, base 10 digits,
+      non-alphanumeric characters'
 
 Resources:
+  InstanceWaitHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+
+  InstanceWaitCondition:
+    DependsOn: LoginServerInstance
+    Properties:
+      Handle: !Ref 'InstanceWaitHandle'
+      Timeout: '3600'
+    Type: AWS::CloudFormation::WaitCondition
+
   LSFMasterInstance:
     Type: "AWS::EC2::Instance"
     DependsOn: LSFEFSMountTarget
@@ -490,10 +524,12 @@ Resources:
               export EFS_FS_DNS_NAME="${LSFElasticFileSystem}.efs.${AWS::Region}.amazonaws.com"
               export LSF_ADMIN=lsfadmin
 
-              yum install vim -q -y
+              user_name="${UserName}"
+              user_pass="${UserPass}"
 
-              # Install cfn-signal helper script to signal bootstrap completion to CloudFormation
-              # yum update -y aws-cfn-bootstrap
+              my_wait_handle="${InstanceWaitHandle}"
+
+              yum install vim -q -y
 
               # Install SSM so we can use SSM Session Manager and avoid ssh logins.
               yum install -q -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
@@ -516,7 +552,126 @@ Resources:
               # Set up LSF envirionment
               echo "source $LSF_INSTALL_DIR/conf/profile.lsf" > /etc/profile.d/lsf.sh
 
-              echo "*** END LOGIN SERVER BOOTSTRAP ***"
+              # Install DCV
+              echo "Installing DCV..."
+
+              function install_prereqs {
+                sudo yum -y groupinstall "GNOME Desktop"
+                sudo yum -y upgrade
+              }
+
+              function install_dcv {
+                mkdir /tmp/dcv-inst.d
+                pushd /tmp/dcv-inst.d
+                rpm --import https://s3-eu-west-1.amazonaws.com/nice-dcv-publish/NICE-GPG-KEY
+                wget https://d1uj6qtbmh3dt5.cloudfront.net/2019.1/Servers/nice-dcv-2019.1-7423-el7.tgz
+                tar xvf nice-dcv-2019.1-7423-el7.tgz
+                cd nice-dcv-2019.1-7423-el7/
+                yum -y install nice-dcv-server-2019.1.7423-1.el7.x86_64.rpm \
+                               nice-xdcv-2019.1.226-1.el7.x86_64.rpm \
+                               nice-dcv-gltest-2019.1.220-1.el7.x86_64.rpm
+                popd
+              }
+
+              function add_user {
+
+                user_name=${!user_name}
+                user_pass=${!user_pass}
+
+                groupadd ${!user_name}
+                useradd ${!user_name} -m -g ${!user_name}
+                echo "${!user_name}:${!user_pass}" | chpasswd
+                echo "Created user ${!user_name}"
+
+              }
+
+              function cr_post_reboot {
+
+              if [[ ! -d /opt/dcv-install ]]; then
+                mkdir /opt/dcv-install
+              fi
+
+              cat << EOF > /opt/dcv-install/post_reboot.sh
+              #!/usr/bin/env bash
+
+              function stop_disable_svc() {
+                systemctl stop \$1
+                systemctl disable \$1
+              }
+
+              stop_disable_svc firewalld
+              stop_disable_svc libvirtd
+              systemctl isolate multi-user.target
+              systemctl isolate graphical.target
+              DISPLAY=:0 XAUTHORITY=\$(ps aux | grep "X.*\\-auth" | grep -v grep | awk -F"-auth " '{print \$2}' | awk '{print \$1}') xhost | grep "SI:localuser:dcv$"
+              dcv create-session --type=virtual --owner ${!user_name} --user ${!user_name} virt
+              dcv list-sessions
+
+              my_wait_handle="${!my_wait_handle}"
+
+              if [[ ! -f /tmp/wait-handle-sent ]]; then
+                exit 0
+              else
+                wait_handle_status=\$(cat /tmp/wait-handle-sent)
+                if [[ \${!wait_handle_status} == "true" ]]; then
+                  rm /tmp/wait-handle-sent
+                  exit 0
+                elif [[ \${!wait_handle_status} == "false" && \${!my_wait_handle} != "" ]] ; then
+                  echo "Sending success to wait handle"
+                  curl -X PUT -H 'Content-Type:' --data-binary '{ "Status" : "SUCCESS",  "Reason" : "instance launched",  "UniqueId" : "inst001",  "Data" : "instance launched."}' "\${!my_wait_handle}"
+                  echo "true" > /tmp/wait-handle-sent
+                fi
+              fi
+
+              EOF
+
+              chmod 744 /opt/dcv-install/post_reboot.sh
+
+              }
+
+              function cr_service {
+
+              cat << EOF > /etc/systemd/system/post-reboot.service
+              [Unit]
+              Description=Post reboot service
+
+              [Service]
+              ExecStart=/opt/dcv-install/post_reboot.sh
+
+              [Install]
+              WantedBy=multi-user.target
+              EOF
+
+              chmod 664 /etc/systemd/system/post-reboot.service
+              systemctl daemon-reload
+              systemctl enable post-reboot.service
+
+              }
+
+              function stop_disable_svc() {
+                systemctl stop $1
+                systemctl disable $1
+              }
+
+
+              function main {
+
+              install_prereqs
+              install_dcv
+              add_user
+              cr_post_reboot
+              cr_service
+
+              systemctl enable dcvserver
+              echo "false" > /tmp/wait-handle-sent
+              stop_disable_svc firewalld
+              stop_disable_svc libvirtd
+              echo "*** END LOGIN SERVER BOOTSTRAP. REBOOTING... ***"
+              reboot
+
+              }
+
+              main
 
   LoginServerRole:
       Type: "AWS::IAM::Role"
@@ -536,6 +691,20 @@ Resources:
           - "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
           - "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
 
+  DcvLicenseBucketPolicy:
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - s3:GetObject
+            Effect: Allow
+            Resource: arn:aws:s3:::dcv-license.us-east-1/*
+        Version: '2012-10-17'
+      PolicyName: DcvLicenseBucketPolicy
+      Roles:
+        - !Ref LoginServerRole
+    Type: AWS::IAM::Policy
+
   LoginServerInstanceProfile:
     Type: "AWS::IAM::InstanceProfile"
     Properties:
@@ -552,6 +721,10 @@ Resources:
       - IpProtocol: tcp
         FromPort: 22
         ToPort: 22
+        CidrIp: !Ref SshSource
+      - IpProtocol: tcp
+        FromPort: 8443
+        ToPort: 8443
         CidrIp: !Ref SshSource
 
   LSFMasterRole:
@@ -720,4 +893,16 @@ Resources:
       FromPort: 2049
       ToPort: 2049
       SourceSecurityGroupId: !Ref LoginServerSG
+
+Outputs:
+  DCVConnectionLink:
+    Description: Connect to the DCV Remote Desktop with this URL
+    Value: !Sub 'https://${LoginServerInstance.PublicIp}:8443'
+  DCVUserName:
+    Description: Login name for DCV session
+    Value: !Ref 'UserName'
+  SSHTunnelCommand:
+    Description: Command for setting up SSH tunnel to remote desktop, use "localhost:18443"
+      for DCV client
+    Value: !Sub 'ssh -i <file.pem> -L 18443:localhost:8443 -l centos ${LoginServerInstance.PublicIp}'
 
