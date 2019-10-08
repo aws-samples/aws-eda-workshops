@@ -321,11 +321,11 @@ Outputs:
     Value: !Ref 'AWS::StackName'
     Export:
       Name: !Join [ '-', [ !Ref LSFClusterName, "RootStackName" ] ]
-  LoginServerPublicIp:
-    Description: Login Server Public IP
-    Value: !GetAtt LoginServerStack.Outputs.LoginServerPublicIp
-  DCVConnection:
-    Description: Paste this IP into the DCV Client
+  LoginServerSsh:
+    Description: Login server SSH command
+    Value: !Sub 'ssh -i ${AdminKeyPair} centos@${LoginServerStack.Outputs.LoginServerPublicIp}'
+  LoginServerRemoteDesktop:
+    Description: Login server remote desktop IP. Paste this IP into the DCV Client connection window.
     Value: !GetAtt LoginServerStack.Outputs.DCVConnectionLink
 
 
