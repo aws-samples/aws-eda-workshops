@@ -14,7 +14,7 @@ Mappings:
       ALinux2: ami-035be7bafff33b6b6
     us-east-2:  
       CentOS75: ami-0f2b4fc905b0bd1f1
-      FPGADev15: ami-04207b688d79a3b2c
+      FPGADev15: ami-0377b0b2d360682dc
       ALinux2: ami-04328208f4f0cf1fe
     us-west-1:
       CentOS75: ami-074e2d6769f445be5
@@ -38,11 +38,11 @@ Mappings:
       ALinux2: ami-0c9d48b5db609ad6e
     ap-northeast-2:      # Seoul
       CentOS75: ami-06cf2a72dadf92410
-      FPGADev15: ami-0de44a841014b9e10
+      FPGADev15: ami-0213e978605c85371
       ALinux2: ami-018a9a930060d38aa
     ap-northeast-1:      # Tokyo
       CentOS75: ami-045f38c93733dd48d
-      FPGADev15: ami-01c6b51fe8525af71
+      FPGADev15: ami-0dd3de26bf4601d6e
       ALinux2: ami-0d7ed3ddb85b521a6
 
 Metadata:
@@ -172,6 +172,7 @@ Parameters:
       - m4.2xlarge
       - m5.xlarge
       - m5.2xlarge
+      - m5.24xlarge
   LSFClusterName:
     Description: "LSF cluster name"
     Type: "String"
@@ -181,7 +182,7 @@ Parameters:
       Shared NFS path for installing LSF. This will be created on the included EFS file system
       and mounted on the nodes in the cluster.
     Type: "String"
-    Default: "/tools/ibm/lsf"
+    Default: "/efs/tools/ibm/lsf"
   CustomerLSFInstallUri:
     Description: >
       S3 URI to the LSF installer script package. 
@@ -312,7 +313,7 @@ Resources:
 
               ## Mount NFS file system for LSF install
               #mount point
-              mkdir $LSF_INSTALL_DIR_ROOT
+              mkdir $LSF_INSTALL_DIR_ROOT 
               
               #mount NFS file system
               mount -t nfs4 -o rw,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 $EFS_FS_DNS_NAME:/ $LSF_INSTALL_DIR_ROOT
@@ -320,7 +321,8 @@ Resources:
               echo "$EFS_FS_DNS_NAME:/ $LSF_INSTALL_DIR_ROOT nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> \
                 /etc/fstab
 
-              mkdir -p $LSF_INSTALL_DIR
+              mkdir -p {$LSF_INSTALL_DIR,$LSF_INSTALL_DIR_ROOT/proj,$LSF_INSTALL_DIR_ROOT/scratch}
+              chmod 777 $LSF_INSTALL_DIR_ROOT/{proj,scratch}
               mkdir /var/log/lsf && chmod 777 /var/log/lsf
 
               # TODO: Setup CloudWatch Logs daemon and send LSF logs to CloudWatch
@@ -529,8 +531,6 @@ Resources:
 
               my_wait_handle="${InstanceWaitHandle}"
 
-              yum install vim -q -y
-
               # Install SSM so we can use SSM Session Manager and avoid ssh logins.
               yum install -q -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
               systemctl enable amazon-ssm-agent
@@ -540,11 +540,9 @@ Resources:
               #mount point
               mkdir $LSF_INSTALL_DIR_ROOT
 
-              
               # mount EFS file system
               mount -t nfs4 -o rw,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 $EFS_FS_DNS_NAME:/ $LSF_INSTALL_DIR_ROOT
 
-       
               #add to fstab
               echo "$EFS_FS_DNS_NAME:/ $LSF_INSTALL_DIR_ROOT nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> \
                 /etc/fstab
@@ -556,8 +554,8 @@ Resources:
               echo "Installing DCV..."
 
               function install_prereqs {
-                sudo yum -y groupinstall "GNOME Desktop"
                 sudo yum -y upgrade
+                sudo yum -y groupinstall "GNOME Desktop"
               }
 
               function install_dcv {
@@ -587,9 +585,9 @@ Resources:
 
               function cr_post_reboot {
 
-              if [[ ! -d /opt/dcv-install ]]; then
-                mkdir /opt/dcv-install
-              fi
+                if [[ ! -d /opt/dcv-install ]]; then
+                  mkdir /opt/dcv-install
+                fi
 
               cat << EOF > /opt/dcv-install/post_reboot.sh
               #!/usr/bin/env bash
@@ -895,8 +893,11 @@ Resources:
       SourceSecurityGroupId: !Ref LoginServerSG
 
 Outputs:
-  DCVConnectionLink:
-    Description: Connect to the DCV Remote Desktop with this URL
+  LoginServerSsh:
+    Description: Login server SSH command
+    Value: !Sub 'ssh -i /path/to/${AdminKeyPair} centos@${LoginServerInstance.PublicIp}'
+  LoginServerRemoteDesktop:
+    Description: Connect to the DCV Remote Desktop with this URL via web browser or native DCV client
     Value: !Sub 'https://${LoginServerInstance.PublicIp}:8443'
   DCVUserName:
     Description: Login name for DCV session
@@ -904,5 +905,5 @@ Outputs:
   SSHTunnelCommand:
     Description: Command for setting up SSH tunnel to remote desktop, use "localhost:18443"
       for DCV client
-    Value: !Sub 'ssh -i <file.pem> -L 18443:localhost:8443 -l centos ${LoginServerInstance.PublicIp}'
+    Value: !Sub 'ssh -i /path/to/${AdminKeyPair} -L 18443:localhost:8443 -l centos ${LoginServerInstance.PublicIp}'
 
