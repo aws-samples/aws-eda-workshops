@@ -907,15 +907,14 @@ Resources:
 Outputs:
   LoginServerSsh:
     Description: Login server SSH command
-    Value: !Sub 'ssh -i /path/to/${AdminKeyPair} centos@${LoginServerInstance.PublicIp}'
+    Value: !Sub 'ssh -i /path/to/${AdminKeyPair}.pem centos@${LoginServerInstance.PublicIp}'
   LoginServerRemoteDesktop:
-    Description: Connect to the DCV Remote Desktop with this URL via web browser or native DCV client
-    Value: !Sub 'https://${LoginServerInstance.PublicIp}:8443'
+    Description: Connect to the cluster login/remote desktop server with this IP, using the native DCV client.
+    Value: !Sub '${LoginServerInstance.PublicIp}:8443'
   DCVUserName:
     Description: Login name for DCV session
     Value: !Ref 'UserName'
   SSHTunnelCommand:
     Description: Command for setting up SSH tunnel to remote desktop, use "localhost:18443"
       for DCV client
-    Value: !Sub 'ssh -i /path/to/${AdminKeyPair} -L 18443:localhost:8443 -l centos ${LoginServerInstance.PublicIp}'
-
+    Value: !Sub 'ssh -i /path/to/${AdminKeyPair}.pem -L 18443:localhost:8443 -l centos ${LoginServerInstance.PublicIp}'

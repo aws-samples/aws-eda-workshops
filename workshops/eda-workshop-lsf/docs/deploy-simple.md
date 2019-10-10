@@ -8,9 +8,7 @@
 
 * [Deploy the environment](#deploy-the-environment)
 
-* [Run example workload](#run-example-workload)
-
-* [Clean up](#before-you-leave)
+* [Run example workload](#run-workload)
 
 ## Overview
 
@@ -84,55 +82,71 @@ Be sure you are logged into the workshop AWS account, and follow these instructi
 1. Repeat the steps 1 through 3 to subscribe to the [Official CentOS 7 x86_64 HVM AMI](https://aws.amazon.com/marketplace/pp/B00O7WM7QW) AMI.
 
 1. Verify the subscriptions in the [Marketplace dashboard](https://console.aws.amazon.com/marketplace/home) within the AWS Console.
-    - Click on **Manage subscriptions** to confirm that the two AMI subscriptions are active in your account.
+    * Click on **Manage subscriptions** to confirm that the two AMI subscriptions are active in your account.
 
 ### Step 4. Launch the Cluster
 
 **Note** The instructions in this section reflect the new version of the AWS CloudFormation console. If you’re using the original console, some of the user interface elements might be different.   You can switch to the new console by selecting **New console** from the **CloudFormation** menu.
 
-
 1. Click The **Deploy to AWS** button below to start the CloudFormation deployment process. The link will take you to the AWS CloudFormation console with the path to the deployment template preloaded.
 
     [![Launch Stack](../../../shared/images/deploy_to_aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=aws-eda-lsf-workshop&templateURL=https://aws-eda-workshop-files.s3.amazonaws.com/workshops/eda-workshop-lsf/templates/eda-lsf-simple-workshop.yaml)
 
-    The cluster infrastructure is deployed in the **US East (N. Virginia)** Region by default.
+    The cluster infrastructure is deployed in the **US East (N. Virginia)** AWS Region by default.
 
 1. In the **Specify template** section of the **Create stack** page, keep the default setting for the template URL, and then choose **Next**.
 
-1. On the **Specify stack details** page, change the stack name if desired. Provide values for the following parameters in the table below. For all other parameters, it is recommended that you keep the default settings.
+1. On the **Specify stack details** page, provide values for the following parameters in the table below. For all other parameters, it is recommended that you keep the default settings.
 
     |Parameter|Notes|
     |---|---|
-    |SSH source CIDR|Enter the internet-facing IP from which you will log into the login server|
-    |EC2 KeyPair|Select the key pair you created in your account|
-    |Cluster name|Enter a name for the LSF cluster|
-    |LSF install package|Enter the S3 protocol URL for the `lsf10.1_lsfinstall_linux_x86_64.tar.Z` package|
-    |LSF binary package|Enter the S3 protocol URL for the `lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z` package|
-    |LSF entitlement file|Enter the S3 protocol URL for the LSF entitlement file.  This should be either `lsf_std_entitlement.dat` or `lsf_adv_entitlement.dat`.
+    |Cluster VPC|Select the Virtual Private Cloud network where the infrastructure will be provisioned.  You should see only one option in the pop-up menu.
+    |LSF master subnet|Select the subnet where the LSF master instance will be launched.
+    |Compute node subnet|Select the subnet where LSF will provision its execution hosts. It is recommended to choose the same subnet you selected for the LSF master.
+    |Source IP|Enter the internet-facing IP from which you will log into servers in the cloud cluster. You can use http://checkip.amazonaws.com or a similar service to discover you internet-facing IP address.|
+    |EC2 Key Pair|Select the key pair you created earlier in this tutorial.  You should see only one option here.|
+    |LSF install package|Enter the S3 protocol URL for your `lsf10.1_lsfinstall_linux_x86_64.tar.Z` package.  Select the package object in the S3 console and choose Copy Path and paste here. |
+    |LSF binary package|Enter the S3 protocol URL for your `lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z` package.  Select the package object in the S3 console and choose Copy Path and paste here.|
+    |LSF entitlement file|Enter the S3 protocol URL for your LSF entitlement file.  This should be either `lsf_std_entitlement.dat` or `lsf_adv_entitlement.dat`.  Select the package object in the S3 console and choose Copy Path and paste here.
+    |DCV login password|Enter a password for the DCV user. Note the password complexity requirements in the parameter description.
 
     When you finish reviewing and customizing the parameters, choose **Next**.
 
-1. On the **Configure stack options** page, you can specify [tags](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-resource-tags.html) (key-value pairs) for resources in your stack.  We recommend setting **key** to `env` and **value** to `aws-lsf-eda-workshop` or something similar.  This will help to identify resources created by this tutorial. When you're done, choose **Next**.
+1. On the **Configure stack options** page, you can specify [tags](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-resource-tags.html) (key-value pairs) for resources in your stack.  We recommend setting **key** to `env` and **value** to `aws-lsf-eda-workshop` or something similar.  This will help to identify resources created by this tutorial. When you're done, click **Add tag**.
 
-1. On the **Review** page, review and confirm the template settings. Under **Capabilities** at the very bottom, select the two check boxes to acknowledge that the template will create IAM resources and that it might require the capability to auto-expand macros.
+1. Under **Stack creation options**, disable **Rollback on failure**. This will leave the resources up for debug in case an error occurs during the provisioning process. Choose **Next**.
 
-1. Choose **Create stack** to deploy the stack. Either deployment option takes approximately 40 minutes to complete.
+1. On the **Review** page, review and confirm the stack details. Click the **Previous** button at the bottom of the page if you need to return to previous pages to make changes.  Under **Capabilities** at the very bottom, select the check box to acknowledge that the template will create IAM resources.
+
+1. Choose **Create stack** to deploy the stack. Stack creation will take approximately 30 minutes to complete.
 
 1. Monitor the status of the stack. When the status is **CREATE\_COMPLETE**, the cluster is ready.
 
 1. Use the URLs displayed in the **Outputs** tab for the stack to view the resources that were created.
 
-### Step 5. Test the Deployment
+### Step 5. Log into the cluster
 
-1. Log into the login server via SSH as `centos` user using the private key from the key pair you provided in the Cloudformation stack and the IP address found in **LoginServerPublicIp** under the stack's **Outputs** tab.
+1. Log into the login/remote desktop server with the DCV client.
 
-   `ssh -i /path/to/private_key centos@<host_ip>`
+    1. In the CloudFormation console, click on the **aws-eda-lsf-workshop** stack and choose the **Outputs** tab.
+    1. Copy the IP:port in the **Value** column for the **LoginServerRemoteDesktop**.  This is the public IP of the login server that was deployed by the CloudFormation stack.
+    1. Launch the DCV client and paste the IP into the server field. Click **Connect** and then **Proceed**.  
+    1. Enter the DCV username and password you provided in **Step 3** above in the credentials fields.
+    1. Next, you should see a clock with a blue screen.  Click on it, enter your DCV password once again, and click the **Unlock** button.
+    1. Close the **Getting Started** window to reveal the GNOME desktop.
 
-1. Run the `lsid` command to verify that LSF installed properly and is running.
+1. Open a new terminal and run the `lsid` command to verify that LSF installed properly and is running.  You should see output similar to the following:
+
+    ```text
+    $ lsid
+    IBM Spectrum LSF Standard 10.1.0.0, Jul 08 2016
+    Copyright International Business Machines Corp. 1992, 2016.
+    US Government Users Restricted Rights - Use, duplication or disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
+
+    My cluster name is mycluster
+    My master name is ip-172-31-15-186
+    ```
 
 ### Step 6. Run workload
 
-Move on to the [next tutorial](run-workload.md) to run logic simulations in your new elastic LSF cluster in the AWS cloud.
-
-
-
+Move on to the [next tutorial](run-simple.md) to run logic simulations in your new elastic LSF cluster in the AWS cloud.
