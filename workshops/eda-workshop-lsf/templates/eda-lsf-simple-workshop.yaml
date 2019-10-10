@@ -915,6 +915,7 @@ Outputs:
     Description: Login name for DCV session
     Value: !Ref 'UserName'
   SSHTunnelCommand:
-    Description: Command for setting up SSH tunnel to remote desktop, use "localhost:18443"
-      for DCV client
+    Description: >
+      Command for setting up an SSH tunnel from your local host to the remote desktop. Use "localhost:18443" as 
+      the connection address in the DCV client. This is helpful if outbound port 8443 is blocked by a proxy.
     Value: !Sub 'ssh -i /path/to/${AdminKeyPair}.pem -L 18443:localhost:8443 -l centos ${LoginServerInstance.PublicIp}'

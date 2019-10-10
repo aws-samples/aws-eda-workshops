@@ -323,9 +323,15 @@ Outputs:
       Name: !Join [ '-', [ !Ref LSFClusterName, "RootStackName" ] ]
   LoginServerSsh:
     Description: Login server SSH command
-    Value: !Sub 'ssh -i /path/to/${AdminKeyPair} centos@${LoginServerStack.Outputs.LoginServerPublicIp}'
+    Value: !Sub 'ssh -i /path/to/${AdminKeyPair}.pem centos@${LoginServerStack.Outputs.LoginServerPublicIp}'
   LoginServerRemoteDesktop:
     Description: Connect to the DCV Remote Desktop with this URL via web browser or native DCV client
     Value: !GetAtt LoginServerStack.Outputs.DCVConnectionLink
+  SSHTunnelCommand:
+    Description: >
+      Command for setting up an SSH tunnel from your local host to the remote desktop. Use "localhost:18443" as 
+      the connection address in the DCV client. This is helpful if outbound port 8443 is blocked by a proxy.
+    Value: !Sub 'ssh -i /path/to/${AdminKeyPair}.pem -L 18443:localhost:8443 -l centos ${LoginServerStack.Outputs.LoginServerPublicIp}'
+
 
 
