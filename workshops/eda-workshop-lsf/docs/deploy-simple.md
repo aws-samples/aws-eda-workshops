@@ -52,7 +52,7 @@ IBM Spectrum LSF software and licenses are not provided by this tutorial. You mu
 
 1. Create SSH key pair by following the [Amazon EC2 Key Pairs documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html#having-ec2-create-your-key-pair).
 
-## Deploying the environment
+## Deploy the environment
 
 ### Step 1. Sign in to your AWS account
 
@@ -147,6 +147,6 @@ Be sure you are logged into the workshop AWS account, and follow these instructi
     My master name is ip-172-31-15-186
     ```
 
-### Step 6. Run workload
+## Run workload
 
 Move on to the [next tutorial](run-simple.md) to run logic simulations in your new elastic LSF cluster in the AWS cloud.
