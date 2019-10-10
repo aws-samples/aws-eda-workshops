@@ -89,80 +89,86 @@ Metadata:
 
     ParameterLabels:
       VpcId:
-        default: "The VPC in which to install LSF cluster resources."
+        default: Cluster VPC
       AdminKeyPair:
-        default: "The Name of an existing EC2 KeyPair to enable SSH access to the login server."
+        default: EC2 Key Pair
       SshSource:
-        default: > 
-          A CIDR block that’s allowed external access to the cluster infrastructure. 
-          We recommend that you use a constrained CIDR range to reduce the potential of inbound attacks 
-          from unknown IP addresses.
+        default: Source IP
       MasterInstanceType:
-        default: "The desired instance type for the master node of the cluster."
+        default: LSF master instance type
       MasterServerAMI:
-        default: "The AMI (OS image) for the master server."
+        default: Master server AMI (OS image)
       ComputeAMI:
-        default: "The AMI (OS image) for the compute nodes."
+        default: Compute node AMI (OS image)
       LSFClusterName:
-        default: "The name for the LSF cluster"
+        default: LSF cluster name
       LSFInstallPath:
-        default: "The shared file system path in which to install LSF. An EFS file system will be created for the LSF binaries, config, and log files."
+        default: LSF install path
       MasterServerSubnet:
-        default: "The subnet for the LSF master server.  This subnet should have access to the internet."
+        default: LSF master subnet
+      ComputeNodeSubnet:
+        default: Compute node subnet
       LoginServerInstanceType:
-        default: ""
+        default: Login server instance type
       UserName:
-        default: Username for DCV login
+        default: DCV login username
       UserPass:
-        default: Password for DCV login
+        default: DCV login password
+      EFSPerformanceMode:
+        default: EFS performance mode
+      EFSThroughputMode:
+        default: EFS throughput mode
+      CustomerLSFInstallUri:
+        default: LSF install script location
+      CustomerLSFBinsUri:
+        default: LSF distribution package location
+      CustomerLSFEntitlementUri:
+        default: LSF entitlement file location
 
 Parameters:
   VpcId:
-    Description: "The VPC in which to install LSF cluster resources."
+    Description: The VPC in which to install the cluster resources
     Type: 'AWS::EC2::VPC::Id'
   AdminKeyPair:
-    Description: "Name of an existing EC2 KeyPair to enable SSH access to the master server."
+    Description: The name of an existing EC2 Key Pair for cluster SSH logins
     Type: "AWS::EC2::KeyPair::KeyName"
     Default: "morrmt"
     AllowedPattern: ".+"
   SshSource:
     Description: >
-      CIDR range that can ssh into the infrastructure instances. 
-      Use your public IP address (http://checkip.amazonaws.com).
+      The CIDR range of the remote hosts that are permitted to log into the infrastructure instances.
+      Use your public IP address (http://checkip.amazonaws.com) suffixed with /32.
     Type: String
     Default: 0.0.0.0/32
     AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
     ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
   MasterServerSubnet:
-    Description: "Subnet for the LSF master server.  This subnet should have access to the internet."
+    Description: The subnet for the LSF master server.  This subnet must have access to the internet.
     Type: AWS::EC2::Subnet::Id
-    Default: "subnet-331c276e"
   ComputeNodeSubnet:
-    Description: "Subnet for the LSF compute nodes."
+    Description: The subnet for the LSF compute nodes
     Type: AWS::EC2::Subnet::Id
-    Default: "subnet-331c276e"
   MasterInstanceType:
-    Description: "The desired instance type for the master node of the cluster."
+    Description: The instance type of the master node of the cluster
     Type: "String"
     Default: "m5.2xlarge"
   MasterServerAMI:
-    Description: "AMI (OS image) for the master server. We recommend Amazon Linux 2"
+    Description: The AMI (OS image) for the master server. We recommend Amazon Linux 2."
     Type: "String"
     Default: "ALinux2"
     AllowedValues:
       - ALinux2
   ComputeAMI:
     Description: >
-      AMI (OS image) for the compute nodes and login servers.
+      The AMI (OS image) for the compute nodes and login servers.
       NOTE: You must first subscribe to this AMI in the AWS Marketplace 
       at https://aws.amazon.com/marketplace/pp/B06VVYBLZZ
     Type: "String"
     Default: "FPGADev15"
     AllowedValues:
-      - CentOS75
       - FPGADev15
   LoginServerInstanceType:
-    Description: "Instance type for the login server."
+    Description: The instance type for the login server
     Type: "String"
     Default: "m5.2xlarge"
     AllowedValues:
@@ -174,43 +180,45 @@ Parameters:
       - m5.2xlarge
       - m5.24xlarge
   LSFClusterName:
-    Description: "LSF cluster name"
+    Description: The LSF cluster name
     Type: "String"
     Default: "mycluster"
   LSFInstallPath:
     Description: >
-      Shared NFS path for installing LSF. This will be created on the included EFS file system
-      and mounted on the nodes in the cluster.
+      The shared NFS path for installing LSF. This will be created on the included EFS file system
+      and mounted on all nodes in the cluster.
     Type: "String"
     Default: "/efs/tools/ibm/lsf"
   CustomerLSFInstallUri:
     Description: >
-      S3 URI to the LSF installer script package. 
-      Select object in the console and choose Copy Path and paste here.
+      The S3 URI to the LSF installer script package. 
+      Select package object in the console and choose Copy Path and paste here.
     Type: "String"
     Default: "s3://<your_bucket>/lsf10.1_lsfinstall_linux_x86_64.tar.Z"
     AllowedPattern: ^s3\:\/\/.*\/lsf10.1_lsfinstall_linux_x86_64.tar.Z$
   CustomerLSFBinsUri:
     Description: >
-      S3 URI to the LSF distribution package. This must be a full distribution and not a patch or Fix Pack package.
-      Select object in the console and choose Copy Path and paste here.
+      The S3 URI to the LSF distribution package. This must be a full distribution and not a patch or Fix Pack package.
+      Select package object in the console and choose Copy Path and paste here.
     Type: "String"
     Default: "s3://<your_bucket>/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z"
     AllowedPattern: ^s3\:\/\/.*\/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z$
   CustomerLSFEntitlementUri:
-    Description: The S3 URI to the LSF entitlement file, lsf_std_entitlement.dat or lsf_adv_entitlement.dat.
-      Select object in the S3 console and choose Copy Path and paste here.
+    Description: >
+      The S3 URI to the LSF entitlement file, lsf_std_entitlement.dat or lsf_adv_entitlement.dat.
+      Select package object in the S3 console and choose Copy Path and paste here.
     Type: String
     Default: s3://<your_bucket>/lsf_std_entitlement.dat
     AllowedPattern: ^s3\:\/\/.*
   EFSPerformanceMode:
-    Description: "Select the performance mode for the EFS file system."
+    Description: The performance mode for the EFS file system
     Type: "String"
     AllowedValues:
       - generalPurpose
       - maxIO
     Default: "generalPurpose"
   EFSThroughputMode:
+    Description: The throughput mode for the EFS file system
     Type: "String"
     AllowedValues:
       - bursting
@@ -218,20 +226,24 @@ Parameters:
     Default: "bursting"
   UserName:
     Default: simuser
-    Description: User name for DCV remote desktop login. Default is "simuser".
+    Description: The username for DCV remote desktop login
     MinLength: '4'
     Type: String
     ConstraintDescription: Must be at least four letters in length
   UserPass:
     Default: Ch4ng3M3!
-    Description: Password for DCV remote desktop login. The default password is Ch4ng3M3!
+    Description: >
+      The password for DCV remote desktop login. The default password is Ch4ng3M3!.
+      The password must be at least 8 characters in length and contain at least one 
+      element from three of the following sets - lowercase letters, uppercase letters,
+      base 10 digits, non-alphanumeric characters
     MinLength: '8'
     NoEcho: true
     Type: String
     AllowedPattern: ^((?=.*[a-z])(?=.*[A-Z])(?=.*[\d])|(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_])|(?=.*[a-z])(?=.*[\d])(?=.*[\W_])|(?=.*[A-Z])(?=.*[\d])(?=.*[\W_])).+$
-    ConstraintDescription: 'Password must contain at least one element from three
-      of the following sets: lowercase letters, uppercase letters, base 10 digits,
-      non-alphanumeric characters'
+    ConstraintDescription: >
+      Password must contain at least one element from three of the following sets - 
+      lowercase letters, uppercase letters, base 10 digits, non-alphanumeric characters
 
 Resources:
   InstanceWaitHandle:
