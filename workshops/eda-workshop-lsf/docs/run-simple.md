@@ -20,7 +20,7 @@ This repo contains example design data, IP, and a simple workflow to execute ver
 
     `cd /efs/proj/aws-fpga-sa-demo/eda-workshop`
 
-### Step 2. Run setup job
+### Step 2. Run build job
 
 This first job will set up the runtime environment for the simulations that you will submit to LSF in Step 3 below.
 
@@ -33,10 +33,10 @@ This first job will set up the runtime environment for the simulations that you 
 
 ### Step 3. Run verification tests at scale
 
-Now we are ready to scale out the simulations.  Like with the setup job above, when these jobs hit the queue LSF will generate demand for EC2 instances, and Resource Connector will start up the appropriate number and type of instances to satisfy the pending jobs in the queue.
+Now we are ready to scale out the simulations.  Like with the build job above, when these jobs hit the queue LSF will generate demand for EC2 instances, and Resource Connector will start up the appropriate number and type of instances to satisfy the pending jobs in the queue.
 
-1.  Run the `bhosts` command.  You should see two hosts now -- the LSF master and the execution host for the setup job.
-1. **Submit a large job array**. This job array will spawn 100 verification jobs.  These jobs use a dependency condition so that they will be dispatched only after the setup job above completes successfully.
+1. Run the `bhosts` command.  You should see two hosts now -- the LSF master and the execution host for the setup job.
+1. **Submit a large job array**. This job array will spawn 100 verification jobs.  These jobs use a dependency condition so that they will be dispatched only after the build job above completes successfully. The build job run time is about 15 minutes.
 
    `bsub -R aws -J "regress[1-100]" -w "done(setup)" ./run-sim.sh --scratch-dir /efs/scratch`
 
