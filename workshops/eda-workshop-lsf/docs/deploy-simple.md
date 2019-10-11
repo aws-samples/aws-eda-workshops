@@ -32,6 +32,10 @@ The deployed cloud infrastructure consists of:
 
 * An Amazon Elastic File System (EFS) file system for the LSF distribution and configuration files, project, and scratch data.
 
+### Workshop  Workflow
+
+![workflow-diagram](images/eda-lsf-workshop-simple-workflow.png)
+
 ### Cost and Licenses
 
 If you run this tutorial in your own account, you are responsible for the cost of the AWS services used while running this reference deployment. There is no additional cost for using this tutorial.
