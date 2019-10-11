@@ -20,7 +20,7 @@ This tutorial is for IT, CAD, and design engineers who are interested in running
 
 This environment deploys into an existing virtual private cloud (VPC) and builds the following EDA computing environment in the AWS Cloud.
 
-![diagram](images/eda-lsf-workshop-diagram-3.png "diagram")
+![diagram](images/eda-lsf-workshop-simple-diagram.png)
 
 The deployed cloud infrastructure consists of:
 
