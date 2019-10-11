@@ -6,6 +6,10 @@ This tutorial provides instructions for running an example logic simulation work
 
 **Note** There is are no additional charges to use the **AWS F1 FPGA Development Kit** or the  **Xilinx Vivado** tools in the **AWS FPGA Developer AMI**.  You are only charged for the underlying AWS resources consumed by running the AMI and included software.
 
+### Workflow
+
+![workflow-diagram](images/eda-lsf-workshop-simple-workflow.png)
+
 ### Step 1. Clone the AWS F1 FPGA Development Kit repo
 This repo contains example design data, IP, and a simple workflow to execute verification tests at scale.
 
