@@ -72,6 +72,7 @@ Metadata:
           - CustomerLSFInstallUri
           - CustomerLSFBinsUri
           - CustomerLSFEntitlementUri
+          - CustomerLSFFixPackUri
           - ComputeAMI
       -
         Label:
@@ -124,6 +125,8 @@ Metadata:
         default: LSF distribution package location
       CustomerLSFEntitlementUri:
         default: LSF entitlement file location
+      CustomerLSFFixPackUri:
+        default: LSF fix pack
 
 Parameters:
   VpcId:
@@ -203,6 +206,13 @@ Parameters:
     Type: "String"
     Default: "s3://<your_bucket>/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z"
     AllowedPattern: ^s3\:\/\/.*\/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z$
+  CustomerLSFFixPackUri:
+    Description: >
+      The S3 URI to the LSF Fix Pack package. This must the lastest Fix Pack package.
+      Select package object in the console and choose Copy Path and paste here.
+    Type: "String"
+    Default: "s3://<your_bucket>/lsf10.1_linux2.6-glibc2.3-x86_64.520009.tar.Z"
+    #AllowedPattern: ^s3\:\/\/.*\/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z$
   CustomerLSFEntitlementUri:
     Description: >
       The S3 URI to the LSF entitlement file, lsf_std_entitlement.dat or lsf_adv_entitlement.dat.
@@ -225,7 +235,7 @@ Parameters:
       - provisioned
     Default: "bursting"
   UserName:
-    Default: simuser
+    Default: centos
     Description: The username for DCV remote desktop login
     MinLength: '4'
     Type: String
@@ -300,6 +310,7 @@ Resources:
               export LSF_ADMIN=lsfadmin
               export LSF_INSTALL_PKG=`echo ${CustomerLSFInstallUri} | awk -F "/" '{print $NF}'`
               export LSF_BIN_PKG=`echo ${CustomerLSFBinsUri} | awk -F "/" '{print $NF}'`
+              export LSF_FP_PKG=`echo ${CustomerLSFFixPackUri} | awk -F "/" '{print $NF}'`
               export LSF_ENTITLEMENT=`echo ${CustomerLSFEntitlementUri} | awk -F "/" '{print $NF}'`
 
               # Disable Hyperthreading
@@ -352,6 +363,7 @@ Resources:
               aws --quiet s3 cp ${CustomerLSFInstallUri} /tmp
               aws --quiet s3 cp ${CustomerLSFBinsUri} /tmp
               aws --quiet s3 cp ${CustomerLSFEntitlementUri} /tmp
+              aws --quiet s3 cp ${CustomerLSFFixPackUri} /tmp
 
               cd /tmp
               tar xf $LSF_INSTALL_PKG
@@ -377,7 +389,18 @@ Resources:
 
               echo "source $LSF_ENVDIR/profile.lsf" > /etc/profile.d/lsf.sh
 
-              # Configure LSF and Resource Connector
+              # Install fix pack
+              
+              cd $LSF_INSTALL_DIR/10.1/install
+              cp /tmp/$LSF_FP_PKG .
+              echo "schmod_demand.so" >> patchlib/daemonlists.tbl
+              ./patchinstall $LSF_FP_PKG
+
+
+              ## Configure LSF and Resource Connector
+              mkdir -p $LSF_ENVDIR/resource_connector/aws/conf
+              chown -R lsfadmin:root $LSF_ENVDIR/resource_connector/aws
+
               # Sets AWS as the sole host provider
               wget https://s3.amazonaws.com/aws-eda-workshop-files/config/lsf/hostProviders.json \
                 -O $LSF_ENVDIR/resource_connector/hostProviders.json

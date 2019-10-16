@@ -51,6 +51,7 @@ IBM Spectrum LSF software and licenses are not provided by this tutorial. You mu
    * `lsf10.1_lsfinstall_linux_x86_64.tar.Z`
    * `lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z`
    * `lsf_std_entitlement.dat` or `lsf_adv_entitlement.dat`
+   * `lsf10.1_linux2.6-glibc2.3-x86_64-xxxxxx.tar.Z` (latest Fix Pack)
 
 1. Download and install the [NICE DCV remote desktop native client](https://download.nice-dcv.com) on the computer you will be using for this workshop.
 
@@ -61,7 +62,6 @@ IBM Spectrum LSF software and licenses are not provided by this tutorial. You mu
 ### Step 1. Sign in to your AWS account
 
 1. Sign into the AWS account provided to you for this workshop.
-1. 
 
 ### Step 2. Upload LSF Software Packages and Entitlement File
 
