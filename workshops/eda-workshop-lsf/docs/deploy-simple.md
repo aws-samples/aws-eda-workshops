@@ -112,6 +112,7 @@ Be sure you are logged into the workshop AWS account, and follow these instructi
     |LSF install package|Enter the S3 protocol URL for your `lsf10.1_lsfinstall_linux_x86_64.tar.Z` package.  Select the package object in the S3 console and choose Copy Path and paste here. |
     |LSF binary package|Enter the S3 protocol URL for your `lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z` package.  Select the package object in the S3 console and choose Copy Path and paste here.|
     |LSF entitlement file|Enter the S3 protocol URL for your LSF entitlement file.  This should be either `lsf_std_entitlement.dat` or `lsf_adv_entitlement.dat`.  Select the package object in the S3 console and choose Copy Path and paste here.
+    |LSF Fix Pack| Enter the S3 protocol URL for the LSF Fix Pack package.  Select the package object in the S3 console and choose Copy Path and paste here.|
     |DCV login password|Enter a password for the DCV user. Note the password complexity requirements in the parameter description.
 
     When you finish reviewing and customizing the parameters, choose **Next**.
