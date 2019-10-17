@@ -491,6 +491,9 @@ Resources:
               # bhosts -rconly commands to work.
               # mosquitto runs on default port 1883.
               LSF_MQ_BROKER_HOSTS=$HOSTNAME
+              # The params below allow remote clients to query RC status from mosquitto
+              MQTT_BROKER_HOST=$HOSTNAME
+              MQTT_BROKER_PORT=1883
 
               #EBROKERD_HOST_CLEAN_DELAY=60
 
