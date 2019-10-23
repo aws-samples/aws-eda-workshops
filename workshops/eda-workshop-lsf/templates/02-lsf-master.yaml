@@ -238,6 +238,7 @@ Resources:
               aws --quiet s3 cp ${CustomerLSFInstallUri} /tmp
               aws --quiet s3 cp ${CustomerLSFBinsUri} /tmp
               aws --quiet s3 cp ${CustomerLSFEntitlementUri} /tmp
+              aws --quiet s3 cp ${CustomerLSFFixPackUri} /tmp
 
               
               cd /tmp
@@ -264,18 +265,29 @@ Resources:
 
               echo "source $LSF_ENVDIR/profile.lsf" > /etc/profile.d/lsf.sh
 
+              # Install fix pack
+              
+              cd $LSF_INSTALL_DIR/10.1/install
+              cp /tmp/$LSF_FP_PKG .
+              echo "schmod_demand.so" >> patchlib/daemonlists.tbl
+              ./patchinstall $LSF_FP_PKG
+
+              ## Configure LSF and Resource Connector
+              mkdir -p $LSF_ENVDIR/resource_connector/aws/conf
+              chown -R lsfadmin:root $LSF_ENVDIR/resource_connector/aws
+
               # Configure LSF and Resource Connector
               # Sets AWS as the sole host provider
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/config/lsf/hostProviders.json \
+              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/hostProviders.json \
                 -O $LSF_ENVDIR/resource_connector/hostProviders.json
 
               # awsprov.config.json
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/config/lsf/awsprov_config.json \
+              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/awsprov_config.json \
                 -O $LSF_ENVDIR/resource_connector/aws/conf/awsprov_config.json
               sed -i -e "s/_CFN_AWS_REGION_/${AWS::Region}/" $LSF_ENVDIR/resource_connector/aws/conf/awsprov_config.json
 
               # awsprov.templates.json
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/config/lsf/awsprov_templates.json \
+              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/awsprov_templates.json \
                 -O $LSF_ENVDIR/resource_connector/aws/conf/awsprov_templates.json
               
               sed -i -e "s|%CFN_COMPUTE_AMI%|${LSFComputeNodeAmi}|" \
@@ -294,22 +306,22 @@ Resources:
                   $LSF_ENVDIR/resource_connector/aws/conf/awsprov_templates.json
               
               # user_data script that RC executes on compute nodes
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/config/lsf/user_data.sh \
+              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/user_data.sh \
                 -O $LSF_INSTALL_DIR/10.1/resource_connector/aws/scripts/user_data.sh
               chmod +x $LSF_INSTALL_DIR/10.1/resource_connector/aws/scripts/user_data.sh
 
               # Copy in pre-configured lsf config files
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/config/lsf/lsf.shared \
+              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/lsf.shared \
                 -O $LSF_ENVDIR/lsf.shared
               sed -i -e "s/^_CFN_LSF_CLUSTER_NAME_/${LSFClusterName}/" $LSF_ENVDIR/lsf.shared
 
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/config/lsf/lsb.queues \
+              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/lsb.queues \
                 -O $LSF_ENVDIR/lsbatch/${LSFClusterName}/configdir/lsb.queues
 
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/config/lsf/lsb.modules \
+              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/lsb.modules \
                 -O $LSF_ENVDIR/lsbatch/${LSFClusterName}/configdir/lsb.modules
 
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/config/lsf/lsb.params\
+              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/lsb.params\
                 -O $LSF_ENVDIR/lsbatch/${LSFClusterName}/configdir/lsb.params
 
               # lsf.cluster.*  Uncomment params to support dynamic hosts
@@ -361,6 +373,9 @@ Resources:
               # bhosts -rconly commands to work.
               # mosquitto runs on default port 1883.
               LSF_MQ_BROKER_HOSTS=$HOSTNAME
+              # The params below allow remote clients to query RC status from mosquitto
+              MQTT_BROKER_HOST=$HOSTNAME
+              MQTT_BROKER_PORT=1883
 
               #EBROKERD_HOST_CLEAN_DELAY=60
 

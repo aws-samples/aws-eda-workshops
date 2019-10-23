@@ -396,7 +396,6 @@ Resources:
               echo "schmod_demand.so" >> patchlib/daemonlists.tbl
               ./patchinstall $LSF_FP_PKG
 
-
               ## Configure LSF and Resource Connector
               mkdir -p $LSF_ENVDIR/resource_connector/aws/conf
               chown -R lsfadmin:root $LSF_ENVDIR/resource_connector/aws
