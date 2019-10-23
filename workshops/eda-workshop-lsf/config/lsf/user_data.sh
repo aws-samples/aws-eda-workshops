@@ -35,24 +35,24 @@ mkdir $FS_MOUNT_POINT
 # Using default mount options.  Tune as necessary.
 mount $NFS_SERVER_EXPORT $FS_MOUNT_POINT
 
-if [ -n "${fsx}" ]; then
-   # Download Lustre client
-   cd /tmp
-   wget https://downloads.whamcloud.com/public/lustre/lustre-2.10.5/el7.5.1804/client/RPMS/x86_64/kmod-lustre-client-2.10.5-1.el7.x86_64.rpm
-   wget https://downloads.whamcloud.com/public/lustre/lustre-2.10.5/el7.5.1804/client/RPMS/x86_64/lustre-client-2.10.5-1.el7.x86_64.rpm
+# if [ -n "${fsx}" ]; then
+#    # Download Lustre client
+#    cd /tmp
+#    wget https://downloads.whamcloud.com/public/lustre/lustre-2.10.5/el7.5.1804/client/RPMS/x86_64/kmod-lustre-client-2.10.5-1.el7.x86_64.rpm
+#    wget https://downloads.whamcloud.com/public/lustre/lustre-2.10.5/el7.5.1804/client/RPMS/x86_64/lustre-client-2.10.5-1.el7.x86_64.rpm
 
-   # Install client
-   yum localinstall -y *lustre-client-2.10.5*.rpm
+#    # Install client
+#    yum localinstall -y *lustre-client-2.10.5*.rpm
 
-   # Mount ${fsx}
-   mkdir /fsx && chown centos /fsx
-   mount -t lustre ${fsx}@tcp:/fsx /fsx
-fi
+#    # Mount ${fsx}
+#    mkdir /fsx && chown centos /fsx
+#    mount -t lustre ${fsx}@tcp:/fsx /fsx
+# fi
 
-if [ -n "${ec2nfs}" ]; then
-   mkdir /ec2nfs
-   # mount ${ec2nfs}
-fi
+# if [ -n "${ec2nfs}" ]; then
+#    mkdir /ec2nfs
+#    # mount ${ec2nfs}
+# fi
 
 # Set up the LSF enviornment
 
