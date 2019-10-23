@@ -143,8 +143,8 @@ Parameters:
       Use your public IP address (http://checkip.amazonaws.com) suffixed with /32.
     Type: String
     Default: 0.0.0.0/32
-    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
-    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/32
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/32.
   MasterServerSubnet:
     Description: The subnet for the LSF master server.  This subnet must have access to the internet.
     Type: AWS::EC2::Subnet::Id
@@ -215,7 +215,7 @@ Parameters:
     #AllowedPattern: ^s3\:\/\/.*\/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z$
   CustomerLSFEntitlementUri:
     Description: >
-      The S3 URI to the LSF entitlement file, lsf_std_entitlement.dat or lsf_adv_entitlement.dat.
+      The S3 URI to the LSF 10.1 entitlement file, lsf_std_entitlement.dat or lsf_adv_entitlement.dat.
       Select package object in the S3 console and choose Copy Path and paste here.
     Type: String
     Default: s3://<your_bucket>/lsf_std_entitlement.dat

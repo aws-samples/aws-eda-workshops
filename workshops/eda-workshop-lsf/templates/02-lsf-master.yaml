@@ -108,10 +108,16 @@ Parameters:
     Type: "String"
     Default: "s3://<your_bucket>/lsf10.1_lsfinstall_linux_x86_64.tar.Z"
   CustomerLSFBinsUri:
-    Description: The S3 URI to the LSF Linux distribution package. 
+    Description: The S3 URI to the LSF 10.1 Linux base distribution package. 
       Select object in the console and choose Copy Path and paste here.
     Type: "String"
     Default: "s3://<your_bucket>/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z"
+  CustomerLSFFixPackUri:
+    Description: >
+      The S3 URI to the LSF 10.1 Fix Pack package. This must the lastest cumulative Fix Pack package.
+      Select package object in the console and choose Copy Path and paste here.
+    Type: "String"
+    Default: "s3://<your_bucket>/lsf10.1_linux2.6-glibc2.3-x86_64.520009.tar.Z"
   CustomerLSFEntitlementUri:
     Description: The S3 URI to the LSF entitlement file, lsf_std_entitlement.dat or lsf_adv_entitlement.dat.
       Select object in the S3 console and choose Copy Path and paste here.
@@ -176,6 +182,7 @@ Resources:
               export LSF_ADMIN=lsfadmin
               export LSF_INSTALL_PKG=`echo ${CustomerLSFInstallUri} | awk -F "/" '{print $NF}'`
               export LSF_BIN_PKG=`echo ${CustomerLSFBinsUri} | awk -F "/" '{print $NF}'`
+              export LSF_FP_PKG=`echo ${CustomerLSFFixPackUri} | awk -F "/" '{print $NF}'`
               export LSF_ENTITLEMENT=`echo ${CustomerLSFEntitlementUri} | awk -F "/" '{print $NF}'`
 
               # Disable Hyperthreading

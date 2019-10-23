@@ -1,0 +1,29 @@
+Begin Cluster
+ClusterName
+_CFN_LSF_CLUSTER_NAME_
+End Cluster
+
+Begin HostType
+TYPENAME
+DEFAULT
+LINUX64
+X86_64
+End HostType
+
+Begin HostModel
+MODELNAME           CPUFACTOR      ARCHITECTURE
+AWS_XEON_E5_2670v2        100       (x6_4988_IntelRXeonRCPUE52670v2250GHz)
+AWS_XEON_E5_2666v3        101       (x6_5800_IntelRXeonRCPUE52666v3290GHz)
+End HostModel
+
+Begin Resource
+RESOURCENAME         TYPE    INTERVAL INCREASING  DESCRIPTION
+define_ncpus_procs   Boolean    ()       ()       (ncpus := procs)
+define_ncpus_cores   Boolean    ()       ()       (ncpus := cores)
+define_ncpus_threads Boolean    ()       ()       (ncpus := threads)
+aws                  Boolean    ()       ()       (AWS instance)
+spot                 Boolean    ()       ()       (AWS spot instance)
+fsx                  Boolean    ()       ()       (Mount Amazon FSx for Lustre on boot)
+pricing              String     ()       ()       (AWS EC2 pricing type)
+rc_account           String     ()       ()       (Exclusive consumer tag for RC hosts)
+End Resource

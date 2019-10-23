@@ -1,0 +1,48 @@
+Begin Parameters
+DEFAULT_QUEUE  = verif
+
+# Amount of time in seconds used for calculating parameter values 
+MBD_SLEEP_TIME = 10
+
+# sbatchd scheduling interval 
+SBD_SLEEP_TIME = 7
+
+# Interval between job scheduling sessions
+JOB_SCHEDULING_INTERVAL=1
+
+# Interval for any host to accept a job 
+JOB_ACCEPT_INTERVAL = 0 
+
+# Absolute run time is used instead of normalized one
+ABS_RUNLIMIT=Y
+
+# LSF evaluates only the most recently submitted job name for dependency conditions
+JOB_DEP_LAST_SUB=1
+
+# Concurrent queries mbatchd can handle
+MAX_CONCURRENT_QUERY=100
+
+# The maximum number of finished jobs whose events are to be stored in the lsb.events log file
+MAX_JOB_NUM=10000
+
+# Schedule parallel jobs based on slots
+PARALLEL_SCHED_BY_SLOT=y
+
+# Enhancement for query mbatchd new job information update
+NEWJOB_REFRESH=y
+
+# enable relaxed job dispatch order in the cluster
+RELAX_JOB_DISPATCH_ORDER = Y
+
+# enable generating combined event logs with the format of array index ranges for array jobs
+JOB_ARRAY_EVENTS_COMBINE = Y
+
+# Specifies the maximum number of new instances that can be requested through 
+# the resource connector during demand evaluations. Use this parameter to control
+# the speed of cluster growth in the cluster. Default 300.
+# Use with LSB_RC_UPDATE_INTERVAL in lsf.conf to control how frequent LSF starts 
+# demand evaluation. Combining with the new parameter, it plays a cluster wide 
+# “step” to control the speed of cluster grow.
+#RC_MAX_REQUESTS=300
+
+End Parameters

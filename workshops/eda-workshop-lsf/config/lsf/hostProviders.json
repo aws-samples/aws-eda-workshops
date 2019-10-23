@@ -1,0 +1,10 @@
+{
+    "providers":[
+        {
+            "name": "aws",
+            "type": "awsProv",
+            "confPath": "resource_connector/aws",
+            "scriptPath": "resource_connector/aws"
+        }
+    ]
+}

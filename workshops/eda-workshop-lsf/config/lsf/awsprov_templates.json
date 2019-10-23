@@ -1,0 +1,158 @@
+{
+    "templates": [
+        {
+            "templateId": "m5-xlarge",
+            "priority": 7,
+            "maxNumber": 1000,
+            "attributes": {
+                "type":    ["String", "X86_64"],
+                "ncores":  ["Numeric", "2"],
+                "ncpus":   ["Numeric", "2"],
+                "mem":     ["Numeric", "15000"],
+                "aws":     ["Boolean", "1"]
+            },
+            "imageId": "%CFN_COMPUTE_AMI%",
+            "subnetId": "%CFN_COMPUTE_NODE_SUBNET%",
+            "vmType": "m5.xlarge",
+            "keyName": "%CFN_ADMIN_KEYPAIR%",
+            "securityGroupIds": ["%CFN_COMPUTE_SECURITY_GROUP_ID%"],
+            "placementGroupName": "",
+            "tenancy": "default",
+            "instanceProfile":  "%CFN_LSF_COMPUTE_NODE_INSTANCE_PROFILE_ARN%",
+            "instanceTags":     "Name=LSF Exec Host;Cluster=%CFN_LSF_CLUSTER_NAME%",
+            "userData":         "EFS_FS_DNS_NAME=%CFN_EFS_FS_DNS_NAME%;LSF_INSTALL_DIR=%CFN_LSF_INSTALL_DIR%;PROJ_DIR=%CFN_PROJ_DIR%;SCRATCH_DIR=%CFN_SCRATCH_DIR%;FS_MOUNT_POINT=%CFN_FS_MOUNT_POINT%;NFS_SERVER_EXPORT=%CFN_NFS_SERVER_EXPORT%"
+        },
+        {
+            "templateId": "m5-2xlarge",
+            "priority": 6,
+            "maxNumber": 1000,
+            "attributes": {
+                "type":    ["String", "X86_64"],
+                "ncores":  ["Numeric", "4"],
+                "ncpus":   ["Numeric", "4"],
+                "mem":     ["Numeric", "30000"],
+                "aws":     ["Boolean", "1"]
+            },
+            "imageId": "%CFN_COMPUTE_AMI%",
+            "subnetId": "%CFN_COMPUTE_NODE_SUBNET%",
+            "vmType": "m5.2xlarge",
+            "keyName": "%CFN_ADMIN_KEYPAIR%",
+            "securityGroupIds": ["%CFN_COMPUTE_SECURITY_GROUP_ID%"],
+            "placementGroupName": "",
+            "tenancy": "default",
+            "instanceProfile":  "%CFN_LSF_COMPUTE_NODE_INSTANCE_PROFILE_ARN%",
+            "instanceTags":     "Name=LSF Exec Host;Cluster=%CFN_LSF_CLUSTER_NAME%",
+            "userData":         "EFS_FS_DNS_NAME=%CFN_EFS_FS_DNS_NAME%;LSF_INSTALL_DIR=%CFN_LSF_INSTALL_DIR%;PROJ_DIR=%CFN_PROJ_DIR%;SCRATCH_DIR=%CFN_SCRATCH_DIR%;FS_MOUNT_POINT=%CFN_FS_MOUNT_POINT%;NFS_SERVER_EXPORT=%CFN_NFS_SERVER_EXPORT%"
+        },
+        {
+            "templateId": "c4-2xlarge",
+            "priority": 10,
+            "maxNumber": 1000,
+            "attributes": {
+                "type":    ["String", "X86_64"],
+                "ncores":  ["Numeric", "4"],
+                "ncpus":   ["Numeric", "4"],
+                "mem":     ["Numeric", "15000"],
+                "aws":     ["Boolean", "1"]
+            },
+            "imageId": "%CFN_COMPUTE_AMI%",
+            "subnetId": "%CFN_COMPUTE_NODE_SUBNET%",
+            "vmType": "c4.2xlarge",
+            "keyName": "%CFN_ADMIN_KEYPAIR%",
+            "securityGroupIds": ["%CFN_COMPUTE_SECURITY_GROUP_ID%"],
+            "placementGroupName": "",
+            "tenancy": "default",
+            "instanceProfile":  "%CFN_LSF_COMPUTE_NODE_INSTANCE_PROFILE_ARN%",
+            "instanceTags":     "Name=LSF Exec Host;Cluster=%CFN_LSF_CLUSTER_NAME%",
+            "userData":         "EFS_FS_DNS_NAME=%CFN_EFS_FS_DNS_NAME%;LSF_INSTALL_DIR=%CFN_LSF_INSTALL_DIR%;PROJ_DIR=%CFN_PROJ_DIR%;SCRATCH_DIR=%CFN_SCRATCH_DIR%;FS_MOUNT_POINT=%CFN_FS_MOUNT_POINT%;NFS_SERVER_EXPORT=%CFN_NFS_SERVER_EXPORT%"
+        },
+        {
+            "templateId": "c5-2xlarge",
+            "priority": 9,
+            "maxNumber": 1000,
+            "attributes": {
+                "type":    ["String", "X86_64"],
+                "ncores":  ["Numeric", "4"],
+                "ncpus":   ["Numeric", "4"],
+                "mem":     ["Numeric", "15000"],
+                "aws":     ["Boolean", "1"]
+            },
+            "imageId": "%CFN_COMPUTE_AMI%",
+            "subnetId": "%CFN_COMPUTE_NODE_SUBNET%",
+            "vmType": "c5.2xlarge",
+            "keyName": "%CFN_ADMIN_KEYPAIR%",
+            "securityGroupIds": ["%CFN_COMPUTE_SECURITY_GROUP_ID%"],
+            "placementGroupName": "",
+            "tenancy": "default",
+            "instanceProfile":  "%CFN_LSF_COMPUTE_NODE_INSTANCE_PROFILE_ARN%",
+            "instanceTags":     "Name=LSF Exec Host;Cluster=%CFN_LSF_CLUSTER_NAME%",
+            "userData":         "EFS_FS_DNS_NAME=%CFN_EFS_FS_DNS_NAME%;LSF_INSTALL_DIR=%CFN_LSF_INSTALL_DIR%;PROJ_DIR=%CFN_PROJ_DIR%;SCRATCH_DIR=%CFN_SCRATCH_DIR%;FS_MOUNT_POINT=%CFN_FS_MOUNT_POINT%;NFS_SERVER_EXPORT=%CFN_NFS_SERVER_EXPORT%"
+        },
+        {
+            "templateId": "z1d-2xlarge",
+            "priority": 8,
+            "maxNumber": 1000,
+            "attributes": {
+                "type":    ["String", "X86_64"],
+                "ncores":  ["Numeric", "4"],
+                "ncpus":   ["Numeric", "4"],
+                "mem":     ["Numeric", "60000"],
+                "aws":     ["Boolean", "1"]
+            },
+            "imageId": "%CFN_COMPUTE_AMI%",
+            "subnetId": "%CFN_COMPUTE_NODE_SUBNET%",
+            "vmType": "z1d.2xlarge",
+            "keyName": "%CFN_ADMIN_KEYPAIR%",
+            "securityGroupIds": ["%CFN_COMPUTE_SECURITY_GROUP_ID%"],
+            "placementGroupName": "",
+            "tenancy": "default",
+            "instanceProfile":  "%CFN_LSF_COMPUTE_NODE_INSTANCE_PROFILE_ARN%",
+            "instanceTags":     "Name=LSF Exec Host;Cluster=%CFN_LSF_CLUSTER_NAME%",
+            "userData":         "EFS_FS_DNS_NAME=%CFN_EFS_FS_DNS_NAME%;LSF_INSTALL_DIR=%CFN_LSF_INSTALL_DIR%;PROJ_DIR=%CFN_PROJ_DIR%;SCRATCH_DIR=%CFN_SCRATCH_DIR%;FS_MOUNT_POINT=%CFN_FS_MOUNT_POINT%;NFS_SERVER_EXPORT=%CFN_NFS_SERVER_EXPORT%"
+        },
+        {
+            "templateId": "r5-12xlarge",
+            "priority": 5,
+            "maxNumber": 1000,
+            "attributes": {
+                "type":    ["String", "X86_64"],
+                "ncores":  ["Numeric", "24"],
+                "ncpus":   ["Numeric", "24"],
+                "mem":     ["Numeric", "380000"],
+                "aws":     ["Boolean", "1"]
+            },
+            "imageId": "%CFN_COMPUTE_AMI%",
+            "subnetId": "%CFN_COMPUTE_NODE_SUBNET%",
+            "vmType": "r5.12xlarge",
+            "keyName": "%CFN_ADMIN_KEYPAIR%",
+            "securityGroupIds": ["%CFN_COMPUTE_SECURITY_GROUP_ID%"],
+            "placementGroupName": "",
+            "tenancy": "default",
+            "instanceProfile":  "%CFN_LSF_COMPUTE_NODE_INSTANCE_PROFILE_ARN%",
+            "instanceTags":     "Name=LSF Exec Host;Cluster=%CFN_LSF_CLUSTER_NAME%",
+            "userData":         "EFS_FS_DNS_NAME=%CFN_EFS_FS_DNS_NAME%;LSF_INSTALL_DIR=%CFN_LSF_INSTALL_DIR%;PROJ_DIR=%CFN_PROJ_DIR%;SCRATCH_DIR=%CFN_SCRATCH_DIR%;FS_MOUNT_POINT=%CFN_FS_MOUNT_POINT%;NFS_SERVER_EXPORT=%CFN_NFS_SERVER_EXPORT%"
+        },
+        {
+            "templateId": "r5-24xlarge",
+            "priority": 4,
+            "maxNumber": 1000,
+            "attributes": {
+                "type":    ["String", "X86_64"],
+                "ncores":  ["Numeric", "48"],
+                "ncpus":   ["Numeric", "48"],
+                "mem":     ["Numeric", "700000"],
+                "aws":     ["Boolean", "1"]
+            },
+            "imageId": "%CFN_COMPUTE_AMI%",
+            "subnetId": "%CFN_COMPUTE_NODE_SUBNET%",
+            "vmType": "r5.24xlarge",
+            "keyName": "%CFN_ADMIN_KEYPAIR%",
+            "securityGroupIds": ["%CFN_COMPUTE_SECURITY_GROUP_ID%"],
+            "placementGroupName": "",
+            "tenancy": "default",
+            "instanceProfile":  "%CFN_LSF_COMPUTE_NODE_INSTANCE_PROFILE_ARN%",
+            "instanceTags":     "Name=LSF Exec Host;Cluster=%CFN_LSF_CLUSTER_NAME%",
+            "userData":         "EFS_FS_DNS_NAME=%CFN_EFS_FS_DNS_NAME%;LSF_INSTALL_DIR=%CFN_LSF_INSTALL_DIR%;PROJ_DIR=%CFN_PROJ_DIR%;SCRATCH_DIR=%CFN_SCRATCH_DIR%;FS_MOUNT_POINT=%CFN_FS_MOUNT_POINT%;NFS_SERVER_EXPORT=%CFN_NFS_SERVER_EXPORT%"
+        }
+    ]
+}

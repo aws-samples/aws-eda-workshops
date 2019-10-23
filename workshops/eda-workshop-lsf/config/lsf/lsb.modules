@@ -1,0 +1,16 @@
+Begin PluginModule
+SCH_PLUGIN          RB_PLUGIN     SCH_DISABLE_PHASES
+schmod_default          ()              ()
+schmod_fcfs             ()              ()
+schmod_fairshare        ()              ()
+schmod_limit            ()              ()
+schmod_parallel         ()              ()
+schmod_reserve          ()              ()
+schmod_mc               ()              ()
+schmod_preemption       ()              ()
+schmod_advrsv           ()              ()
+schmod_ps               ()              ()
+schmod_affinity         ()              ()
+schmod_demand           ()              ()
+#schmod_datamgr         ()              ()
+End PluginModule

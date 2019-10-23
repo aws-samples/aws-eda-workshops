@@ -1,8 +1,8 @@
 
 AWSTemplateFormatVersion: 2010-09-09
 Description: |
-  Deploys a full EDA computing infrastructure that includes a new VPC, login server,
-  LSF master, EFS file system, and a shared NFS file system.
+  Deploys a full EDA computing infrastructure that includes a new VPC, login server with
+  remote desktop, LSF master, EFS file system, and a shared NFS file system.
   
   This root stack launches a nested stack for each infrastructure component.
   
@@ -35,6 +35,7 @@ Metadata:
           - CustomerLSFInstallUri
           - CustomerLSFBinsUri
           - CustomerLSFEntitlementUri
+          - CustomerLSFFixPackUri
           - MasterInstanceType
           - MasterServerAMI
           - ComputeAMI
@@ -76,11 +77,13 @@ Metadata:
       PrivateSubnet1CIDR:
         default: CIDR block for the private subnet
       CustomerLSFInstallUri:
-        default: LSF install script package
+        default: LSF 10.1 install script package
       CustomerLSFBinsUri:
-        default: LSF Linux distribution package
+        default: LSF 10.1 Linux base distribution package
       CustomerLSFEntitlementUri:
-        default: LSF entitlement file
+        default: LSF 10.1 entitlement file
+      CustomerLSFFixPackUri:
+        default: LSF 10.1 Fix Pack
       LoginServerInstanceType:
         default: Login server instance type
       LoginServerAMI:
@@ -97,7 +100,7 @@ Parameters:
     AllowedPattern: ".+"
 
   MasterInstanceType:
-    Description: "The instance type for the master node of the cluster."
+    Description: "The instance type for the LSF master host of the cluster."
     Type: String
     Default: "m5.2xlarge"
     AllowedValues:
@@ -107,7 +110,7 @@ Parameters:
       - m5.2xlarge
 
   MasterServerAMI:
-    Description: "The AMI for the master server. Amazon Linux 2 is recommended."
+    Description: "The AMI for the LSF master server. Amazon Linux 2 is recommended."
     Type: String
     Default: ALinux2
     AllowedValues:
@@ -130,8 +133,10 @@ Parameters:
     Default: nebula
 
   LSFInstallPath:
-    Description: The path in which to install the LSF trial software. For example, /tools/ibm/lsf.
-    Type: String
+    Description: >
+      The shared NFS path for installing LSF. This will be created on the included EFS file system
+      and mounted on all nodes in the cluster.
+    Type: "String"
     Default: "/tools/ibm/lsf"
     AllowedPattern: ^/.+
 
@@ -158,8 +163,8 @@ Parameters:
       Use your public IP address (http://checkip.amazonaws.com).
     Type: String
     Default: 0.0.0.0/32
-    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
-    ConstraintDescription: This must be a valid IP CIDR range of the form x.x.x.x/x.
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/32
+    ConstraintDescription: This must be a valid IP CIDR range of the form x.x.x.x/32.
 
   LoginServerInstanceType:
     Description: The instance type for the login server.
@@ -221,7 +226,7 @@ Parameters:
       the example in the parameter description.
 
   CustomerLSFBinsUri:
-    Description: The S3 URI to the LSF Linux 2.6 kernel glibc version 2.3 distribution package,
+    Description: The S3 URI to the LSF 10.1 Linux 2.6 kernel glibc version 2.3 base distribution package,
       lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z. This must be a full distribution and not a patch 
       or Fix Pack package. Select object in the S3 console and choose Copy Path and paste here.
     Type: String
@@ -229,6 +234,14 @@ Parameters:
     AllowedPattern: s3\:\/\/.*\/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z
     ConstraintDescription: S3 path invalid. Please verify LSF package name matches
       the example in the parameter description.
+
+  CustomerLSFFixPackUri:
+    Description: >
+      The S3 URI to the LSF 10.1 Fix Pack package. This must the lastest cumulative Fix Pack package.
+      Select package object in the console and choose Copy Path and paste here.
+    Type: "String"
+    Default: "s3://<your_bucket>/lsf10.1_linux2.6-glibc2.3-x86_64.520009.tar.Z"
+    #AllowedPattern: ^s3\:\/\/.*\/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z$
 
   CustomerLSFEntitlementUri:
     Description: The S3 URI to the LSF entitlement file, lsf_std_entitlement.dat or lsf_adv_entitlement.dat.
@@ -284,6 +297,7 @@ Resources:
         ProjectDir: !Ref ProjectDir
         CustomerLSFInstallUri: !Ref CustomerLSFInstallUri
         CustomerLSFBinsUri: !Ref CustomerLSFBinsUri
+        CustomerLSFFixPackUri: !Ref CustomerLSFFixPackUri
         CustomerLSFEntitlementUri: !Ref CustomerLSFEntitlementUri
         AdminKeyPair: !Ref AdminKeyPair
       TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/templates/02-lsf-master.yaml
