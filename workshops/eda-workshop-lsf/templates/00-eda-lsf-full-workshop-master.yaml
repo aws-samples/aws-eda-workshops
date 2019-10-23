@@ -300,6 +300,7 @@ Resources:
         CustomerLSFFixPackUri: !Ref CustomerLSFFixPackUri
         CustomerLSFEntitlementUri: !Ref CustomerLSFEntitlementUri
         AdminKeyPair: !Ref AdminKeyPair
+        DCVUserName: !Ref UserName
       TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/templates/02-lsf-master.yaml
 
   NFSServerStack:

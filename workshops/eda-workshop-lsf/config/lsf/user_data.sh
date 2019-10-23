@@ -61,9 +61,10 @@ mount $NFS_SERVER_EXPORT $FS_MOUNT_POINT
 # TODO: figure out more elegant way to do this
 #cp /efs/tools/lsf/clusters/bespin/conf/lsf.conf.orig /etc/lsf.conf
 
-# Add the LSF admin account, ec2-user
-# TODO: pass from RC template variable
+# Add the LSF admin account
 useradd -m -u 1500 $LSF_ADMIN
+# Add DCV login user account
+useradd -m -u 1501 $DCV_USER_NAME
 
 LSF_TOP=$LSF_INSTALL_DIR
 LSF_CONF_FILE=$LSF_TOP/conf/lsf.conf
