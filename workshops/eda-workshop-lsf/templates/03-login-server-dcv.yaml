@@ -238,7 +238,7 @@ Resources:
                 user_pass=${!user_pass}
 
                 groupadd ${!user_name}
-                useradd ${!user_name} -m -g ${!user_name}
+                useradd -u 1501 -m -g ${!user_name} ${!user_name} 
                 echo "${!user_name}:${!user_pass}" | chpasswd
                 echo "Created user ${!user_name}"
 
