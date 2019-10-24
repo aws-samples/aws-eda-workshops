@@ -30,7 +30,7 @@ The tutorial sets up the following:
 
 - A VPC configured with public and private subnets to provide you with your own virtual network on AWS.*
 - In the public subnet, a managed NAT gateway to allow outbound internet access for resources in the private subnets.
-- In the public subnet, a Linux login/submission host to allow inbound Secure Shell (SSH) access to the environment.
+- In the public subnet, a Linux login/submission host running NICE DCV to allow remote desktop and Secure Shell (SSH) access to the environment.
 - In the private subnet, an LSF master running IBM Spectrum LSF with the Resource Connector feature enabled, Amazon EC2 compute instances that are dynamically provisioned by LSF, and a Linux-based NFS server for runtime scratch data.
 - An Amazon Elastic File System (EFS) file system for the LSF distribution and configuration files.
 
@@ -49,8 +49,12 @@ This deployment guide also requires a moderate level of familiarity with AWS ser
 The IBM Spectrum LSF software is not provided in this workshop; you will need to download LSF 10.1 Fix Pack 8 or newer and an associated entitlement file from your IBM Passport Advantage portal to complete this tutorial.  Download the following packages from the web portal:
 
 - `lsf10.1_lsfinstall_linux_x86_64.tar.Z`
-- `lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z` This should the latest full distribution package and not a patch or Fix Pack.
+- `lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z` (base distribution)
+- `lsf10.1_linux2.6-glibc2.3-x86_64-######.tar.Z` (latest cumulative Fix Pack)
 - `lsf_std_entitlement.dat` or `lsf_adv_entitlement.dat`
+
+### NICE DCV Remote Desktop Client
+NICE DCV is a license-free, high-performance remote display protocol that you'll use for logging into the login server's desktop environment. Download and install the [NICE DCV remote desktop native client](https://download.nice-dcv.com) on the computer you will be using for this workshop.
 
 ### AWS Account
 
@@ -72,8 +76,8 @@ If necessary, request [service limit increases](https://console.aws.amazon.com/s
 |IAM roles|4|
 |EFS file systems|1|
 |i3.16xlarge instance|1|
+|m5.xlarge instance|1|
 |m5.2xlarge instance|1|
-|t3.medium instance|1|
 |c5.2xlarge instance|Up to 20|
 
 #### Regions
@@ -109,7 +113,7 @@ This tutorial provides separate CloudFormation templates for these options. It a
 
 ### Step 2. Upload LSF Software Packages and Entitlement File
 
-1. Upload the two required LSF software packages and the LSF entitlement file to an S3 bucket in your account.
+1. Upload the three required LSF software packages and the LSF entitlement file to a private S3 bucket in your account.
 
 ### Step 3. Subscribe to the Required AMIs
 
@@ -169,7 +173,8 @@ Sign in to your AWS account, and follow these instructions to subscribe:
     |EC2 KeyPair|Select the key pair you created in your account|
     |Cluster name|Enter a name for the LSF cluster|
     |LSF install package|Enter the S3 protocol URL for the `lsf10.1_lsfinstall_linux_x86_64.tar.Z` package|
-    |LSF binary package|Enter the S3 protocol URL for the `lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z` package|
+    |LSF distribution package|Enter the S3 protocol URL for the `lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z` package|
+    |LSF fix pack package|Enter the S3 protocol URL for the `lsf10.1_linux2.6-glibc2.3-x86_64-######.tar.Z` package|
     |LSF entitlement file|Enter the S3 protocol URL for the LSF entitlement file.  This should be either `lsf_std_entitlement.dat` or `lsf_adv_entitlement.dat`.
 
     When you finish reviewing and customizing the parameters, choose **Next**.
