@@ -204,6 +204,9 @@ Resources:
               #add to fstab
               echo "${LSFEFSFileSystemFQDN}:/ $LSF_INSTALL_DIR_ROOT nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> \
                 /etc/fstab
+              echo "${NFSServerExport}:/ $FileSystemMountPoint nfs rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> \
+                /etc/fstab
+
 
               # Set up LSF envirionment
               echo "source $LSF_INSTALL_DIR/conf/profile.lsf" > /etc/profile.d/lsf.sh
