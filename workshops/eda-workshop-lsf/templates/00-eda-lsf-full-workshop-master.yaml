@@ -169,7 +169,7 @@ Parameters:
   LoginServerInstanceType:
     Description: The instance type for the login server.
     Type: String
-    Default: t3.medium
+    Default: m5.xlarge
     AllowedValues:
       - t3.medium
       - t3.xlarge
