@@ -145,10 +145,10 @@ Resources:
   LSFMasterInstance:
     Type: "AWS::EC2::Instance"
     DependsOn: LSFEFSMountTarget
-    # CreationPolicy:
-    #   ResourceSignal:    
-    #     Count: 1
-    #     Timeout: PT5M
+    CreationPolicy:
+      ResourceSignal:    
+        Count: 1
+        Timeout: PT15M
     Properties:
       InstanceType: !Ref MasterInstanceType
       ImageId:
@@ -270,7 +270,7 @@ Resources:
               cd $LSF_INSTALL_DIR/10.1/install
               cp /tmp/$LSF_FP_PKG .
               echo "schmod_demand.so" >> patchlib/daemonlists.tbl
-              ./patchinstall $LSF_FP_PKG
+              ./patchinstall --silent $LSF_FP_PKG
 
               ## Configure LSF and Resource Connector
               mkdir -p $LSF_ENVDIR/resource_connector/aws/conf
@@ -402,7 +402,7 @@ Resources:
               # Verify that LSF is up and send signal to Cloudformation
               sleep 5
               lsid
-              #/opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource LSFMasterInstance --region ${AWS::Region}
+              /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource LSFMasterInstance --region ${AWS::Region}
 
               echo "*** END LSF MASTER BOOTSTRAP ***"
 
