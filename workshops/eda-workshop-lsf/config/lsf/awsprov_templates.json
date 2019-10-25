@@ -46,7 +46,7 @@
         },
         {
             "templateId": "c4-2xlarge",
-            "priority": 10,
+            "priority": 9,
             "maxNumber": 1000,
             "attributes": {
                 "type":    ["String", "X86_64"],
@@ -68,7 +68,7 @@
         },
         {
             "templateId": "c5-2xlarge",
-            "priority": 9,
+            "priority": 10,
             "maxNumber": 1000,
             "attributes": {
                 "type":    ["String", "X86_64"],
