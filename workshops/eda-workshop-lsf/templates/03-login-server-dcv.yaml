@@ -185,6 +185,31 @@ Resources:
               systemctl enable amazon-ssm-agent
               systemctl start amazon-ssm-agent
 
+              ## Mount NFS file system for LSF install
+              ## and create working directories
+
+              # mount points
+              mkdir $LSF_INSTALL_DIR_ROOT
+              mkdir ${FileSystemMountPoint}
+              
+              # mount EFS file system
+              mount -t nfs4 -o rw,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 ${LSFEFSFileSystemFQDN}:/ $LSF_INSTALL_DIR_ROOT
+              # mount NFS file system
+              mount ${NFSServerExport} ${FileSystemMountPoint}
+
+              # create project and scratch directories
+              mkdir ${FileSystemMountPoint}/{${ScratchDir},${ProjectDir}} \
+                && chmod 777 ${FileSystemMountPoint}/{${ScratchDir},${ProjectDir}}
+
+              # add to fstab
+              echo "${LSFEFSFileSystemFQDN}:/ $LSF_INSTALL_DIR_ROOT nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> \
+                /etc/fstab
+              echo "${NFSServerExport}:/ ${FileSystemMountPoint} nfs rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> \
+                /etc/fstab
+
+              # Set up LSF envirionment
+              echo "source $LSF_INSTALL_DIR/conf/profile.lsf" > /etc/profile.d/lsf.sh
+
               ### Install DCV ###
               echo "Installing DCV..."
 
@@ -307,32 +332,6 @@ Resources:
 
               ### End Install DCV ###
               
-              ## Mount NFS file system for LSF install
-              ## and create working directories
-
-              # mount points
-              mkdir $LSF_INSTALL_DIR_ROOT
-              mkdir ${FileSystemMountPoint}
-              
-              # mount EFS file system
-              mount -t nfs4 -o rw,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 ${LSFEFSFileSystemFQDN}:/ $LSF_INSTALL_DIR_ROOT
-              # mount NFS file system
-              mount ${NFSServerExport} ${FileSystemMountPoint}
-
-              # create project and scratch directories
-              mkdir ${FileSystemMountPoint}/{${ScratchDir},${ProjectDir}} \
-                && chmod 777 ${FileSystemMountPoint}/{${ScratchDir},${ProjectDir}}
-
-              #add to fstab
-              echo "${LSFEFSFileSystemFQDN}:/ $LSF_INSTALL_DIR_ROOT nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> \
-                /etc/fstab
-              echo "${NFSServerExport}:/ $FileSystemMountPoint nfs rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> \
-                /etc/fstab
-
-
-              # Set up LSF envirionment
-              echo "source $LSF_INSTALL_DIR/conf/profile.lsf" > /etc/profile.d/lsf.sh
-
             -
               LSFEFSFileSystemFQDN:
                 Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"LSFEFSFileSystemFQDN" ] ]
