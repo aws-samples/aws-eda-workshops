@@ -1,1 +1,1 @@
-aws cloudformation deploy --stack-name=lsf-test1 --template-file ./templates/00-eda-lsf-full-workshop-master.yaml --parameter-overrides $(cat config/parameters.ini) --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
+aws cloudformation deploy --stack-name=lsf-test1 --template-file ~/Documents/repos/aws-eda-workshops/workshops/eda-workshop-lsf/templates/00-eda-lsf-full-workshop-master.yaml --parameter-overrides $(cat ~/Documents/repos/parameters.ini) --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
