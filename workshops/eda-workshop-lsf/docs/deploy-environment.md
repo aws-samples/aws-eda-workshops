@@ -120,7 +120,7 @@ This tutorial provides separate CloudFormation templates for these options. It a
 This workshop requires a subscription to the following AMIs in AWS Marketplace. AMIs are images that are used to boot the instances (virtual servers) in AWS. They also contain software required to run the workshop.  There is no additional cost to use these AMIs.
 
 - AWS FPGA Developer AMI
-- Official CentOS 7 x86_64 HVM AMI
+- CentOS 7 (x86_64) - with Updates HVM AMI
 
 Sign in to your AWS account, and follow these instructions to subscribe:
 
@@ -130,7 +130,7 @@ Sign in to your AWS account, and follow these instructions to subscribe:
 
 1. When the subscription process is complete, exit out of AWS Marketplace without further action. **Do not** click **Continue to Launch**; the workshop CloudFormation templates will deploy the AMI for you.
 
-1. Repeat the steps 1 through 3 to subscribe to the [Official CentOS 7 x86_64 HVM AMI](https://aws.amazon.com/marketplace/pp/B00O7WM7QW) AMI.
+1. Repeat the steps 1 through 3 to subscribe to the [CentOS 7 (x86_64) - with Updates HVM](https://aws.amazon.com/marketplace/pp/B00O7WM7QW) AMI.
 
 1. Verify the subscriptions in the [Marketplace dashboard](https://console.aws.amazon.com/marketplace/home) within the AWS Console.
     - Click on **Manage subscriptions** to confirm that the two AMI subscriptions are active in your account.
