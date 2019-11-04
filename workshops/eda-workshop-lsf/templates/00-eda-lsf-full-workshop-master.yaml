@@ -177,6 +177,7 @@ Parameters:
       - m4.2xlarge
       - m5.xlarge
       - m5.2xlarge
+      - c5d.9xlarge
 
   LoginServerAMI:
     Description: This should be the same AMI that is used for the compute nodes. 
