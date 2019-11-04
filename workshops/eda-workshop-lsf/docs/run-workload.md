@@ -53,7 +53,9 @@ Now we are ready to scale out the simulations.  Like with the setup job above, w
 
 1. Check LSF Resource Connector status
 
+
     `badmin rc view`
+
     `badmin rc error`
 
 1. View LSF Resource Connector template configuration
