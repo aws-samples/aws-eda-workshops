@@ -130,7 +130,7 @@ Parameters:
   LSFClusterName:
     Description: The name of the computing environment.  This will also be the name of the LSF cluster.
     Type: String
-    Default: nebula
+    Default: myawscluster
 
   LSFInstallPath:
     Description: >
