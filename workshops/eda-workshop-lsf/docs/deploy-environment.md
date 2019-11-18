@@ -46,12 +46,18 @@ This deployment guide also requires a moderate level of familiarity with AWS ser
 
 ### IBM LSF Software
 
-The IBM Spectrum LSF software is not provided in this workshop; you will need to download LSF 10.1 Fix Pack 8 or newer and an associated entitlement file from your IBM Passport Advantage portal to complete this tutorial.  Download the following packages from the web portal:
+The IBM Spectrum LSF software is not provided in this workshop; you will need to download LSF 10.1 Fix Pack 8 and an associated entitlement file from your IBM Passport Advantage portal to complete this tutorial.  Download the following packages from the web portal:
 
-- `lsf10.1_lsfinstall_linux_x86_64.tar.Z`
+- `lsf10.1_lsfinstall_linux_x86_64.tar.Z` (install script)
 - `lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z` (base distribution)
-- `lsf10.1_linux2.6-glibc2.3-x86_64-######.tar.Z` (latest cumulative Fix Pack)
-- `lsf_std_entitlement.dat` or `lsf_adv_entitlement.dat`
+- `lsf10.1_linux2.6-glibc2.3-x86_64-520099.tar.Z` (Fix Pack 8*)
+- `lsf_std_entitlement.dat` or `lsf_adv_entitlement.dat` (entitlement file)
+
+***Identifying LSF Fix Pack 8 in IBM Fix Central**
+
+|Fix ID|Package Name|
+|:-----|:-----------|
+|lsf-10.1.0.8-spk-2019-May-build520099|lsf10.1_linux2.6-glibc2.3-x86_64-520099.tar.Z
 
 ### NICE DCV Remote Desktop Client
 NICE DCV is a license-free, high-performance remote display protocol that you'll use for logging into the login server's desktop environment. Download and install the [NICE DCV remote desktop native client](https://download.nice-dcv.com) on the computer you will be using for this workshop.
