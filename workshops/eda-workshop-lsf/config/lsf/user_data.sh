@@ -14,6 +14,11 @@ export AWS_DEFAULT_REGION="$( curl -s http://169.254.169.254/latest/meta-data/pl
 export LSF_INSTALL_DIR_ROOT="/`echo $LSF_INSTALL_DIR | cut -d / -f2`"
 export LSF_ADMIN=lsfadmin
 
+# Add the LSF admin account
+useradd -m -u 1500 $LSF_ADMIN
+# Add DCV login user account
+useradd -m -u 1501 $DCV_USER_NAME
+
 # Install SSM so we can use SSM Session Manager and avoid ssh logins.
 yum install -q -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
 systemctl enable amazon-ssm-agent
@@ -56,29 +61,25 @@ mount $NFS_SERVER_EXPORT $FS_MOUNT_POINT
 
 # Set up the LSF enviornment
 
-# Create local lsf.conf file to support per-exechost configs
-# See LSF_LOCAL_RESOURCES below.
-# TODO: figure out more elegant way to do this
-#cp /efs/tools/lsf/clusters/bespin/conf/lsf.conf.orig /etc/lsf.conf
-
-# Add the LSF admin account
-useradd -m -u 1500 $LSF_ADMIN
-# Add DCV login user account
-useradd -m -u 1501 $DCV_USER_NAME
+# Create LSF log and conf directories
+mkdir /var/log/lsf && chmod 777 /var/log/lsf
+mkdir /etc/lsf && chmod 777 /etc/lsf
 
 LSF_TOP=$LSF_INSTALL_DIR
-LSF_CONF_FILE=$LSF_TOP/conf/lsf.conf
 . $LSF_TOP/conf/profile.lsf
 
-# Create LSF log directories
-mkdir /var/log/lsf && chmod 777 /var/log/lsf
+# Create local lsf.conf file to support dynamic resources
+# See LSF_LOCAL_RESOURCES below.
+cp $LSF_ENVDIR/lsf.conf /etc/lsf/lsf.conf
+chmod 444 /etc/lsf/lsf.conf
+export $LSF_ENVDIR=/etc/lsf
 
-# Support rc_account resource to enable RC_ACCOUNT policy
-# Add additional local resources if needed
-# if [ -n "${rc_account}" ]; then
-#    sed -i "s/\(LSF_LOCAL_RESOURCES=.*\)\"/\1 [resourcemap ${rc_account}*rc_account]\"/" $LSF_CONF_FILE
-#    echo "update LSF_LOCAL_RESOURCES lsf.conf successfully, add [resourcemap ${rc_account}*rc_account]"
-# fi
+#Support rc_account resource to enable RC_ACCOUNT policy
+#Add additional local resources if needed
+if [ -n "${rc_account}" ]; then
+   sed -i "s/\(LSF_LOCAL_RESOURCES=.*\)\"/\1 [resourcemap ${rc_account}*rc_account]\"/" $LSF_ENVDIR/lsf.conf
+   echo "update LSF_LOCAL_RESOURCES lsf.conf successfully, add [resourcemap ${rc_account}*rc_account]"
+fi
 
 
 # Start LSF Daemons
