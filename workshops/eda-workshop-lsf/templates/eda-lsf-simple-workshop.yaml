@@ -415,18 +415,14 @@ Resources:
                 -O $LSF_ENVDIR/resource_connector/aws/conf/awsprov_templates.json
               
               sed -i -e "s|%CFN_COMPUTE_AMI%|${LSFComputeNodeAmi}|" \
-                     -e "s|%CFN_COMPUTE_NODE_SUBNET%|${LSFComputeNodeSubnet}|" \
+                     -e "s|%CFN_COMPUTE_NODE_SUBNET%|${ComputeNodeSubnet}|" \
                      -e "s|%CFN_ADMIN_KEYPAIR%|${AdminKeyPair}|" \
                      -e "s|%CFN_COMPUTE_SECURITY_GROUP_ID%|${LSFComputeNodeSGGroupId}|" \
                      -e "s|%CFN_LSF_COMPUTE_NODE_INSTANCE_PROFILE_ARN%|${LSFComputeNodeInstanceProfileArn}|" \
                      -e "s|%CFN_LSF_CLUSTER_NAME%|${LSFClusterName}|" \
                      -e "s|%CFN_EFS_FS_DNS_NAME%|$EFS_FS_DNS_NAME|" \
                      -e "s|%CFN_LSF_INSTALL_DIR%|$LSF_INSTALL_DIR|" \
-                     -e "s|%CFN_PROJ_DIR%|${ProjectDir}|" \
-                     -e "s|%CFN_SCRATCH_DIR%|${ScratchDir}|" \
-                     -e "s|%CFN_FS_MOUNT_POINT%|${FileSystemMountPoint}|" \
-                     -e "s|%CFN_NFS_SERVER_EXPORT%|${NFSServerExport}|" \
-                     -e "s|%CFN_DCV_USER_NAME%|${DCVUserName}|" \
+                     -e "s|%CFN_DCV_USER_NAME%|${UserName}|" \
                   $LSF_ENVDIR/resource_connector/aws/conf/awsprov_templates.json
               
               # user_data script that RC executes on compute nodes
