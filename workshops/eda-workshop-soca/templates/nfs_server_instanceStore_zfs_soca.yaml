@@ -168,8 +168,6 @@ Metadata:
           default: Use ZFS or Software Raid (mdadm)
         ZfsPool:
           default: ZFS pool name
-        EDAInstallPath:
-          default: "Path to EDA tools and project data"
     
 Parameters:
   CreateElasticIP:
@@ -292,10 +290,6 @@ Parameters:
     Default: v01
     Description: ZFS pool name
     Type: String
-  EDAInstallPath:
-    Description: "Path for EDA tools and design data"
-    Type: String
-    Default: "/proj"
 
 Resources:
   BucketPolicy:
@@ -452,7 +446,9 @@ Resources:
                                                         \"io_time\",
                                                         \"iops_in_progress\",
                                                         \"write_bytes\",
+                                                        \"write_time\",
                                                         \"read_bytes\",
+                                                        \"read_time\",
                                                         \"writes\",
                                                         \"reads\"
                                                 ],
@@ -831,3 +827,4 @@ Outputs:
   NFSServerExport:
     Description: NFS server IP and export point
     Value: !Join [ '', [ !GetAtt NFSInstance.PrivateIp, ":/", !Ref ZfsPool, "/", !Ref ZfsMountPoint ] ]
+
