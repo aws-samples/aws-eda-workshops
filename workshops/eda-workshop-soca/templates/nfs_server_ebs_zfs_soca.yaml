@@ -14,12 +14,18 @@ Conditions:
   create_elastic_ip: !Equals
     - !Ref 'CreateElasticIP'
     - 'True'
+  ebs_is_io1: !Equals
+    - !Ref 'EBSVolumeType'
+    - io1
   no_placement_group: !Equals
     - !Ref 'ExistingPlacementGroup'
     - NO_VALUE
   not_existing_sg: !Equals
     - !Ref 'ExistingSecurityGroup'
     - NO_VALUE
+  vol_type_ebs: !Equals
+    - !Ref 'VolumeType'
+    - EBS
 Description: Currently supporting Amazon Linux 2 and RHEL/CentOS 7.6. Setup IAM role and security groups,
   launch instance, use local NVMe volumes, use ZFS or software RIAD (mdadm) for FS,
   and setup NFS server
@@ -121,6 +127,13 @@ Metadata:
           - RAIDLevel
           - ZfsOrMdadm
       - Label:
+          default: EBS Storage Options
+        Parameters:
+          - EBSVolumeType
+          - EBSVolumeSize
+          - EBSVolumeIops
+          - EBSDeleteOnTermination
+      - Label:
           default: ZFS Pool and FS Options - Required if using ZFS
         Parameters:
           - ZfsPool
@@ -158,6 +171,14 @@ Metadata:
           default: RAID Level
         VolumeType:
           default: Storage volume type
+      - EBSDeleteOnTermination:
+          default: Delete vols when instance term
+        EBSVolumeIops:
+          default: IOPS for each EBS vol (only for io1)
+        EBSVolumeSize:
+          default: Volume size of the EBS vol
+        EBSVolumeType:
+          default: Volume type of the EBS vol
       - UseL2arc:
           default: Use l2arc for ZFS
         UseZil:
@@ -168,7 +189,6 @@ Metadata:
           default: Use ZFS or Software Raid (mdadm)
         ZfsPool:
           default: ZFS pool name
-    
 Parameters:
   CreateElasticIP:
     AllowedValues:
@@ -177,6 +197,31 @@ Parameters:
     ConstraintDescription: True/False
     Default: 'False'
     Description: Create an Elasic IP address that will be assinged to the instance
+    Type: String
+  EBSDeleteOnTermination:
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Default: 'true'
+    Description: Should the EBS volumes be deleted when the NFS server terminates
+    Type: String
+  EBSVolumeIops:
+    Default: '10000'
+    Description: Only used for io1 volume, IOPS for the io1 EBS volume
+    Type: Number
+  EBSVolumeSize:
+    Default: '5400'
+    Description: Size of each EBS volume - multiply this times the number of volumes
+      to get FS size
+    Type: Number
+  EBSVolumeType:
+    AllowedValues:
+      - gp2
+      - io1
+      - st1
+    ConstraintDescription: 'Must be a either: gp2, io1, st1'
+    Default: gp2
+    Description: Type of EBS volumes to create
     Type: String
   AdminKeyPair:
     ConstraintDescription: 'REQUIRED: Must be a valid EC2 key pair'
@@ -198,16 +243,12 @@ Parameters:
     Type: String
   NFSInstanceType:
     AllowedValues:
-      - i3en.3xlarge
-      - i3en.6xlarge
-      - i3en.12xlarge
-      - i3en.24xlarge
-      - i3en.metal
-      - i3.16xlarge
-      - i3.metal
+      - m5d.24xlarge
+      - r5d.24xlarge
+      - z1d.12xlarge
       - p3dn.24xlarge
     ConstraintDescription: Must an EC2 instance type from the list
-    Default: i3en.3xlarge
+    Default: m5d.24xlarge
     Description: NFS instance type
     Type: String
   NFSOpts:
@@ -269,10 +310,10 @@ Parameters:
     Type: AWS::EC2::VPC::Id
   VolumeType:
     AllowedValues:
-      - InstanceStore
+      - EBS
     ConstraintDescription: Volume type has to EBS or InstanceStore, which is auto-selected
-    Default: InstanceStore
-    Description: 'Using auto-selected VolumeType: InstanceStore'
+    Default: EBS
+    Description: 'Using auto-selected VolumeType: EBS'
     Type: String
   ZfsMountPoint:
     Default: zfs1
@@ -319,7 +360,82 @@ Resources:
   NFSInstance:
     Type: AWS::EC2::Instance
     Properties:
-      DisableApiTermination: false
+      BlockDeviceMappings: !If
+        - vol_type_ebs
+        - - DeviceName: /dev/sdb
+            Ebs:
+              DeleteOnTermination: !Ref 'EBSDeleteOnTermination'
+              Iops: !If
+                - ebs_is_io1
+                - !Ref 'EBSVolumeIops'
+                - !Ref 'AWS::NoValue'
+              VolumeSize: !Ref 'EBSVolumeSize'
+              VolumeType: !Ref 'EBSVolumeType'
+          - DeviceName: /dev/sdc
+            Ebs:
+              DeleteOnTermination: !Ref 'EBSDeleteOnTermination'
+              Iops: !If
+                - ebs_is_io1
+                - !Ref 'EBSVolumeIops'
+                - !Ref 'AWS::NoValue'
+              VolumeSize: !Ref 'EBSVolumeSize'
+              VolumeType: !Ref 'EBSVolumeType'
+          - DeviceName: /dev/sdd
+            Ebs:
+              DeleteOnTermination: !Ref 'EBSDeleteOnTermination'
+              Iops: !If
+                - ebs_is_io1
+                - !Ref 'EBSVolumeIops'
+                - !Ref 'AWS::NoValue'
+              VolumeSize: !Ref 'EBSVolumeSize'
+              VolumeType: !Ref 'EBSVolumeType'
+          - DeviceName: /dev/sde
+            Ebs:
+              DeleteOnTermination: !Ref 'EBSDeleteOnTermination'
+              Iops: !If
+                - ebs_is_io1
+                - !Ref 'EBSVolumeIops'
+                - !Ref 'AWS::NoValue'
+              VolumeSize: !Ref 'EBSVolumeSize'
+              VolumeType: !Ref 'EBSVolumeType'
+          - DeviceName: /dev/sdf
+            Ebs:
+              DeleteOnTermination: !Ref 'EBSDeleteOnTermination'
+              Iops: !If
+                - ebs_is_io1
+                - !Ref 'EBSVolumeIops'
+                - !Ref 'AWS::NoValue'
+              VolumeSize: !Ref 'EBSVolumeSize'
+              VolumeType: !Ref 'EBSVolumeType'
+          - DeviceName: /dev/sdg
+            Ebs:
+              DeleteOnTermination: !Ref 'EBSDeleteOnTermination'
+              Iops: !If
+                - ebs_is_io1
+                - !Ref 'EBSVolumeIops'
+                - !Ref 'AWS::NoValue'
+              VolumeSize: !Ref 'EBSVolumeSize'
+              VolumeType: !Ref 'EBSVolumeType'
+          - DeviceName: /dev/sdh
+            Ebs:
+              DeleteOnTermination: !Ref 'EBSDeleteOnTermination'
+              Iops: !If
+                - ebs_is_io1
+                - !Ref 'EBSVolumeIops'
+                - !Ref 'AWS::NoValue'
+              VolumeSize: !Ref 'EBSVolumeSize'
+              VolumeType: !Ref 'EBSVolumeType'
+          - DeviceName: /dev/sdi
+            Ebs:
+              DeleteOnTermination: !Ref 'EBSDeleteOnTermination'
+              Iops: !If
+                - ebs_is_io1
+                - !Ref 'EBSVolumeIops'
+                - !Ref 'AWS::NoValue'
+              VolumeSize: !Ref 'EBSVolumeSize'
+              VolumeType: !Ref 'EBSVolumeType'
+        - !Ref 'AWS::NoValue'
+      DisableApiTermination: true
       IamInstanceProfile: !Ref 'RootInstanceProfile'
       ImageId: !FindInMap
         - AWSRegionAMI
@@ -755,11 +871,6 @@ Resources:
 
           declare -A instStore_devs
 
-          instStore_devs["i3en.3xlarge"]=1
-          instStore_devs["i3en.6xlarge"]=2
-          instStore_devs["i3en.12xlarge"]=4
-          instStore_devs["i3en.24xlarge"]=8
-          instStore_devs["i3en.metal"]=8
           instStore_devs["i3.16xlarge"]=8
           instStore_devs["i3.metal"]=8
           instStore_devs["p3dn.24xlarge"]=2
@@ -798,25 +909,21 @@ Resources:
     Type: AWS::CloudFormation::WaitConditionHandle
 
   RootInstanceProfile:
-    Type: "AWS::IAM::InstanceProfile"
+    Type: AWS::IAM::InstanceProfile
     Properties:
-      Path: "/"
       Roles:
-        - !Ref RootRole
+        - !Ref 'RootRole'
   RootRole:
-    Type: "AWS::IAM::Role"
+    Type: AWS::IAM::Role
     Properties:
-      Path: "/"
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
         Statement:
-          - 
+          - Action:
+              - sts:AssumeRole
             Effect: Allow
             Principal:
               Service:
-              - "ec2.amazonaws.com"
-            Action:
-            - "sts:AssumeRole"
+                - ec2.amazonaws.com
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
         - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
