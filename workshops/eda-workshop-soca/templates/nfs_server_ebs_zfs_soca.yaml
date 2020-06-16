@@ -360,6 +360,7 @@ Resources:
   NFSInstance:
     Type: AWS::EC2::Instance
     Properties:
+      DisableApiTermination: false
       BlockDeviceMappings: !If
         - vol_type_ebs
         - - DeviceName: /dev/sdb
@@ -435,7 +436,6 @@ Resources:
               VolumeSize: !Ref 'EBSVolumeSize'
               VolumeType: !Ref 'EBSVolumeType'
         - !Ref 'AWS::NoValue'
-      DisableApiTermination: true
       IamInstanceProfile: !Ref 'RootInstanceProfile'
       ImageId: !FindInMap
         - AWSRegionAMI
