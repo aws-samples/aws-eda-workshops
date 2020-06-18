@@ -243,12 +243,18 @@ Parameters:
     Type: String
   NFSInstanceType:
     AllowedValues:
+      - m5n.24xlarge
+      - m5.24xlarge
+      - m5dn.24xlarge
       - m5d.24xlarge
+      - r5n.24xlarge
+      - r5.24xlarge
+      - r5dn.24xlarge
       - r5d.24xlarge
       - z1d.12xlarge
       - p3dn.24xlarge
     ConstraintDescription: Must an EC2 instance type from the list
-    Default: m5d.24xlarge
+    Default: r5n.24xlarge
     Description: NFS instance type
     Type: String
   NFSOpts:
