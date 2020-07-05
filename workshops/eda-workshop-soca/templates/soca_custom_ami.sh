@@ -5,7 +5,7 @@ if [[ $EUID -ne 0 ]]; then
    echo "Error: This script must be run as root" 
    exit 1
 fi
-exec > >(tee /root/custom_ami2.log ) 2>&1
+exec > >(tee /root/custom_ami.log ) 2>&1
 
 OS_NAME=`awk -F= '/^NAME/{print $2}' /etc/os-release`
 if [ "$OS_NAME" == "\"Red Hat Enterprise Linux Server\"" ]; then
