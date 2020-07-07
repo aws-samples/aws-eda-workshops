@@ -33,9 +33,6 @@ fi
 
 #Install PBSPro
 echo "Installing PBSPro"
-export PBSPRO_URL
-export PBSPRO_TGZ
-export PBSPRO_VERSION
 wget $PBSPRO_URL
 tar zxvf $PBSPRO_TGZ
 cd pbspro-$PBSPRO_VERSION
@@ -82,6 +79,7 @@ ulimit -u 3061780
 ulimit -i 3061780
 ulimit -n 1048576" >> /opt/pbs/lib/init.d/limits.pbs_mom
 
+# Install and configure Amazon CloudWatch Agent
 echo "Install and configure Amazon CloudWatch Agent"
 yum install -y https://s3.amazonaws.com/amazoncloudwatch-agent/redhat/amd64/latest/amazon-cloudwatch-agent.rpm
 echo -e "{
@@ -129,6 +127,18 @@ echo -e "{
 }" > /opt/aws/amazon-cloudwatch-agent/bin/config.json
 sed -i 's/\(Instance.*\)\\{\(.*\)\\}/\1{\2}/g' /opt/aws/amazon-cloudwatch-agent/bin/config.json
 /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json -s
+
+# Install DCV
+echo "Install DCV"
+cd ~
+wget $DCV_URL
+if [[ $(md5sum $DCV_TGZ | awk '{print $1}') != $DCV_HASH ]];  then
+        echo -e "FATAL ERROR: Checksum for DCV failed. File may be compromised." > /etc/motd
+            exit 1
+fi
+tar zxvf $DCV_TGZ
+cd nice-dcv-$DCV_VERSION
+rpm -ivh *.rpm --nodeps
 
 echo "Creating script to install FSx for Lustre client: fsx_lusre.sh"
 echo -e "#!/bin/bash    
