@@ -35,7 +35,7 @@ fi
 echo "Installing PBSPro"
 wget $PBSPRO_URL
 tar zxvf $PBSPRO_TGZ
-cd pbspro-$PBSPRO_VERSION
+cd *pbs*-$PBSPRO_VERSION
 ./autogen.sh
 ./configure --prefix=/opt/pbs
 make -j6
