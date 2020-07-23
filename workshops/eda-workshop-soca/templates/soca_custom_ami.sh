@@ -35,7 +35,7 @@ fi
 echo "Installing PBSPro"
 wget $PBSPRO_URL
 tar zxvf $PBSPRO_TGZ
-cd pbspro-$PBSPRO_VERSION
+cd *pbs*-$PBSPRO_VERSION
 ./autogen.sh
 ./configure --prefix=/opt/pbs
 make -j6
@@ -138,7 +138,7 @@ if [[ $(md5sum $DCV_TGZ | awk '{print $1}') != $DCV_HASH ]];  then
 fi
 tar zxvf $DCV_TGZ
 cd nice-dcv-$DCV_VERSION
-rpm -ivh *.rpm --nodeps
+rpm -ivh *.x86_64.rpm --nodeps
 
 echo "Creating script to install FSx for Lustre client: fsx_lusre.sh"
 echo -e "#!/bin/bash    
