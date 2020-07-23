@@ -35,7 +35,7 @@ fi
 echo "Installing PBSPro"
 wget $PBSPRO_URL
 tar zxvf $PBSPRO_TGZ
-cd *pbs*-$PBSPRO_VERSION
+cd pbspro-$PBSPRO_VERSION
 ./autogen.sh
 ./configure --prefix=/opt/pbs
 make -j6
@@ -68,10 +68,10 @@ fs.file-max=1048576
 fs.nr_open=1048576" >> /etc/sysctl.conf 
 echo -e "*		hard 	memlock 	unlimited
 *		soft 	memlock 	unlimited
-*		soft 	maxproc 	3061780
-*		hard 	maxproc 	3061780
-*		soft	maxsignal	3061780
-*		hard	maxsignal	3061780
+*		soft 	nproc 	    3061780
+*		hard 	nproc 	    3061780
+*		soft	sigpending  3061780
+*		hard	sigpending  3061780
 *		soft	nofile		1048576
 *		hard	nofile		1048576" >> /etc/security/limits.conf 
 echo -e "ulimit -l unlimited
@@ -138,7 +138,7 @@ if [[ $(md5sum $DCV_TGZ | awk '{print $1}') != $DCV_HASH ]];  then
 fi
 tar zxvf $DCV_TGZ
 cd nice-dcv-$DCV_VERSION
-rpm -ivh *.x86_64.rpm --nodeps
+rpm -ivh *.rpm --nodeps
 
 echo "Creating script to install FSx for Lustre client: fsx_lusre.sh"
 echo -e "#!/bin/bash    
