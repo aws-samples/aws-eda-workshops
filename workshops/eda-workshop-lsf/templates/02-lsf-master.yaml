@@ -14,7 +14,7 @@ Mappings:
       ALinux2: ami-035be7bafff33b6b6
     us-east-2:  
       CentOS75: ami-0f2b4fc905b0bd1f1
-      FPGADev15: ami-04207b688d79a3b2c
+      FPGADev15: ami-0377b0b2d360682dc
       ALinux2: ami-04328208f4f0cf1fe
     us-west-1:
       CentOS75: ami-074e2d6769f445be5
