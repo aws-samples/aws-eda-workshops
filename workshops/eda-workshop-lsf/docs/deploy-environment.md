@@ -53,7 +53,7 @@ The IBM Spectrum LSF software is not provided in this workshop; you will need to
 |Install script|Passport Advantage|--|`lsf10.1_lsfinstall_linux_x86_64.tar.Z` 
 |Base distribution|Passport Advantage|--|`lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z`
 |Entitlement file|Passport Advantage|--|`lsf_std_entitlement.dat` or `lsf_adv_entitlement.dat`
-|Fix Pack 8|Fix Central|lsf-10.1.0.8-spk-2019-May-build520099|`lsf10.1_linux2.6-glibc2.3-x86_64-520099.tar.Z`
+|Fix Pack 10|Fix Central|lsf-10.1.0.10-spk build545500|`lsf10.1_linux2.6-glibc2.3-x86_64-545500.tar.Z`
 
 ### NICE DCV Remote Desktop Client
 
