@@ -22,8 +22,11 @@ wget https://raw.githubusercontent.com/awslabs/scale-out-computing-on-aws/master
 source /root/config.cfg
 if [ $OS == "centos" ]; then
     yum install -y epel-release
+    yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
     if [ $OS_VER == "7" ]; then
         yum groupinstall -y "GNOME Desktop"
+        systemctl enable amazon-ssm-agent
+        systemctl restart amazon-ssm-agent
     elif [ $OS_VER == "6" ]; then
         yum groupinstall -y "X Window System" Desktop Fonts
     fi
