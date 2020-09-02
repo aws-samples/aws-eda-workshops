@@ -1,16 +1,17 @@
-#!/bin/bash    
+#!/bin/bash -e
 
-set -x
+set +x
 if [[ $EUID -ne 0 ]]; then
-   echo "Error: This script must be run as root" 
+   echo "Error: This script must be run as root"
    exit 1
 fi
 exec > >(tee /root/custom_ami.log ) 2>&1
 
-OS_NAME=`awk -F= '/^NAME/{print $2}' /etc/os-release`
-if [ "$OS_NAME" == "\"Red Hat Enterprise Linux Server\"" ]; then
+OS_NAME=$(cat /etc/redhat-release | awk '{print $1}')
+OS_VER=$(cat /etc/redhat-release | tr -dc '0-9.' | cut -d \. -f1)
+if [ "$OS_NAME" == "Red" ]; then
     OS="rhel"
-elif [ "$OS_NAME" == "\"CentOS Linux\"" ]; then
+elif [ "$OS_NAME" == "CentOS" ]; then
     OS="centos"
 fi
 
@@ -18,17 +19,27 @@ echo "Installing System packages"
 yum install -y wget
 cd /root
 wget https://raw.githubusercontent.com/awslabs/scale-out-computing-on-aws/master/source/scripts/config.cfg
-source /root/config.cfg 
+source /root/config.cfg
 if [ $OS == "centos" ]; then
     yum install -y epel-release
     yum install -y $(echo ${SYSTEM_PKGS[*]}) $(echo ${SCHEDULER_PKGS[*]}) $(echo ${OPENLDAP_SERVER_PKGS[*]}) $(echo ${SSSD_PKGS[*]})
-    yum groupinstall -y "GNOME Desktop"
+    if [ $OS_VER == "7" ]; then
+        yum groupinstall -y "GNOME Desktop"
+    elif [ $OS_VER == "6" ]; then
+        yum groupinstall -y "X Window System" Desktop Fonts
+    fi
 elif [ $OS == "rhel" ]; then
-    wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-    yum install epel-release-latest-7.noarch.rpm 
+    if [ $OS_VER == "7" ]; then
+        wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+        yum install epel-release-latest-7.noarch.rpm
+        yum groupinstall -y "Server with GUI"
+    elif [ $OS_VER == "6" ]; then
+        wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
+        yum install epel-release-latest-6.noarch.rpm
+        yum groupinstall -y "X Window System" Desktop Fonts
+    fi
     yum install -y $(echo ${SYSTEM_PKGS[*]}) $(echo ${SCHEDULER_PKGS[*]}) --enablerepo rhui-REGION-rhel-server-optional
     yum install -y $(echo ${OPENLDAP_SERVER_PKGS[*]}) $(echo ${SSSD_PKGS[*]})
-    yum groupinstall -y "Server with GUI"
 fi
 
 #Install PBSPro
@@ -42,19 +53,37 @@ make -j6
 make install -j6
 /opt/pbs/libexec/pbs_postinstall
 chmod 4755 /opt/pbs/sbin/pbs_iff /opt/pbs/sbin/pbs_rcp
-systemctl disable pbs
-systemctl disable libvirtd
-systemctl disable firewalld
+if [ $OS_VER == "7" ]; then
+    systemctl disable pbs
+    systemctl disable libvirtd
+    systemctl disable firewalld
+elif [ $OS_VER == "6" ]; then
+    chkconfig pbs off
+    chkconfig iptables off
+fi
 
 # Disable SELinux
 sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
 
 # Install pip and awscli
 echo "Installing pip and awscli"
-EASY_INSTALL=$(which easy_install-2.7)
-$EASY_INSTALL pip
-PIP=$(which pip2.7)
-$PIP install awscli
+if [ $OS_VER == "7" ]; then
+    EASY_INSTALL=$(which easy_install-2.7)
+    $EASY_INSTALL pip
+    PIP=$(which pip2.7)
+    $PIP install awscli
+elif [ $OS_VER == "6" ]; then
+    wget https://www.python.org/ftp/python/2.7.18/Python-2.7.18.tgz
+    tar xzf Python-2.7.18.tgz
+    cd Python-2.7.18
+    ./configure --enable-optimizations
+    make altinstall
+    export PATH=$PATH:/usr/local/bin
+    wget https://bootstrap.pypa.io/get-pip.py
+    python2.7 get-pip.py
+    PIP=$(which pip2.7)
+    $PIP install awscli
+fi
 
 # Configure system limits
 echo "Configuring system limits"
@@ -65,15 +94,15 @@ net.core.rmem_max=67108864
 net.core.wmem_default = 31457280
 net.core.wmem_max = 67108864
 fs.file-max=1048576
-fs.nr_open=1048576" >> /etc/sysctl.conf 
-echo -e "*		hard 	memlock 	unlimited
-*		soft 	memlock 	unlimited
-*		soft 	nproc 	    3061780
-*		hard 	nproc 	    3061780
-*		soft	sigpending  3061780
-*		hard	sigpending  3061780
-*		soft	nofile		1048576
-*		hard	nofile		1048576" >> /etc/security/limits.conf 
+fs.nr_open=1048576" >> /etc/sysctl.conf
+echo -e "*              hard    memlock         unlimited
+*               soft    memlock         unlimited
+*               soft    nproc       3061780
+*               hard    nproc       3061780
+*               soft    sigpending  3061780
+*               hard    sigpending  3061780
+*               soft    nofile          1048576
+*               hard    nofile          1048576" >> /etc/security/limits.conf
 echo -e "ulimit -l unlimited
 ulimit -u 3061780
 ulimit -i 3061780
@@ -131,42 +160,57 @@ sed -i 's/\(Instance.*\)\\{\(.*\)\\}/\1{\2}/g' /opt/aws/amazon-cloudwatch-agent/
 # Install DCV
 echo "Install DCV"
 cd ~
-wget $DCV_URL
-if [[ $(md5sum $DCV_TGZ | awk '{print $1}') != $DCV_HASH ]];  then
+if [ $OS_VER == "7" ]; then
+    wget $DCV_URL
+    if [[ $(md5sum $DCV_TGZ | awk '{print $1}') != $DCV_HASH ]];  then
         echo -e "FATAL ERROR: Checksum for DCV failed. File may be compromised." > /etc/motd
             exit 1
+    fi
+elif [ $OS_VER == "6" ]; then
+    DCV_URL=$(sed 's/el7/el6/' <<< $DCV_URL)
+    DCV_TGZ=$(sed 's/el7/el6/' <<< $DCV_TGZ)
+    DCV_VERSION=$(sed 's/el7/el6/' <<< $DCV_VERSION)
+    wget $DCV_URL
 fi
 tar zxvf $DCV_TGZ
 cd nice-dcv-$DCV_VERSION
 rpm -ivh *.x86_64.rpm --nodeps
 
-echo "Creating script to install FSx for Lustre client: fsx_lusre.sh"
-echo -e "#!/bin/bash    
+echo "Creating script to install FSx for Lustre client: fsx_lustre.sh"
+echo -e "#!/bin/bash
 
 set -x
 if [[ \$EUID -ne 0 ]]; then
-   echo \"Error: This script must be run as root\" 
+   echo \"Error: This script must be run as root\"
    exit 1
 fi
 exec > >(tee /root/fsx_lustre.log ) 2>&1
 echo \"Installing FSx lustre client\"
+OS_VER=\$(cat /etc/redhat-release | tr -dc '0-9.' | cut -d \. -f1)
 kernel=\$(uname -r)
-echo \$(uname -r)   
-if [[ \$kernel == *\"3.10.0-1127\"* ]]; then
-    echo \"Newer kernel\"
-    sudo wget https://fsx-lustre-client-repo-public-keys.s3.amazonaws.com/fsx-rpm-public-key.asc -O /tmp/fsx-rpm-public-key.asc
-    sudo rpm --import /tmp/fsx-rpm-public-key.asc
-    sudo wget https://fsx-lustre-client-repo.s3.amazonaws.com/el/7/fsx-lustre-client.repo -O /etc/yum.repos.d/aws-fsx.repo
-    sudo yum clean all
-    sudo yum install -y kmod-lustre-client lustre-client
-else
-    echo \"Older kernel\"
-    sudo wget https://fsx-lustre-client-repo-public-keys.s3.amazonaws.com/fsx-rpm-public-key.asc -O /tmp/fsx-rpm-public-key.asc
-    sudo rpm --import /tmp/fsx-rpm-public-key.asc
-    sudo wget https://fsx-lustre-client-repo.s3.amazonaws.com/el/7/fsx-lustre-client.repo -O /etc/yum.repos.d/aws-fsx.repo
-    sudo sed -i 's#7#7.7#' /etc/yum.repos.d/aws-fsx.repo
-    sudo yum clean all
-    sudo yum install -y kmod-lustre-client lustre-client
+echo \$(uname -r)
+if [ \$OS_VER == "7" ]; then
+        if [[ \$kernel == *\"3.10.0-1127\"* ]]; then
+                echo \"Newer kernel\"
+                wget https://fsx-lustre-client-repo-public-keys.s3.amazonaws.com/fsx-rpm-public-key.asc -O /tmp/fsx-rpm-public-key.asc
+                rpm --import /tmp/fsx-rpm-public-key.asc
+                wget https://fsx-lustre-client-repo.s3.amazonaws.com/el/7/fsx-lustre-client.repo -O /etc/yum.repos.d/aws-fsx.repo
+                yum clean all
+                yum install -y kmod-lustre-client lustre-client
+        else
+                echo \"Older kernel\"
+                wget https://fsx-lustre-client-repo-public-keys.s3.amazonaws.com/fsx-rpm-public-key.asc -O /tmp/fsx-rpm-public-key.asc
+                rpm --import /tmp/fsx-rpm-public-key.asc
+                wget https://fsx-lustre-client-repo.s3.amazonaws.com/el/7/fsx-lustre-client.repo -O /etc/yum.repos.d/aws-fsx.repo
+                sed -i 's#7#7.7#' /etc/yum.repos.d/aws-fsx.repo
+                yum clean all
+                yum install -y kmod-lustre-client lustre-client
+   fi
+elif [ \$OS_VER == "6" ]; then
+    wget https://downloads.whamcloud.com/public/lustre/lustre-2.10.5/el6.10/client/RPMS/x86_64/kmod-lustre-client-2.10.5-1.el6.x86_64.rpm
+    wget https://downloads.whamcloud.com/public/lustre/lustre-2.10.5/el6.10/client/RPMS/x86_64/lustre-client-2.10.5-1.el6.x86_64.rpm
+    yum clean all
+    yum localinstall -y kmod-lustre-client-2.10.5-1.el6.x86_64.rpm lustre-client-2.10.5-1.el6.x86_64.rpm
 fi" > /root/fsx_lustre.sh
 chmod +x /root/fsx_lustre.sh
 
