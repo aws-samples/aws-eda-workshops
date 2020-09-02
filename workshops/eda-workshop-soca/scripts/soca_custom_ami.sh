@@ -33,13 +33,15 @@ elif [ $OS == "rhel" ]; then
         wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
         yum install -y epel-release-latest-7.noarch.rpm
         yum groupinstall -y "Server with GUI"
+        yum install -y $(echo ${SYSTEM_PKGS[*]}) $(echo ${SCHEDULER_PKGS[*]}) --enablerepo rhui-REGION-rhel-server-optional
+        yum install -y $(echo ${OPENLDAP_SERVER_PKGS[*]}) $(echo ${SSSD_PKGS[*]})
     elif [ $OS_VER == "6" ]; then
         wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
         yum install -y epel-release-latest-6.noarch.rpm
         yum groupinstall -y "X Window System" Desktop Fonts
+        yum install -y $(echo ${SYSTEM_PKGS[*]}) $(echo ${SCHEDULER_PKGS[*]}) $(echo ${OPENLDAP_SERVER_PKGS[*]}) $(echo ${SSSD_PKGS[*]})
     fi
-    yum install -y $(echo ${SYSTEM_PKGS[*]}) $(echo ${SCHEDULER_PKGS[*]}) --enablerepo rhui-REGION-rhel-server-optional
-    yum install -y $(echo ${OPENLDAP_SERVER_PKGS[*]}) $(echo ${SSSD_PKGS[*]})
+
 fi
 
 #Install PBSPro
