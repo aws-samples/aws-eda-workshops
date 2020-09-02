@@ -31,11 +31,11 @@ if [ $OS == "centos" ]; then
 elif [ $OS == "rhel" ]; then
     if [ $OS_VER == "7" ]; then
         wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-        yum install epel-release-latest-7.noarch.rpm
+        yum install -y epel-release-latest-7.noarch.rpm
         yum groupinstall -y "Server with GUI"
     elif [ $OS_VER == "6" ]; then
         wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
-        yum install epel-release-latest-6.noarch.rpm
+        yum install -y epel-release-latest-6.noarch.rpm
         yum groupinstall -y "X Window System" Desktop Fonts
     fi
     yum install -y $(echo ${SYSTEM_PKGS[*]}) $(echo ${SCHEDULER_PKGS[*]}) --enablerepo rhui-REGION-rhel-server-optional
