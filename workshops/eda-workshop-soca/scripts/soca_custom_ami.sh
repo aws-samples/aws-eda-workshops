@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-set +x
+set -x
 if [[ $EUID -ne 0 ]]; then
    echo "Error: This script must be run as root"
    exit 1
