@@ -22,7 +22,6 @@ wget https://raw.githubusercontent.com/awslabs/scale-out-computing-on-aws/master
 source /root/config.cfg
 if [ $OS == "centos" ]; then
     yum install -y epel-release
-    yum install -y $(echo ${SYSTEM_PKGS[*]}) $(echo ${SCHEDULER_PKGS[*]}) $(echo ${OPENLDAP_SERVER_PKGS[*]}) $(echo ${SSSD_PKGS[*]})
     if [ $OS_VER == "7" ]; then
         yum groupinstall -y "GNOME Desktop"
     elif [ $OS_VER == "6" ]; then
@@ -31,18 +30,20 @@ if [ $OS == "centos" ]; then
 elif [ $OS == "rhel" ]; then
     if [ $OS_VER == "7" ]; then
         wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-        yum install -y epel-release-latest-7.noarch.rpm
+        yum localinstall -y epel-release-latest-7.noarch.rpm
         yum groupinstall -y "Server with GUI"
-        yum install -y $(echo ${SYSTEM_PKGS[*]}) $(echo ${SCHEDULER_PKGS[*]}) --enablerepo rhui-REGION-rhel-server-optional
-        yum install -y $(echo ${OPENLDAP_SERVER_PKGS[*]}) $(echo ${SSSD_PKGS[*]})
+        yum localinstall -y https://rpmfind.net/linux/centos/7.8.2003/os/x86_64/Packages/libedit-devel-3.0-12.20121213cvs.el7.x86_64.rpm
+        yum localinstall -y https://rpmfind.net/linux/centos/7.8.2003/os/x86_64/Packages/hwloc-devel-1.11.8-4.el7.x86_64.rpm
     elif [ $OS_VER == "6" ]; then
         wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
-        yum install -y epel-release-latest-6.noarch.rpm
+        yum localinstall -y epel-release-latest-6.noarch.rpm
         yum groupinstall -y "X Window System" Desktop Fonts
-        yum install -y $(echo ${SYSTEM_PKGS[*]}) $(echo ${SCHEDULER_PKGS[*]}) $(echo ${OPENLDAP_SERVER_PKGS[*]}) $(echo ${SSSD_PKGS[*]})
+        yum localinstall -y https://rpmfind.net/linux/centos/6.10/os/x86_64/Packages/libedit-devel-2.11-4.20080712cvs.1.el6.x86_64.rpm
+        yum localinstall -y https://rpmfind.net/linux/centos/6.10/os/x86_64/Packages/pciutils-devel-3.1.10-4.el6.x86_64.rpm
+        yum localinstall -y https://rpmfind.net/linux/centos/6.10/os/x86_64/Packages/hwloc-devel-1.5-3.el6_5.x86_64.rpm
     fi
-
 fi
+yum install -y $(echo ${SYSTEM_PKGS[*]}) $(echo ${SCHEDULER_PKGS[*]}) $(echo ${OPENLDAP_SERVER_PKGS[*]}) $(echo ${SSSD_PKGS[*]})
 
 #Install PBSPro
 echo "Installing PBSPro"
