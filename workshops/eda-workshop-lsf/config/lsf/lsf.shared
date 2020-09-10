@@ -24,7 +24,6 @@ define_ncpus_threads Boolean    ()       ()       (ncpus := threads)
 aws                  Boolean    ()       ()       (AWS instance)
 spot                 Boolean    ()       ()       (AWS spot instance)
 fsx                  Boolean    ()       ()       (Mount Amazon FSx for Lustre on boot)
-pricing              String     ()       ()       (AWS EC2 pricing type)
 rc_account           String     ()       ()       (Exclusive consumer tag for RC hosts)
 instance_type        String     ()       ()       (EC2 instance type)
 End Resource
