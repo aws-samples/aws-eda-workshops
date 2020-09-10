@@ -11,6 +11,7 @@ echo "*** BEGIN LSF HOST BOOTSTRAP ***"
 
 export PATH=/sbin:/usr/sbin:/usr/local/bin:/bin:/usr/bin
 export AWS_DEFAULT_REGION="$( curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed -e 's/[a-z]*$//' )"
+export EC2_INSTANCE_TYPE="$( curl -s http://169.254.169.254/latest/meta-data/instance-type | sed -e 's/\./_/' )"
 export LSF_INSTALL_DIR_ROOT="/`echo $LSF_INSTALL_DIR | cut -d / -f2`"
 export LSF_ADMIN=lsfadmin
 
@@ -40,49 +41,38 @@ mkdir $FS_MOUNT_POINT
 # Using default mount options.  Tune as necessary.
 mount $NFS_SERVER_EXPORT $FS_MOUNT_POINT
 
-# if [ -n "${fsx}" ]; then
-#    # Download Lustre client
-#    cd /tmp
-#    wget https://downloads.whamcloud.com/public/lustre/lustre-2.10.5/el7.5.1804/client/RPMS/x86_64/kmod-lustre-client-2.10.5-1.el7.x86_64.rpm
-#    wget https://downloads.whamcloud.com/public/lustre/lustre-2.10.5/el7.5.1804/client/RPMS/x86_64/lustre-client-2.10.5-1.el7.x86_64.rpm
-
-#    # Install client
-#    yum localinstall -y *lustre-client-2.10.5*.rpm
-
-#    # Mount ${fsx}
-#    mkdir /fsx && chown centos /fsx
-#    mount -t lustre ${fsx}@tcp:/fsx /fsx
-# fi
-
-# if [ -n "${ec2nfs}" ]; then
-#    mkdir /ec2nfs
-#    # mount ${ec2nfs}
-# fi
-
-# Set up the LSF enviornment
+## Set up the LSF environment
 
 # Create LSF log and conf directories
 mkdir /var/log/lsf && chmod 777 /var/log/lsf
 mkdir /etc/lsf && chmod 777 /etc/lsf
 
 LSF_TOP=$LSF_INSTALL_DIR
-. $LSF_TOP/conf/profile.lsf
+source $LSF_TOP/conf/profile.lsf
 
-# Create local lsf.conf file to support dynamic resources
-# See LSF_LOCAL_RESOURCES below.
+# Create local lsf.conf file and update LSF_LOCAL_RESOURCES
+# parameter to support dynamic resources
 cp $LSF_ENVDIR/lsf.conf /etc/lsf/lsf.conf
 chmod 444 /etc/lsf/lsf.conf
-export $LSF_ENVDIR=/etc/lsf
+export LSF_ENVDIR=/etc/lsf
 
-#Support rc_account resource to enable RC_ACCOUNT policy
-#Add additional local resources if needed
+sed -i "s/\(LSF_LOCAL_RESOURCES=.*\)\"/\1 [resourcemap ${EC2_INSTANCE_TYPE}*instance_type]\"/" $LSF_ENVDIR/lsf.conf
+echo "Updated LSF_LOCAL_RESOURCES lsf.conf with [resourcemap ${EC2_INSTANCE_TYPE}*instance_type]"
+
 if [ -n "${rc_account}" ]; then
    sed -i "s/\(LSF_LOCAL_RESOURCES=.*\)\"/\1 [resourcemap ${rc_account}*rc_account]\"/" $LSF_ENVDIR/lsf.conf
-   echo "update LSF_LOCAL_RESOURCES lsf.conf successfully, add [resourcemap ${rc_account}*rc_account]"
+   echo "Updated LSF_LOCAL_RESOURCES lsf.conf with [resourcemap ${rc_account}*rc_account]"
 fi
 
+if [ -n "${spot}" ]; then
+   sed -i "s/\(LSF_LOCAL_RESOURCES=.*\)\"/\1 [resource ${spot}]\"/" $LSF_ENVDIR/lsf.conf
+   echo "Updated LSF_LOCAL_RESOURCES lsf.conf with [resource ${spot}]"
+fi
 
 # Start LSF Daemons
-$LSF_SERVERDIR/lsf_daemons start
+lsadmin limstartup
+lsadmin resstartup
+sleep 2
+badmin hstartup
 
 echo "*** END LSF HOST BOOTSTRAP ***"
