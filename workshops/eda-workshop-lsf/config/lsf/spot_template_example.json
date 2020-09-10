@@ -7,6 +7,7 @@
         "ncores":  ["Numeric", "4"],
         "ncpus":   ["Numeric", "4"],
         "mem":     ["Numeric", "15000"],
+        "instance_type":    ["String", "spot"],
         "!spot":   ["Boolean", "1"],
         "aws":     ["Boolean", "1"]
     },
