@@ -101,7 +101,7 @@
                 "ncores":  ["Numeric", "24"],
                 "ncpus":   ["Numeric", "24"],
                 "mem":     ["Numeric", "380000"],
-                "instance_type":    ["String", "r5-12xlarge"],
+                "instance_type":    ["String", "r5_12xlarge"],
                 "aws":     ["Boolean", "1"]
             },
             "imageId": "%CFN_COMPUTE_AMI%",
