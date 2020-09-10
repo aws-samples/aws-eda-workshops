@@ -1,0 +1,16 @@
+{
+    "Policies":
+    [
+      {
+        "Name": "default-instance-throttle",
+        "Consumer": 
+        {
+          "rcAccount": ["all"],
+          "templateName": ["all"],
+          "provider": ["aws"]      
+        },      
+        "MaxNumber": "2000",
+        "StepValue": "250:5"      
+      }
+    ]
+  }
