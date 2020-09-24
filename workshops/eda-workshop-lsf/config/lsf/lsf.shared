@@ -8,12 +8,14 @@ TYPENAME
 DEFAULT
 LINUX64
 X86_64
+LINUX_ARM
 End HostType
 
 Begin HostModel
 MODELNAME           CPUFACTOR      ARCHITECTURE
 AWS_XEON_E5_2670v2        100       (x6_4988_IntelRXeonRCPUE52670v2250GHz)
 AWS_XEON_E5_2666v3        101       (x6_5800_IntelRXeonRCPUE52666v3290GHz)
+AWS_GRAVITON2             101       (AArch64Processorrev1aarch64)
 End HostModel
 
 Begin Resource
@@ -24,6 +26,8 @@ define_ncpus_threads Boolean    ()       ()       (ncpus := threads)
 aws                  Boolean    ()       ()       (AWS instance)
 spot                 Boolean    ()       ()       (AWS spot instance)
 fsx                  Boolean    ()       ()       (Mount Amazon FSx for Lustre on boot)
+ssd                  Boolean    ()       ()       (Local SSD)
 rc_account           String     ()       ()       (Exclusive consumer tag for RC hosts)
 instance_type        String     ()       ()       (EC2 instance type)
+
 End Resource
