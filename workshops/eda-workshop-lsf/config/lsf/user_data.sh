@@ -56,6 +56,7 @@ cp $LSF_ENVDIR/lsf.conf /etc/lsf/lsf.conf
 chmod 444 /etc/lsf/lsf.conf
 export LSF_ENVDIR=/etc/lsf
 
+# Add instance_type resource
 sed -i "s/\(LSF_LOCAL_RESOURCES=.*\)\"/\1 [resourcemap ${EC2_INSTANCE_TYPE}*instance_type]\"/" $LSF_ENVDIR/lsf.conf
 echo "Updated LSF_LOCAL_RESOURCES lsf.conf with [resourcemap ${EC2_INSTANCE_TYPE}*instance_type]"
 
