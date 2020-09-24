@@ -79,6 +79,7 @@
                 "ncpus":   ["Numeric", "4"],
                 "mem":     ["Numeric", "62000"],
                 "instance_type":    ["String", "z1d_2xlarge"],
+                "ssd":     ["Boolean", "1"],
                 "aws":     ["Boolean", "1"]
             },
             "imageId": "%CFN_COMPUTE_AMI%",
