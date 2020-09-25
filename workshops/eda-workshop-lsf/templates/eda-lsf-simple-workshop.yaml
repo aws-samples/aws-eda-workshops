@@ -269,11 +269,10 @@ Resources:
   LSFMasterInstance:
     Type: "AWS::EC2::Instance"
     DependsOn: LSFEFSMountTarget
-    # CreationPolicy:
-    #   ResourceSignal:    
-    #     Count: 1
-    #     Timeout: PT5M
-
+    CreationPolicy:
+      ResourceSignal:    
+        Count: 1
+        Timeout: PT15M
     Properties:
       InstanceType: !Ref MasterInstanceType
       ImageId:
@@ -359,7 +358,7 @@ Resources:
               # Add LSF admin account
               adduser -m -u 1500 $LSF_ADMIN
 
-              # Customer-provided LSF binaries and entitlement file
+              # Download customer-provided LSF binaries and entitlement file
               aws --quiet s3 cp ${CustomerLSFInstallUri} /tmp
               aws --quiet s3 cp ${CustomerLSFBinsUri} /tmp
               aws --quiet s3 cp ${CustomerLSFEntitlementUri} /tmp
@@ -394,7 +393,7 @@ Resources:
               cd $LSF_INSTALL_DIR/10.1/install
               cp /tmp/$LSF_FP_PKG .
               echo "schmod_demand.so" >> patchlib/daemonlists.tbl
-              ./patchinstall $LSF_FP_PKG
+              ./patchinstall --silent $LSF_FP_PKG
 
               ## Configure LSF and Resource Connector
               mkdir -p $LSF_ENVDIR/resource_connector/aws/conf
@@ -519,9 +518,9 @@ Resources:
               lsf_daemons start
 
               # Verify that LSF is up and send signal to Cloudformation
-              sleep 5
+              sleep 10
               lsid
-              # /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource LSFMasterInstance --region ${AWS::Region}
+              /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource LSFMasterInstance --region ${AWS::Region}
 
               echo "*** END LSF MASTER BOOTSTRAP ***"
 
@@ -726,21 +725,16 @@ Resources:
               - "sts:AssumeRole"
         ManagedPolicyArns:
           - "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
-          - "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
-
-  DcvLicenseBucketPolicy:
-    Properties:
-      PolicyDocument:
-        Statement:
-          - Action:
-              - s3:GetObject
-            Effect: Allow
-            Resource: arn:aws:s3:::dcv-license.us-east-1/*
-        Version: '2012-10-17'
-      PolicyName: DcvLicenseBucketPolicy
-      Roles:
-        - !Ref LoginServerRole
-    Type: AWS::IAM::Policy
+          - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        Policies:
+          - PolicyName: DcvLicenseBucketPolicy
+            PolicyDocument:
+              Version: 2012-10-17
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - s3:GetObject
+                  Resource: arn:aws:s3:::dcv-license.us-east-1/*
 
   LoginServerInstanceProfile:
     Type: "AWS::IAM::InstanceProfile"
@@ -767,6 +761,7 @@ Resources:
   LSFMasterRole:
       Type: "AWS::IAM::Role"
       Properties:
+        Description: AWS service permissions for LSF Resource Connector
         Path: "/"
         AssumeRolePolicyDocument:
           Version: '2012-10-17'
@@ -779,15 +774,40 @@ Resources:
               Action:
               - "sts:AssumeRole"
         ManagedPolicyArns:
-          - "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
-          - "arn:aws:iam::aws:policy/IAMFullAccess"
-          - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
           - "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
-          - "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+          - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        Policies:
+          - PolicyName: LSFResourceConnectorPerms
+            PolicyDocument:
+              Version: 2012-10-17
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - iam:PassRole
+                    - iam:ListInstanceProfiles
+                    - s3:GetObject
+                    - ec2:DescribeInstances
+                    - ec2:DescribeInstanceStatus
+                    - ec2:DescribeKeyPairs
+                    - ec2:RunInstances
+                    - ec2:TerminateInstances
+                    - ec2:CreateTags
+                    - ec2:ModifyIdFormat
+                    - ec2:AssociateIamInstanceProfile
+                    - ec2:ReplaceIamInstanceProfileAssociation
+                    - ec2:CancelSpotFleetRequests
+                    - ec2:DescribeSpotFleetInstances
+                    - ec2:DescribeSpotFleetRequests
+                    - ec2:DescribeSpotFleetRequestHistory
+                    - ec2:ModifySpotFleetRequest
+                    - ec2:RequestSpotFleet
+                    - ec2:DescribeSpotInstanceRequests
+                  Resource: '*'
 
   LSFComputeNodeRole:
       Type: "AWS::IAM::Role"
       Properties:
+        Description: AWS service permissions for LSF compute nodes
         Path: "/"
         AssumeRolePolicyDocument:
           Version: '2012-10-17'
@@ -800,9 +820,17 @@ Resources:
               Action:
               - "sts:AssumeRole"
         ManagedPolicyArns:
-          - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
           - "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
-          - "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+          - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        Policies:
+          - PolicyName: DownloadS3Packages
+            PolicyDocument:
+              Version: 2012-10-17
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - s3:GetObject
+                  Resource: '*'
 
   LSFMasterInstanceProfile:
     Type: "AWS::IAM::InstanceProfile"
@@ -824,13 +852,11 @@ Resources:
       GroupDescription: "SG for LSF Master"
       VpcId: !Ref VpcId
 
-
   LSFComputeNodeSG:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
       GroupDescription: "SG for LSF Compute Nodes"
       VpcId: !Ref VpcId
-
 
   LSFMasterSGRule01:
     Type: "AWS::EC2::SecurityGroupIngress"
