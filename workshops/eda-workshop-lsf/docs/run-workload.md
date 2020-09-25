@@ -39,6 +39,11 @@ Now we are ready to scale out the simulations.  Like with the setup job above, w
 
    `bsub -R aws -J "regress[1-100]" -w "done(setup)" ./run-sim.sh --scratch-dir /ec2-nfs/scratch`
 
+   **Option: Specify an instance type**
+   LSF will choose the best instance type based on the LSF Resource Connector configuration, but there may be situations where you may want to target a particular instance type for a workload. This workshop has been configured to allow you to overide the default behavior and specify the desired instance type. The following instance types are supported in this workshop: `z1d_2xlarge`, `m5_xlarge`, `m5_2xlarge`, `c5_2xlarge`, `z1d_2xlarge`, `r5_12xlarge`, and `r5_24xlarge`.  Use the `instance_type` resource in the `bsub` resource requirement string to request one of these instances. For example:
+
+   `bsub -R "select[aws && instance_type==z1d_2xlarge]" -J "regress[1-100]" -w "done(setup)" ./run-sim.sh --scratch-dir /ec2-nfs/scratch`
+
 1. Check job status
 
     `bjobs -A`
