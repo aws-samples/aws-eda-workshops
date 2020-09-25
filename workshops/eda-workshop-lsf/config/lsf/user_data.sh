@@ -70,6 +70,11 @@ if [ -n "${spot}" ]; then
    echo "Updated LSF_LOCAL_RESOURCES lsf.conf with [resource ${spot}]"
 fi
 
+if [ -n "${ssd}" ]; then
+   sed -i "s/\(LSF_LOCAL_RESOURCES=.*\)\"/\1 [resource ${ssd}]\"/" $LSF_ENVDIR/lsf.conf
+   echo "Updated LSF_LOCAL_RESOURCES lsf.conf with [resource ${ssd}]"
+fi
+
 # Start LSF Daemons
 lsadmin limstartup
 lsadmin resstartup
