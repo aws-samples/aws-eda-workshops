@@ -193,7 +193,17 @@ Resources:
               - "sts:AssumeRole"
         ManagedPolicyArns:
           - "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
-          - "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+          - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        Policies:
+          - PolicyName: DcvLicenseBucketPolicy
+            PolicyDocument:
+              Version: 2012-10-17
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - s3:GetObject
+                  Resource: arn:aws:s3:::dcv-license.us-east-1/*
+
 
   LoginServerInstanceProfile:
     Type: "AWS::IAM::InstanceProfile"

@@ -418,6 +418,7 @@ Resources:
   LSFMasterRole:
       Type: "AWS::IAM::Role"
       Properties:
+        Description: AWS service permissions for LSF Resource Connector
         Path: "/"
         AssumeRolePolicyDocument:
           Version: '2012-10-17'
@@ -430,15 +431,40 @@ Resources:
               Action:
               - "sts:AssumeRole"
         ManagedPolicyArns:
-          - "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
-          - "arn:aws:iam::aws:policy/IAMFullAccess"
-          - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
           - "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
-          - "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+          - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        Policies:
+          - PolicyName: LSFResourceConnectorPerms
+            PolicyDocument:
+              Version: 2012-10-17
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - iam:PassRole
+                    - iam:ListInstanceProfiles
+                    - s3:GetObject
+                    - ec2:DescribeInstances
+                    - ec2:DescribeInstanceStatus
+                    - ec2:DescribeKeyPairs
+                    - ec2:RunInstances
+                    - ec2:TerminateInstances
+                    - ec2:CreateTags
+                    - ec2:ModifyIdFormat
+                    - ec2:AssociateIamInstanceProfile
+                    - ec2:ReplaceIamInstanceProfileAssociation
+                    - ec2:CancelSpotFleetRequests
+                    - ec2:DescribeSpotFleetInstances
+                    - ec2:DescribeSpotFleetRequests
+                    - ec2:DescribeSpotFleetRequestHistory
+                    - ec2:ModifySpotFleetRequest
+                    - ec2:RequestSpotFleet
+                    - ec2:DescribeSpotInstanceRequests
+                  Resource: '*'
 
   LSFComputeNodeRole:
       Type: "AWS::IAM::Role"
       Properties:
+        Description: AWS service permissions for LSF compute nodes
         Path: "/"
         AssumeRolePolicyDocument:
           Version: '2012-10-17'
@@ -451,9 +477,17 @@ Resources:
               Action:
               - "sts:AssumeRole"
         ManagedPolicyArns:
-          - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
           - "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
-          - "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+          - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        Policies:
+          - PolicyName: DownloadS3Packages
+            PolicyDocument:
+              Version: 2012-10-17
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - s3:GetObject
+                  Resource: '*'
 
   LSFMasterInstanceProfile:
     Type: "AWS::IAM::InstanceProfile"
