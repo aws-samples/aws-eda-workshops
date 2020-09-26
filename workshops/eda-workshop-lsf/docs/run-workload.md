@@ -67,7 +67,7 @@ Now we are ready to scale out the simulations.  Like with the setup job above, w
 
     `badmin rc view -c templates`
 
-About 5 minutes after the jobs complete, LSF Resource Connector will begin terminating the idle EC2 instances.
+About 10 minutes after the jobs complete, LSF Resource Connector will begin terminating the idle EC2 instances.
 
 ### Step 4: Clean up
 
