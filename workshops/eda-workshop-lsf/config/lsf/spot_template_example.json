@@ -12,11 +12,11 @@
         "aws":     ["Boolean", "1"]
     },
     "imageId": "%CFN_COMPUTE_AMI%",
-    "subnetId": "%CFN_COMPUTE_NODE_SUBNET%",  # list of subnets across AZs
-    "vmType": "c5.2xlarge,c5.4xlarge,c5.8xlarge,m5.xlarge,m5.2xlarge,m5.4xlarge,m5.8xlarge",  # minimum size and up. Add 4th gen and AMD for greater diversity.
-    "spotPrice":         "0.2", # set to on-demand price
+    "subnetId": "%CFN_COMPUTE_NODE_SUBNET%",
+    "vmType": "c5.2xlarge,c5.4xlarge,c5.8xlarge,m5.xlarge,m5.2xlarge,m5.4xlarge,m5.8xlarge",
+    "spotPrice":         "0.2",
     "allocationStrategy":"lowestPrice",
-    "fleetRole":         "%CFN_LSF_COMPUTE_NODE_FLEET_ROLE_ARN%", #arn:aws:iam::xxxxxxxxxxxx:role/EC2-Spot-Fleet-role
+    "fleetRole":         "%CFN_LSF_COMPUTE_NODE_FLEET_ROLE_ARN%",
     "keyName": "%CFN_ADMIN_KEYPAIR%",
     "securityGroupIds": ["%CFN_COMPUTE_SECURITY_GROUP_ID%"],
     "placementGroupName": "",
