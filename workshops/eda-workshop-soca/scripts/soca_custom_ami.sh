@@ -140,6 +140,12 @@ cd nice-dcv-$DCV_VERSION
 rpm -ivh nice-xdcv-*.x86_64.rpm --nodeps
 rpm -ivh nice-dcv-server*.x86_64.rpm --nodeps
 
+# Enable DCV support for USB remotization
+yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
+yum install -y dkms
+DCVUSBDRIVERINSTALLER=$(which dcvusbdriverinstaller)
+$DCVUSBDRIVERINSTALLER --quiet
+
 echo "Creating script to install FSx for Lustre client: /root/fsx_lustre.sh"
 echo -e "#!/bin/bash    
 
