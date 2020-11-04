@@ -140,7 +140,7 @@ cd nice-dcv-$DCV_VERSION
 rpm -ivh nice-xdcv-*.x86_64.rpm --nodeps
 rpm -ivh nice-dcv-server*.x86_64.rpm --nodeps
 
-# Enable DCV support for USB remotization
+# Install USB drivers needed to enable DCV support for USB
 yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
 yum install -y dkms
 DCVUSBDRIVERINSTALLER=$(which dcvusbdriverinstaller)
