@@ -65,6 +65,11 @@ if [ -n "${rc_account}" ]; then
    echo "Updated LSF_LOCAL_RESOURCES lsf.conf with [resourcemap ${rc_account}*rc_account]"
 fi
 
+if [ -n "${instance_type}" ]; then
+   sed -i "s/\(LSF_LOCAL_RESOURCES=.*\)\"/\1 [resourcemap ${instance_type}*instance_type]\"/" $LSF_ENVDIR/lsf.conf
+   echo "Updated LSF_LOCAL_RESOURCES lsf.conf with [resourcemap ${instance_type}*instance_type]"
+fi
+
 if [ -n "${spot}" ]; then
    sed -i "s/\(LSF_LOCAL_RESOURCES=.*\)\"/\1 [resource ${spot}]\"/" $LSF_ENVDIR/lsf.conf
    echo "Updated LSF_LOCAL_RESOURCES lsf.conf with [resource ${spot}]"
