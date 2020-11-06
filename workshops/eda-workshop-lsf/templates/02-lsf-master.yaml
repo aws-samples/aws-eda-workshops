@@ -459,6 +459,9 @@ Resources:
                     - ec2:ModifySpotFleetRequest
                     - ec2:RequestSpotFleet
                     - ec2:DescribeSpotInstanceRequests
+                    - ec2:DescribeLaunchTemplateVersions
+                    - ec2:GetLaunchTemplateData
+                    - ec2:CreateLaunchTemplateVersion
                   Resource: '*'
 
   LSFComputeNodeRole:
