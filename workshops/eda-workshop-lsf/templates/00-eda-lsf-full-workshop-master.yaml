@@ -241,7 +241,7 @@ Parameters:
       The S3 URI to the LSF 10.1 Fix Pack package. This must the lastest cumulative Fix Pack package.
       Select package object in the console and choose Copy Path and paste here.
     Type: "String"
-    Default: "s3://<your_bucket>/lsf10.1_linux2.6-glibc2.3-x86_64.520009.tar.Z"
+    Default: "s3://<your_bucket>/lsf10.1_linux2.6-glibc2.3-x86_64.545500.tar.Z"
     #AllowedPattern: ^s3\:\/\/.*\/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z$
 
   CustomerLSFEntitlementUri:
