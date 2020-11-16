@@ -1,0 +1,4 @@
+dn: cn=dlutes,ou=Group,dc=soca,dc=local
+changetype: modify
+replace: cn
+cn: cad
