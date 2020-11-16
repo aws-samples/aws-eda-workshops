@@ -5,7 +5,7 @@ if [[ $EUID -ne 0 ]]; then
    echo "Error: This script must be run as root" 
    exit 1
 fi
-exec > >(tee /root/custom_ami.log ) 2>&1
+exec > >(tee /root/soca_custom_ami.log ) 2>&1
 
 OS_NAME=`awk -F= '/^NAME/{print $2}' /etc/os-release`
 if [ "$OS_NAME" == "\"Red Hat Enterprise Linux Server\"" ]; then
@@ -200,10 +200,10 @@ else
 fi
 if [[ \$REQUIRE_REBOOT -eq 1 ]]; then
     echo \"Rebooting to load FSx for Lustre drivers!\"
-    reboot
+    /sbin/reboot
 fi" > /root/fsx_lustre.sh
 chmod +x /root/fsx_lustre.sh
 
 echo "Will reboot instance now to load new kernel! After reboot, the script at /root/fsx_lustre.sh will install FSx for Lustre client corresponding to the new kernel version. See details in /root/fsx_lustre.sh.log"
 echo "@reboot /bin/bash /root/fsx_lustre.sh >> /root/fsx_lustre.sh.log 2>&1" | crontab -
-reboot
+/sbin/reboot
