@@ -31,7 +31,14 @@ elif [ $OS == "rhel" ]; then
     yum groupinstall -y "Server with GUI"
 fi
 
-#Install PBSPro
+echo "Installing Packages typically needed for EDA applications"
+yum install -y vim vim-X11 xterm compat-db47 glibc glibc.i686 openssl098e compat-expat1.i686 dstat \
+    motif libXp libXaw libICE.i686 libpng.i686 libXau.i686 libuuid.i686 libSM.i686 libxcb.i686 \
+    plotutils libXext.i686 libXt.i686 libXmu.i686 libXp.i686 libXrender.i686 bzip2-libs.i686 \ 
+    freetype.i686 fontconfig.i686 libXft.i686 libjpeg-turbo.i686 motif.i686 apr.i686 libdb \
+    libdb.i686 libdb-utils apr-util.i686 libXp.i686 qt qt-x11 qtwebkit apr-util gnuplot
+
+#Install OpenPBS
 echo "Installing OpenPBS"
 wget $OPENPBS_URL
 tar zxvf $OPENPBS_TGZ
