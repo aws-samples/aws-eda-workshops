@@ -9,7 +9,7 @@ import boto3
 import os
 import sys
 
-ec2 = boto3.resource('ec2',region_name='us-east-1')
+ec2 = boto3.resource('ec2',region_name='$REGION')
 
 def lambda_handler(event, context):
     for vol in ec2.volumes.all():
@@ -19,9 +19,9 @@ def lambda_handler(event, context):
                 print ("No tag. Skipping " +vol.id)
                 continue
             for tag in vol.tags:
-                if tag['Key'] == 'admin_contact':
+                if tag['Key'] == '$mykey':
                     value=tag['Value']
-                    if value == 'morrmt' and vol.state=='available':
+                    if value == '$myvalue' and vol.state=='available':
                         vid=vol.id
                         v=ec2.Volume(vol.id)
                         print ("Deleting", vid, "based on tag", value, ".")
