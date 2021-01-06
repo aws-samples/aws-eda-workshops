@@ -37,4 +37,4 @@ After you deploy the workshop, we recommend that you enable the AWS Cost and Usa
 ### Clean up
 
 * Delete the parent stack
-* Delete orphaned EBS volumes.  The FPGA AMI doesn't delete them on instance termination.
+* Delete orphaned EBS volumes. The FPGA AMI doesn't delete them on instance termination.
