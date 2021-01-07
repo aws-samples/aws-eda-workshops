@@ -440,9 +440,6 @@ Resources:
               Statement:
                 - Effect: Allow
                   Action:
-                    - iam:PassRole
-                    - iam:ListInstanceProfiles
-                    - s3:GetObject
                     - ec2:DescribeInstances
                     - ec2:DescribeInstanceStatus
                     - ec2:DescribeKeyPairs
@@ -462,6 +459,17 @@ Resources:
                     - ec2:DescribeLaunchTemplateVersions
                     - ec2:GetLaunchTemplateData
                     - ec2:CreateLaunchTemplateVersion
+                  Resource: '*'
+                - Effect: Allow
+                  Action:
+                    - iam:PassRole
+                    - iam:ListRoles
+                    - iam:ListInstanceProfiles
+                    - iam:CreateServiceLinkedRole
+                  Resource: '*'
+                - Effect: Allow
+                  Action:
+                    - s3:GetObject
                   Resource: '*'
 
   LSFComputeNodeRole:
