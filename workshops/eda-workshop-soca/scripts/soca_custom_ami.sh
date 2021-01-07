@@ -216,10 +216,10 @@ else
 fi
 if [[ $REQUIRE_REBOOT -eq 1 ]]; then
     echo \"Rebooting to load FSx for Lustre drivers!\"
-    reboot
+    /sbin/reboot
 fi" > /root/fsx_lustre.sh
 chmod +x /root/fsx_lustre.sh
 
 echo "Will reboot instance now to load new kernel! After reboot, the script at /root/fsx_lustre.sh will install FSx for Lustre client corresponding to the new kernel version. See details in /root/fsx_lustre.sh.log"
 echo "@reboot /bin/bash /root/fsx_lustre.sh >> /root/fsx_lustre.sh.log 2>&1" | crontab -
-reboot
+/sbin/reboot
