@@ -114,7 +114,7 @@
             "tenancy": "default",
             "instanceProfile":  "%CFN_LSF_COMPUTE_NODE_INSTANCE_PROFILE_ARN%",
             "instanceTags":     "Name=LSF Exec Host;Cluster=%CFN_LSF_CLUSTER_NAME%",
-            "userData":         "EFS_FS_DNS_NAME=%CFN_EFS_FS_DNS_NAME%;LSF_INSTALL_DIR=%CFN_LSF_INSTALL_DIR%;PROJ_DIR=%CFN_PROJ_DIR%;SCRATCH_DIR=%CFN_SCRATCH_DIR%;FS_MOUNT_POINT=%CFN_FS_MOUNT_POINT%;NFS_SERVER_EXPORT=%CFN_NFS_SERVER_EXPORT%;DCV_USER_NAME=%CFN_DCV_USER_NAME%;instance_type=55_12xlarge"
+            "userData":         "EFS_FS_DNS_NAME=%CFN_EFS_FS_DNS_NAME%;LSF_INSTALL_DIR=%CFN_LSF_INSTALL_DIR%;PROJ_DIR=%CFN_PROJ_DIR%;SCRATCH_DIR=%CFN_SCRATCH_DIR%;FS_MOUNT_POINT=%CFN_FS_MOUNT_POINT%;NFS_SERVER_EXPORT=%CFN_NFS_SERVER_EXPORT%;DCV_USER_NAME=%CFN_DCV_USER_NAME%;instance_type=r5_12xlarge"
         },
         {
             "templateId": "r5-24xlarge",
