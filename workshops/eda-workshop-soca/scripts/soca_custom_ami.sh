@@ -214,7 +214,7 @@ elif [[ \$kernel == *\"4.18.0-193\"*\$machine ]]; then
 else
     echo \"ERROR: Can't install FSx for Lustre client as kernel version: ${kernel} isn't matching expected versions: (x86_64: 3.10.0-957, -1062, -1127, -1160, aarch64: 4.18.0-193)!\"
 fi
-if [[ $REQUIRE_REBOOT -eq 1 ]]; then
+if [[ \$REQUIRE_REBOOT -eq 1 ]]; then
     echo \"Rebooting to load FSx for Lustre drivers!\"
     /sbin/reboot
 fi" > /root/fsx_lustre.sh
