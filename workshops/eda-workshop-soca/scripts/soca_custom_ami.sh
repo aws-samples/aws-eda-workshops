@@ -5,7 +5,7 @@ if [[ $EUID -ne 0 ]]; then
    echo "Error: This script must be run as root" 
    exit 1
 fi
-exec > >(tee /root/soca_custom_ami.log ) 2>&1
+exec > >(tee /root/custom_ami.log ) 2>&1
 
 OS_NAME=`awk -F= '/^NAME/{print $2}' /etc/os-release`
 if [ "$OS_NAME" == "\"Red Hat Enterprise Linux Server\"" ]; then
@@ -87,7 +87,12 @@ ulimit -n 1048576" >> /opt/pbs/lib/init.d/limits.pbs_mom
 
 # Install and configure Amazon CloudWatch Agent
 echo "Install and configure Amazon CloudWatch Agent"
-yum install -y https://s3.amazonaws.com/amazoncloudwatch-agent/redhat/amd64/latest/amazon-cloudwatch-agent.rpm
+machine=$(uname -m)
+if [[ $machine == "x86_64" ]]; then
+    yum install -y https://s3.amazonaws.com/amazoncloudwatch-agent/redhat/amd64/latest/amazon-cloudwatch-agent.rpm
+elif [[ $machine == "aarch64" ]]; then
+    yum install -y https://s3.amazonaws.com/amazoncloudwatch-agent/redhat/arm64/latest/amazon-cloudwatch-agent.rpm
+fi
 echo -e "{
         \"agent\": {
                 \"metrics_collection_interval\": 60,
@@ -137,21 +142,25 @@ sed -i 's/\(Instance.*\)\\{\(.*\)\\}/\1{\2}/g' /opt/aws/amazon-cloudwatch-agent/
 # Install DCV
 echo "Install DCV"
 cd ~
-wget $DCV_URL
-if [[ $(md5sum $DCV_TGZ | awk '{print $1}') != $DCV_HASH ]];  then
-    echo -e "FATAL ERROR: Checksum for DCV failed. File may be compromised." > /etc/motd
-    exit 1
+machine=$(uname -m)
+if [[ $machine == "x86_64" ]]; then
+    wget $DCV_URL
+    if [[ $(md5sum $DCV_TGZ | awk '{print $1}') != $DCV_HASH ]];  then
+        echo -e "FATAL ERROR: Checksum for DCV failed. File may be compromised." > /etc/motd
+        exit 1
+    fi
+    tar zxvf $DCV_TGZ
+    cd nice-dcv-$DCV_VERSION
+elif [[ $machine == "aarch64" ]]; then
+    DCV_URL=$(echo $DCV_URL | sed 's/x86_64/aarch64/')
+    wget $DCV_URL
+    DCV_TGZ=$(echo $DCV_TGZ | sed 's/x86_64/aarch64/')
+    tar zxvf $DCV_TGZ
+    DCV_VERSION=$(echo $DCV_VERSION | sed 's/x86_64/aarch64/')
+    cd nice-dcv-$DCV_VERSION
 fi
-tar zxvf $DCV_TGZ
-cd nice-dcv-$DCV_VERSION
-rpm -ivh nice-xdcv-*.x86_64.rpm --nodeps
-rpm -ivh nice-dcv-server*.x86_64.rpm --nodeps
-
-# Install USB drivers needed to enable DCV support for USB
-yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
-yum install -y dkms
-DCVUSBDRIVERINSTALLER=$(which dcvusbdriverinstaller)
-$DCVUSBDRIVERINSTALLER --quiet
+rpm -ivh nice-xdcv-*.${machine}.rpm --nodeps
+rpm -ivh nice-dcv-server*.${machine}.rpm --nodeps
 
 echo "Creating script to install FSx for Lustre client: /root/fsx_lustre.sh"
 echo -e "#!/bin/bash    
@@ -205,12 +214,12 @@ elif [[ \$kernel == *\"4.18.0-193\"*\$machine ]]; then
 else
     echo \"ERROR: Can't install FSx for Lustre client as kernel version: ${kernel} isn't matching expected versions: (x86_64: 3.10.0-957, -1062, -1127, -1160, aarch64: 4.18.0-193)!\"
 fi
-if [[ \$REQUIRE_REBOOT -eq 1 ]]; then
+if [[ $REQUIRE_REBOOT -eq 1 ]]; then
     echo \"Rebooting to load FSx for Lustre drivers!\"
-    /sbin/reboot
+    reboot
 fi" > /root/fsx_lustre.sh
 chmod +x /root/fsx_lustre.sh
 
 echo "Will reboot instance now to load new kernel! After reboot, the script at /root/fsx_lustre.sh will install FSx for Lustre client corresponding to the new kernel version. See details in /root/fsx_lustre.sh.log"
 echo "@reboot /bin/bash /root/fsx_lustre.sh >> /root/fsx_lustre.sh.log 2>&1" | crontab -
-/sbin/reboot
+reboot
