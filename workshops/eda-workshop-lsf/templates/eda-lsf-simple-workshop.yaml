@@ -422,7 +422,7 @@ Resources:
                      -e "s|%CFN_EFS_FS_DNS_NAME%|$EFS_FS_DNS_NAME|" \
                      -e "s|%CFN_LSF_INSTALL_DIR%|$LSF_INSTALL_DIR|" \
                      -e "s|%CFN_DCV_USER_NAME%|${UserName}|" \
-                     -e "s|%CFN_LSF_COMPUTE_NODE_SPOT_FLEET_ROLE_ARN%|${LSFComputeNodeSpotFleetRoleArn}|"
+                     -e "s|%CFN_LSF_COMPUTE_NODE_SPOT_FLEET_ROLE_ARN%|${LSFComputeNodeSpotFleetRoleArn}|" \
                   $LSF_ENVDIR/resource_connector/aws/conf/awsprov_templates.json
               
               # user_data script that RC executes on compute nodes
