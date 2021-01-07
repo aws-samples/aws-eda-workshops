@@ -1,8 +1,8 @@
-#!/bin/bash    
+#!/bin/bash
 
 set -x
 if [[ $EUID -ne 0 ]]; then
-   echo "Error: This script must be run as root" 
+   echo "Error: This script must be run as root"
    exit 1
 fi
 exec > >(tee /root/soca_custom_ami.log ) 2>&1
@@ -18,14 +18,14 @@ echo "Installing System packages"
 yum install -y wget
 cd /root
 wget https://raw.githubusercontent.com/awslabs/scale-out-computing-on-aws/master/source/scripts/config.cfg
-source /root/config.cfg 
+source /root/config.cfg
 if [ $OS == "centos" ]; then
     yum install -y epel-release
     yum install -y $(echo ${SYSTEM_PKGS[*]} ${SCHEDULER_PKGS[*]} ${OPENLDAP_SERVER_PKGS[*]} ${SSSD_PKGS[*]})
     yum groupinstall -y "GNOME Desktop"
 elif [ $OS == "rhel" ]; then
     wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-    yum install epel-release-latest-7.noarch.rpm 
+    yum install epel-release-latest-7.noarch.rpm
     yum install -y $(echo ${SYSTEM_PKGS[*]} ${SCHEDULER_PKGS[*]}) --enablerepo rhui-REGION-rhel-server-optional
     yum install -y $(echo ${OPENLDAP_SERVER_PKGS[*]} ${SSSD_PKGS[*]})
     yum groupinstall -y "Server with GUI"
@@ -34,7 +34,7 @@ fi
 echo "Installing Packages typically needed for EDA applications"
 yum install -y vim vim-X11 xterm compat-db47 glibc glibc.i686 openssl098e compat-expat1.i686 dstat \
     motif libXp libXaw libICE.i686 libpng.i686 libXau.i686 libuuid.i686 libSM.i686 libxcb.i686 \
-    plotutils libXext.i686 libXt.i686 libXmu.i686 libXp.i686 libXrender.i686 bzip2-libs.i686 \ 
+    plotutils libXext.i686 libXt.i686 libXmu.i686 libXp.i686 libXrender.i686 bzip2-libs.i686 \
     freetype.i686 fontconfig.i686 libXft.i686 libjpeg-turbo.i686 motif.i686 apr.i686 libdb \
     libdb.i686 libdb-utils apr-util.i686 libXp.i686 qt qt-x11 qtwebkit apr-util gnuplot
 
@@ -71,7 +71,7 @@ net.core.rmem_max=67108864
 net.core.wmem_default = 31457280
 net.core.wmem_max = 67108864
 fs.file-max=1048576
-fs.nr_open=1048576" >> /etc/sysctl.conf 
+fs.nr_open=1048576" >> /etc/sysctl.conf
 echo -e "*		hard 	memlock 	unlimited
 *		soft 	memlock 	unlimited
 *		soft 	nproc 	    3061780
@@ -79,7 +79,7 @@ echo -e "*		hard 	memlock 	unlimited
 *		soft	sigpending  3061780
 *		hard	sigpending  3061780
 *		soft	nofile		1048576
-*		hard	nofile		1048576" >> /etc/security/limits.conf 
+*		hard	nofile		1048576" >> /etc/security/limits.conf
 echo -e "ulimit -l unlimited
 ulimit -u 3061780
 ulimit -i 3061780
@@ -163,12 +163,12 @@ rpm -ivh nice-xdcv-*.${machine}.rpm --nodeps
 rpm -ivh nice-dcv-server*.${machine}.rpm --nodeps
 
 echo "Creating script to install FSx for Lustre client: /root/fsx_lustre.sh"
-echo -e "#!/bin/bash    
+echo -e "#!/bin/bash
 
 set -x
 crontab -r
 if [[ \$EUID -ne 0 ]]; then
-   echo \"Error: This script must be run as root\" 
+   echo \"Error: This script must be run as root\"
    exit 1
 fi
 REQUIRE_REBOOT=0
