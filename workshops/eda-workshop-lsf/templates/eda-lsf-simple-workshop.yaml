@@ -422,6 +422,7 @@ Resources:
                      -e "s|%CFN_EFS_FS_DNS_NAME%|$EFS_FS_DNS_NAME|" \
                      -e "s|%CFN_LSF_INSTALL_DIR%|$LSF_INSTALL_DIR|" \
                      -e "s|%CFN_DCV_USER_NAME%|${UserName}|" \
+                     -e "s|%CFN_LSF_COMPUTE_NODE_SPOT_FLEET_ROLE_ARN%|${LSFComputeNodeSpotFleetRoleArn}|"
                   $LSF_ENVDIR/resource_connector/aws/conf/awsprov_templates.json
               
               # user_data script that RC executes on compute nodes
@@ -525,6 +526,7 @@ Resources:
               echo "*** END LSF MASTER BOOTSTRAP ***"
 
             - LSFComputeNodeInstanceProfileArn: !GetAtt LSFComputeNodeInstanceProfile.Arn
+              LSFComputeNodeSpotFleetRoleArn: !GetAtt LSFSpotFleetRole.Arn
               LSFComputeNodeSGGroupId: !Ref LSFComputeNodeSG
               LSFComputeNodeAmi: !FindInMap [ RegionMap, !Ref "AWS::Region", !Ref ComputeAMI ]
 
@@ -783,9 +785,6 @@ Resources:
               Statement:
                 - Effect: Allow
                   Action:
-                    - iam:PassRole
-                    - iam:ListInstanceProfiles
-                    - s3:GetObject
                     - ec2:DescribeInstances
                     - ec2:DescribeInstanceStatus
                     - ec2:DescribeKeyPairs
@@ -802,7 +801,39 @@ Resources:
                     - ec2:ModifySpotFleetRequest
                     - ec2:RequestSpotFleet
                     - ec2:DescribeSpotInstanceRequests
+                    - ec2:DescribeLaunchTemplateVersions
+                    - ec2:GetLaunchTemplateData
+                    - ec2:CreateLaunchTemplateVersion
                   Resource: '*'
+                - Effect: Allow
+                  Action:
+                    - iam:PassRole
+                    - iam:ListRoles
+                    - iam:ListInstanceProfiles
+                    - iam:CreateServiceLinkedRole
+                  Resource: '*'
+                - Effect: Allow
+                  Action:
+                    - s3:GetObject
+                  Resource: '*'
+
+  LSFSpotFleetRole:
+      Type: "AWS::IAM::Role"
+      Properties:
+        Description: Enables EC2 Spot Fleet to work on behalf of LSF Resource Connector
+        Path: "/"
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - 
+              Effect: Allow
+              Principal:
+                Service:
+                - "spotfleet.amazonaws.com"
+              Action:
+              - "sts:AssumeRole"
+        ManagedPolicyArns:
+          - "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole"
 
   LSFComputeNodeRole:
       Type: "AWS::IAM::Role"
