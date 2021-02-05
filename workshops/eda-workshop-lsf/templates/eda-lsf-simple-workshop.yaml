@@ -377,6 +377,7 @@ Resources:
               LSF_MASTER_LIST="$HOSTNAME"
               SILENT_INSTALL="Y"
               LSF_SILENT_INSTALL_TARLIST="ALL"
+              ACCEPT_LICENSE="Y"
               LSF_ENTITLEMENT_FILE="/tmp/$LSF_ENTITLEMENT"
               EOF
 
