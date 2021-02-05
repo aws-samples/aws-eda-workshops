@@ -1,0 +1,26 @@
+cd /ec2-nfs/proj
+git clone https://github.com/morrmt/aws-fpga-sa-demo.git
+
+cd /ec2-nfs/proj/aws-fpga-sa-demo/eda-workshop
+
+bsub -R aws -J "setup" ./run-sim.sh --scratch-dir /ec2-nfs/scratch
+
+bsub -R aws -J "regress[1-100]" -w "done(setup)" ./run-sim.sh --scratch-dir /ec2-nfs/scratch
+
+bsub -R aws -J "regress[1-100]" ./run-sim.sh --scratch-dir /ec2-nfs/scratch
+
+bsub -R "select[aws && mem>30000]" ./run-sim.sh --scratch-dir /ec2-nfs/scratch
+
+bsub -R "select[aws && instance_type==z1d_2xlarge]" ./run-sim.sh --scratch-dir /ec2-nfs/scratch
+
+
+bjobs -aws
+bhosts -w
+badmin showstatus
+badmin rc view
+badmin rc error
+badmin rc view -c templates
+
+
+
+
