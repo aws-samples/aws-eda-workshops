@@ -235,7 +235,7 @@ Parameters:
       - provisioned
     Default: "bursting"
   UserName:
-    Default: centos
+    Default: simuser
     Description: The username for DCV remote desktop login
     MinLength: '4'
     Type: String
@@ -288,7 +288,7 @@ Resources:
       Tags:
         - 
           Key: "Name"
-          Value: !Join [ '', [ 'LSF Master - ',!Ref LSFClusterName ] ]
+          Value: !Join [ '', [ 'LSF Primary - ',!Ref LSFClusterName ] ]
         - 
           Key: "Cluster"
           Value: !Ref LSFClusterName

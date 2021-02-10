@@ -165,7 +165,7 @@ Resources:
       Tags:
         - 
           Key: "Name"
-          Value: !Join [ '-', [ 'LSF Master',!Ref LSFClusterName ] ]
+          Value: !Join [ '-', [ 'LSF Primary',!Ref LSFClusterName ] ]
         - 
           Key: "Cluster"
           Value: !Ref LSFClusterName
