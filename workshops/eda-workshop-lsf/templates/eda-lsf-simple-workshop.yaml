@@ -10,39 +10,39 @@ Mappings:
   RegionMap:
     us-east-1:  
       CentOS75: ami-9887c6e7
-      FPGADev15: ami-0da0d9ed98b33a214
+      FPGADev15: ami-0a71d776cea7922c1
       ALinux2: ami-035be7bafff33b6b6
     us-east-2:  
       CentOS75: ami-0f2b4fc905b0bd1f1
-      FPGADev15: ami-0377b0b2d360682dc
+      FPGADev15: ami-0d3e8847d15d9ad72
       ALinux2: ami-04328208f4f0cf1fe
     us-west-1:
       CentOS75: ami-074e2d6769f445be5
-      FPGADev15: ami-04b152df7fb645142
+      FPGADev15: ami-06fd3aab7a08e942d
       ALinux2: ami-0799ad445b5727125
     us-west-2:
       CentOS75: ami-3ecc8f46
-      FPGADev15: ami-0d0bd43b0b6c54f6f
+      FPGADev15: ami-068ef4610de0dfb70
       ALinux2: ami-032509850cf9ee54e
     eu-west-1:           # Dublin
       CentOS75: ami-3548444c
-      FPGADev15: ami-0d86116010d6cae11
+      FPGADev15: ami-0521b6e4d86dad1f1
       ALinux2: ami-0fad7378adf284ce0
     ap-southeast-1:      # Singapore
       CentOS75: ami-8e0205f2
-      FPGADev15: ami-021384cdd418eedaa
+      FPGADev15: ami-0c4b3ff18b42e34a8
       ALinux2: ami-04677bdaa3c2b6e24
     ap-southeast-2:      # Sydney
       CentOS75: ami-d8c21dba
-      FPGADev15: ami-0e4b6096be3f361cc
+      FPGADev15: ami-000e49a33676e256a
       ALinux2: ami-0c9d48b5db609ad6e
     ap-northeast-2:      # Seoul
       CentOS75: ami-06cf2a72dadf92410
-      FPGADev15: ami-0213e978605c85371
+      FPGADev15: ami-0bbca7ce2aa871d41
       ALinux2: ami-018a9a930060d38aa
     ap-northeast-1:      # Tokyo
       CentOS75: ami-045f38c93733dd48d
-      FPGADev15: ami-0dd3de26bf4601d6e
+      FPGADev15: ami-0f741966c7ef2c378
       ALinux2: ami-0d7ed3ddb85b521a6
 
 Metadata:
