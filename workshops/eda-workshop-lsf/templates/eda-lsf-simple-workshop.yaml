@@ -927,6 +927,14 @@ Resources:
     Type: "AWS::EC2::SecurityGroupIngress"
     Properties:
       GroupId: !Ref LSFComputeNodeSG
+      Description: "All traffic from other LSF exec hosts" 
+      IpProtocol: "-1"
+      SourceSecurityGroupId: !Ref LSFComputeNodeSG
+
+  LSFComputeNodeSGRule03:
+    Type: "AWS::EC2::SecurityGroupIngress"
+    Properties:
+      GroupId: !Ref LSFComputeNodeSG
       Description: "SSH Ingress" 
       IpProtocol: "tcp"
       FromPort: 22
