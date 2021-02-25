@@ -200,7 +200,6 @@ Resources:
       GroupDescription: "SG for LSF Compute Nodes"
       VpcId: !Ref VPCId
 
-  # TODO: restrict to LSF port traffic
   LSFComputeNodeSGRule01:
     Type: "AWS::EC2::SecurityGroupIngress"
     Properties:
@@ -208,6 +207,14 @@ Resources:
       Description: "All traffic from LSF Master" 
       IpProtocol: "-1"
       SourceSecurityGroupId: !Ref LSFMasterSG
+
+  LSFComputeNodeSGRule02:
+    Type: "AWS::EC2::SecurityGroupIngress"
+    Properties:
+      GroupId: !Ref LSFComputeNodeSG
+      Description: "All traffic from other LSF exec hosts" 
+      IpProtocol: "-1"
+      SourceSecurityGroupId: !Ref LSFComputeNodeSG
 
   LoginServerSG:
     Type: "AWS::EC2::SecurityGroup"
