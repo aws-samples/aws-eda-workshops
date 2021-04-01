@@ -13,6 +13,7 @@ bsub -R "select[aws && mem>30000]" ./run-sim.sh --scratch-dir /ec2-nfs/scratch
 
 bsub -R "select[aws && instance_type==z1d_2xlarge]" ./run-sim.sh --scratch-dir /ec2-nfs/scratch
 
+bsub -R spot -J "spot[1-100]" ./run-sim.sh --scratch-dir /ec2-nfs/scratch
 
 bjobs -aws
 bhosts -w

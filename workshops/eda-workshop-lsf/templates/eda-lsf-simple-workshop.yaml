@@ -328,7 +328,7 @@ Resources:
               yum install wget -q -y
               yum install vim -q -y
 
-              # Install SSM so we can use SSM Session Manager and avoid ssh logins in the future.
+              # Install SSM so we can use SSM Session Manager and avoid ssh logins
               yum install -q -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
               systemctl enable amazon-ssm-agent
               systemctl start amazon-ssm-agent
@@ -946,9 +946,10 @@ Resources:
     Properties:
       PerformanceMode: !Ref EFSPerformanceMode
       ThroughputMode: !Ref EFSThroughputMode
+      Encrypted: True
       FileSystemTags:
         - Key: Name
-          Value: !Join [ '', [ 'Infra Tools - ',!Ref 'AWS::StackName' ] ]
+          Value: !Join [ ' - ', [ 'Infra Tools',!Ref 'AWS::StackName' ] ]
 
   LSFEFSMountTarget:
       Type: AWS::EFS::MountTarget
