@@ -29,9 +29,9 @@ if [ $OS == "centos7" ]; then
     yum install -y epel-release
     yum install -y $(echo ${SYSTEM_PKGS[*]} ${SCHEDULER_PKGS[*]} ${OPENLDAP_SERVER_PKGS[*]} ${SSSD_PKGS[*]})
     yum groupinstall -y "GNOME Desktop"
-if [ $OS == "amazonlinux2" ]; then
+elif [ $OS == "amazonlinux2" ]; then
     yum install -y epel-release
-    yum install -y $(echo ${SYSTEM_PKGS[*]} ${SCHEDULER_PKGS[*]} ${OPENLDAP_SERVER_PKGS[*]} ${SSSD_PKGS[*] ${DCV_AMAZONLINUX_PKGS[*]})
+    yum install -y $(echo ${SYSTEM_PKGS[*]} ${SCHEDULER_PKGS[*]} ${OPENLDAP_SERVER_PKGS[*]} ${SSSD_PKGS[*]} ${DCV_AMAZONLINUX_PKGS[*]})
     amazon-linux-extras install mate-desktop1.x
     bash -c 'echo PREFERRED=/usr/bin/mate-session > /etc/sysconfig/desktop'
 elif [ $OS == "rhel7" ]; then
@@ -228,6 +228,7 @@ if [ $OS == "centos7" ] || [ $OS == "rhel7" ]; then
     fi
 elif [ $OS == "amazonlinux2" ]; then
     amazon-linux-extras install -y lustre2.10
+    REQUIRE_REBOOT=1
 fi
 if [[ \$REQUIRE_REBOOT -eq 1 ]]; then
     echo \"Rebooting to load FSx for Lustre drivers!\"
