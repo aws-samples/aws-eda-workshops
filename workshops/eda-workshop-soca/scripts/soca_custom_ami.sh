@@ -155,20 +155,24 @@ echo "Install DCV"
 cd ~
 machine=$(uname -m)
 if [[ $machine == "x86_64" ]]; then
-    wget $DCV_URL
-    if [[ $(md5sum $DCV_TGZ | awk '{print $1}') != $DCV_HASH ]];  then
+    wget $DCV_X86_64_URL
+    if [[ $(md5sum $DCV_X86_64_TGZ | awk '{print $1}') != $DCV_X86_64_HASH ]];  then
         echo -e "FATAL ERROR: Checksum for DCV failed. File may be compromised." > /etc/motd
         exit 1
     fi
-    tar zxvf $DCV_TGZ
-    cd nice-dcv-$DCV_VERSION
+    tar zxvf $DCV_X86_64_TGZ
+    cd nice-dcv-$DCV_X86_64_VERSION
 elif [[ $machine == "aarch64" ]]; then
-    DCV_URL=$(echo $DCV_URL | sed 's/x86_64/aarch64/')
-    wget $DCV_URL
-    DCV_TGZ=$(echo $DCV_TGZ | sed 's/x86_64/aarch64/')
-    tar zxvf $DCV_TGZ
-    DCV_VERSION=$(echo $DCV_VERSION | sed 's/x86_64/aarch64/')
-    cd nice-dcv-$DCV_VERSION
+    DCV_URL=$(echo $DCV_AARCH64_URL | sed 's/x86_64/aarch64/')
+    wget $DCV_AARCH64_URL
+    if [[ $(md5sum $DCV_AARCH64_TGZ | awk '{print $1}') != $DCV_AARCH64_HASH ]];  then
+        echo -e "FATAL ERROR: Checksum for DCV failed. File may be compromised." > /etc/motd
+        exit 1
+    fi
+    DCV_TGZ=$(echo $DCV_AARCH64_TGZ | sed 's/x86_64/aarch64/')
+    tar zxvf $DCV_AARCH64_TGZ
+    DCV_VERSION=$(echo $DCV_AARCH64_VERSION | sed 's/x86_64/aarch64/')
+    cd nice-dcv-$DCV_AARCH64_VERSION
 fi
 rpm -ivh nice-xdcv-*.${machine}.rpm --nodeps
 rpm -ivh nice-dcv-server*.${machine}.rpm --nodeps
