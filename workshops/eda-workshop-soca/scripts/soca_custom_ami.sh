@@ -47,7 +47,8 @@ yum install -y vim vim-X11 xterm compat-db47 glibc glibc.i686 openssl098e compat
     motif libXp libXaw libICE.i686 libpng.i686 libXau.i686 libuuid.i686 libSM.i686 libxcb.i686 \
     plotutils libXext.i686 libXt.i686 libXmu.i686 libXp.i686 libXrender.i686 bzip2-libs.i686 \
     freetype.i686 fontconfig.i686 libXft.i686 libjpeg-turbo.i686 motif.i686 apr.i686 libdb \
-    libdb.i686 libdb-utils apr-util.i686 libXp.i686 qt qt-x11 qtwebkit apr-util gnuplot
+    libdb.i686 libdb-utils apr-util.i686 libXp.i686 qt qt-x11 qtwebkit apr-util gnuplot \
+    libXScrnSaver tbb compat-libtiff3 arts SDL
 
 #Install OpenPBS
 echo "Installing OpenPBS"
@@ -155,20 +156,24 @@ echo "Install DCV"
 cd ~
 machine=$(uname -m)
 if [[ $machine == "x86_64" ]]; then
-    wget $DCV_URL
-    if [[ $(md5sum $DCV_TGZ | awk '{print $1}') != $DCV_HASH ]];  then
+    wget $DCV_X86_64_URL
+    if [[ $(md5sum $DCV_X86_64_TGZ | awk '{print $1}') != $DCV_X86_64_HASH ]];  then
         echo -e "FATAL ERROR: Checksum for DCV failed. File may be compromised." > /etc/motd
         exit 1
     fi
-    tar zxvf $DCV_TGZ
-    cd nice-dcv-$DCV_VERSION
+    tar zxvf $DCV_X86_64_TGZ
+    cd nice-dcv-$DCV_X86_64_VERSION
 elif [[ $machine == "aarch64" ]]; then
-    DCV_URL=$(echo $DCV_URL | sed 's/x86_64/aarch64/')
-    wget $DCV_URL
-    DCV_TGZ=$(echo $DCV_TGZ | sed 's/x86_64/aarch64/')
-    tar zxvf $DCV_TGZ
-    DCV_VERSION=$(echo $DCV_VERSION | sed 's/x86_64/aarch64/')
-    cd nice-dcv-$DCV_VERSION
+    DCV_URL=$(echo $DCV_AARCH64_URL | sed 's/x86_64/aarch64/')
+    wget $DCV_AARCH64_URL
+    if [[ $(md5sum $DCV_AARCH64_TGZ | awk '{print $1}') != $DCV_AARCH64_HASH ]];  then
+        echo -e "FATAL ERROR: Checksum for DCV failed. File may be compromised." > /etc/motd
+        exit 1
+    fi
+    DCV_TGZ=$(echo $DCV_AARCH64_TGZ | sed 's/x86_64/aarch64/')
+    tar zxvf $DCV_AARCH64_TGZ
+    DCV_VERSION=$(echo $DCV_AARCH64_VERSION | sed 's/x86_64/aarch64/')
+    cd nice-dcv-$DCV_AARCH64_VERSION
 fi
 rpm -ivh nice-xdcv-*.${machine}.rpm --nodeps
 rpm -ivh nice-dcv-server*.${machine}.rpm --nodeps
