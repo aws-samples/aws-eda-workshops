@@ -262,16 +262,13 @@ Resources:
               # Setup LSF environment
               source $LSF_INSTALL_DIR/conf/profile.lsf
 
-              echo "source $LSF_ENVDIR/profile.lsf" > /etc/profile.d/lsf.sh
-
               # Install fix pack
-              
               cd $LSF_INSTALL_DIR/10.1/install
               cp /tmp/$LSF_FP_PKG .
               echo "schmod_demand.so" >> patchlib/daemonlists.tbl
               ./patchinstall --silent $LSF_FP_PKG
 
-              ## Configure LSF and Resource Connector
+              ## Create Resource Connector config dir
               mkdir -p $LSF_ENVDIR/resource_connector/aws/conf
               chown -R lsfadmin:root $LSF_ENVDIR/resource_connector/aws
 
@@ -396,8 +393,13 @@ Resources:
 
               EOF
 
-              # Start LSF
-              lsf_daemons start
+              # Configure system scripts to start LSF at boot time
+              # Add cshrc.lsf and profile.lsf to system-wide environment
+              # Start LSF daemons
+              $LSF_INSTALL_DIR/10.1/install/hostsetup --top="$LSF_INSTALL_DIR" \
+                                                      --boot="y"    \
+                                                      --profile="y" \
+                                                      --start="y"
 
               # Verify that LSF is up and send signal to Cloudformation
               sleep 5
