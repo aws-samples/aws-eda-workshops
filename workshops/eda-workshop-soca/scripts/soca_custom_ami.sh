@@ -32,8 +32,8 @@ if [ $OS == "centos7" ]; then
 elif [ $OS == "amazonlinux2" ]; then
     yum install -y epel-release
     yum install -y $(echo ${SYSTEM_PKGS[*]} ${SCHEDULER_PKGS[*]} ${OPENLDAP_SERVER_PKGS[*]} ${SSSD_PKGS[*]} ${DCV_AMAZONLINUX_PKGS[*]})
-    amazon-linux-extras install mate-desktop1.x
-    bash -c 'echo PREFERRED=/usr/bin/mate-session > /etc/sysconfig/desktop'
+    #amazon-linux-extras install mate-desktop1.x
+    #bash -c 'echo PREFERRED=/usr/bin/mate-session > /etc/sysconfig/desktop'
 elif [ $OS == "rhel7" ]; then
     # Tested only on RHEL7.6
     yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
