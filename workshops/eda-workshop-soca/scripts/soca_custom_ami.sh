@@ -5,7 +5,7 @@ if [[ $EUID -ne 0 ]]; then
    echo "Error: This script must be run as root"
    exit 1
 fi
-exec > >(tee /root/soca_custom_ami.log ) 2>&1
+exec > >(tee /root/soca_preinstalled_packages.log ) 2>&1
 
 OS_NAME=`awk -F= '/^NAME=/{print $2}' /etc/os-release`
 OS_VERSION=`awk -F= '/^VERSION_ID=/{print $2}' /etc/os-release`
