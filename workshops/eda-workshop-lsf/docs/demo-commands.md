@@ -18,6 +18,7 @@ bsub -R spot sleep 15m
 
 2. Manually terminate spot instance
 3. Observe requeue
+
 bhist -l <job_id>
 
 bsub -R spot -J "spot[1-100]" ./run-sim.sh --scratch-dir /ec2-nfs/scratch
