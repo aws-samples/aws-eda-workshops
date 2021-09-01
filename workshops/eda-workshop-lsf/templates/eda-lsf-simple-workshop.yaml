@@ -288,7 +288,7 @@ Resources:
       Tags:
         - 
           Key: "Name"
-          Value: !Join [ '', [ 'LSF Management Host - ',!Ref LSFClusterName ] ]
+          Value: !Join [ '', [ 'LSF Mgmt Host - ',!Ref LSFClusterName ] ]
         - 
           Key: "Cluster"
           Value: !Ref LSFClusterName
