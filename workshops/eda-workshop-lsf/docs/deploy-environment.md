@@ -198,7 +198,7 @@ Sign in to your AWS account, and follow these instructions to subscribe:
 
    `ssh -i /path/to/private_key centos@<host_ip>`
 
-1. Run the `lsid` command to verify that LSF installed properly and is running.
+1. Run the `lsid` command to verify that LSF installed properly and is running. You should see something similar to the following:
     ```
     IBM Spectrum LSF Standard 10.1.0.11, Nov 12 2020
     Copyright International Business Machines Corp. 1992, 2016.
