@@ -203,7 +203,7 @@ Sign in to your AWS account, and follow these instructions to subscribe:
     IBM Spectrum LSF Standard 10.1.0.11, Nov 12 2020
     Copyright International Business Machines Corp. 1992, 2016.
     US Government Users Restricted Rights - Use, duplication or disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
-    My cluster name is <CLUSTERN_NAME>
+    My cluster name is <CLUSTER_NAME>
     My master name is <MASTER_HOST_NAME>
     ```
 
