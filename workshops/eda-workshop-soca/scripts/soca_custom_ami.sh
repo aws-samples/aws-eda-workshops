@@ -178,6 +178,13 @@ elif [[ $machine == "aarch64" ]]; then
 fi
 rpm -ivh nice-xdcv-*.${machine}.rpm --nodeps
 rpm -ivh nice-dcv-server*.${machine}.rpm --nodeps
+rpm -ivh nice-dcv-web-viewer-*.${machine}.rpm --nodeps
+
+# Enable DCV support for USB remotization
+yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
+yum install -y dkms
+DCVUSBDRIVERINSTALLER=$(which dcvusbdriverinstaller)
+$DCVUSBDRIVERINSTALLER --quiet
 
 echo "Creating script to install FSx for Lustre client: /root/fsx_lustre.sh"
 echo -e "#!/bin/bash
