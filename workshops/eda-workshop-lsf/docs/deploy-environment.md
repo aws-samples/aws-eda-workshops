@@ -199,6 +199,13 @@ Sign in to your AWS account, and follow these instructions to subscribe:
    `ssh -i /path/to/private_key centos@<host_ip>`
 
 1. Run the `lsid` command to verify that LSF installed properly and is running.
+    ```
+    IBM Spectrum LSF Standard 10.1.0.11, Nov 12 2020
+    Copyright International Business Machines Corp. 1992, 2016.
+    US Government Users Restricted Rights - Use, duplication or disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
+    My cluster name is <CLUSTERN_NAME>
+    My master name is <MASTER_HOST_NAME>
+    ```
 
 ### Step 6. Run workload
 
