@@ -1,0 +1,8 @@
+---
+
+- name: Configure users/groups on compute node
+  hosts: ldap
+  become_user: root
+  become: yes
+  roles:
+    - create_users_groups

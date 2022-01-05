@@ -1,0 +1,8 @@
+---
+
+- name: Configure ldap host to save users/groups to json
+  hosts: ldap
+  become_user: root
+  become: yes
+  roles:
+    - create_users_groups_json

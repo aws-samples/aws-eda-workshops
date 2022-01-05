@@ -1,0 +1,10 @@
+---
+
+- name: Create/Update Users
+  template:
+    src:   etc/cron.d/soca_users_groups
+    dest: /etc/cron.d/soca_users_groups
+    owner: root
+    group: root
+    mode: 0600
+    force: yes
