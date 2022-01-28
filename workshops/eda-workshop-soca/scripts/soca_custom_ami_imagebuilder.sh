@@ -241,5 +241,5 @@ if [ $OS == "centos7" ] || [ $OS == "rhel7" ]; then
 elif [ $OS == "amazonlinux2" ]; then
     amazon-linux-extras install -y lustre2.10
     REQUIRE_REBOOT=1
-fi
+fi" > /root/fsx_lustre.sh
 chmod +x /root/fsx_lustre.sh
