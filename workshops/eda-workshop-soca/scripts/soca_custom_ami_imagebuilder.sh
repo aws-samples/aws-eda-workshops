@@ -189,6 +189,7 @@ $DCVUSBDRIVERINSTALLER --quiet
 echo "Creating script to install FSx for Lustre client: /root/fsx_lustre.sh"
 echo -e "#!/bin/bash
 set -x
+exec > >(tee /root/fsx_lustre.sh.log ) 2>&1
 crontab -r
 if [[ \$EUID -ne 0 ]]; then
    echo \"Error: This script must be run as root\"
