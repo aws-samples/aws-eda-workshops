@@ -190,12 +190,12 @@ echo "Creating script to install FSx for Lustre client: /root/fsx_lustre.sh"
 echo -e "#!/bin/bash
 set -x
 exec > >(tee /root/fsx_lustre.sh.log ) 2>&1
-crontab -r
+
 if [[ \$EUID -ne 0 ]]; then
    echo \"Error: This script must be run as root\"
    exit 1
 fi
-REQUIRE_REBOOT=0
+
 echo \"Installing FSx lustre client\"
 kernel=\$(uname -r)
 machine=\$(uname -m)
@@ -204,7 +204,6 @@ if [ $OS == "centos7" ] || [ $OS == "rhel7" ]; then
     if [[ \$kernel == *\"3.10.0-957\"*\$machine ]]; then
        yum -y install https://downloads.whamcloud.com/public/lustre/lustre-2.10.8/el7/client/RPMS/x86_64/kmod-lustre-client-2.10.8-1.el7.x86_64.rpm
        yum -y install https://downloads.whamcloud.com/public/lustre/lustre-2.10.8/el7/client/RPMS/x86_64/lustre-client-2.10.8-1.el7.x86_64.rpm
-       REQUIRE_REBOOT=1
     elif [[ \$kernel == *\"3.10.0-1062\"*\$machine ]]; then
        wget https://fsx-lustre-client-repo-public-keys.s3.amazonaws.com/fsx-rpm-public-key.asc -O /tmp/fsx-rpm-public-key.asc
        rpm --import /tmp/fsx-rpm-public-key.asc
@@ -212,7 +211,6 @@ if [ $OS == "centos7" ] || [ $OS == "rhel7" ]; then
        sed -i 's#7#7.7#' /etc/yum.repos.d/aws-fsx.repo
        yum clean all
        yum install -y kmod-lustre-client lustre-client
-       REQUIRE_REBOOT=1
     elif [[ \$kernel == *\"3.10.0-1127\"*\$machine ]]; then
        wget https://fsx-lustre-client-repo-public-keys.s3.amazonaws.com/fsx-rpm-public-key.asc -O /tmp/fsx-rpm-public-key.asc
        rpm --import /tmp/fsx-rpm-public-key.asc
@@ -220,14 +218,12 @@ if [ $OS == "centos7" ] || [ $OS == "rhel7" ]; then
        sed -i 's#7#7.8#' /etc/yum.repos.d/aws-fsx.repo
        yum clean all
        yum install -y kmod-lustre-client lustre-client
-       REQUIRE_REBOOT=1
     elif [[ \$kernel == *\"3.10.0-1160\"*\$machine ]]; then
        wget https://fsx-lustre-client-repo-public-keys.s3.amazonaws.com/fsx-rpm-public-key.asc -O /tmp/fsx-rpm-public-key.asc
        rpm --import /tmp/fsx-rpm-public-key.asc
        wget https://fsx-lustre-client-repo.s3.amazonaws.com/el/7/fsx-lustre-client.repo -O /etc/yum.repos.d/aws-fsx.repo
        yum clean all
        yum install -y kmod-lustre-client lustre-client
-       REQUIRE_REBOOT=1
     elif [[ \$kernel == *\"4.18.0-193\"*\$machine ]]; then
        # FSX for Lustre on aarch64 is supported only on 4.18.0-193
        wget https://fsx-lustre-client-repo-public-keys.s3.amazonaws.com/fsx-rpm-public-key.asc -O /tmp/fsx-rpm-public-key.asc
@@ -235,12 +231,10 @@ if [ $OS == "centos7" ] || [ $OS == "rhel7" ]; then
        wget https://fsx-lustre-client-repo.s3.amazonaws.com/centos/7/fsx-lustre-client.repo -O /etc/yum.repos.d/aws-fsx.repo
        yum clean all
        yum install -y kmod-lustre-client lustre-client
-       REQUIRE_REBOOT=1
     else
        echo \"ERROR: Can't install FSx for Lustre client as kernel version: ${kernel} isn't matching expected versions: (x86_64: 3.10.0-957, -1062, -1127, -1160, aarch64: 4.18.0-193)!\"
     fi
 elif [ $OS == "amazonlinux2" ]; then
     amazon-linux-extras install -y lustre2.10
-    REQUIRE_REBOOT=1
 fi" > /root/fsx_lustre.sh
 chmod +x /root/fsx_lustre.sh
