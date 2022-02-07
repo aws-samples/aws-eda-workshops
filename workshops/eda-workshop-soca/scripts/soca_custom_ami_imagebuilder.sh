@@ -49,7 +49,7 @@ yum install -y vim vim-X11 xterm compat-db47 glibc glibc.i686 openssl098e compat
     plotutils libXext.i686 libXt.i686 libXmu.i686 libXp.i686 libXrender.i686 bzip2-libs.i686 \
     freetype.i686 fontconfig.i686 libXft.i686 libjpeg-turbo.i686 motif.i686 apr.i686 libdb \
     libdb.i686 libdb-utils apr-util.i686 libXp.i686 qt qt-x11 qtwebkit apr-util gnuplot \
-    libXScrnSaver tbb compat-libtiff3 arts SDL
+    libXScrnSaver tbb compat-libtiff3 arts SDL qt5-qtsvg
 
 #Install OpenPBS
 echo "Installing OpenPBS"
