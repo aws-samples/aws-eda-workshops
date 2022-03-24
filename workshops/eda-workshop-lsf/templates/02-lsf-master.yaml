@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: |
-  This template deploys an LSF master server, a supporting EFS file system, and
+  This template deploys an LSF management server, a supporting EFS file system, and
   installs the LSF packages provided by the user.
 
   **WARNING** This template creates AWS resources. 
