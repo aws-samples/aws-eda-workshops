@@ -59,12 +59,6 @@ Metadata:
           - AdminKeyPair
       - 
         Label:
-          default: "File system configuration"
-        Parameters:
-          - EFSPerformanceMode
-          - EFSThroughputMode
-      - 
-        Label:
           default: "LSF software configuration"
         Parameters:
           - LSFInstallPath
@@ -115,10 +109,6 @@ Metadata:
         default: DCV login username
       UserPass:
         default: DCV login password
-      EFSPerformanceMode:
-        default: EFS performance mode
-      EFSThroughputMode:
-        default: EFS throughput mode
       CustomerLSFInstallUri:
         default: LSF install script location
       CustomerLSFBinsUri:
@@ -221,20 +211,6 @@ Parameters:
     Type: String
     Default: s3://<your_bucket>/lsf_std_entitlement.dat
     AllowedPattern: ^s3\:\/\/.*
-  EFSPerformanceMode:
-    Description: The performance mode for the EFS file system
-    Type: "String"
-    AllowedValues:
-      - generalPurpose
-      - maxIO
-    Default: "generalPurpose"
-  EFSThroughputMode:
-    Description: The throughput mode for the EFS file system
-    Type: "String"
-    AllowedValues:
-      - bursting
-      - provisioned
-    Default: "bursting"
   UserName:
     Default: simuser
     Description: The username for DCV remote desktop login
@@ -416,7 +392,7 @@ Resources:
                      -e "s|%CFN_COMPUTE_SECURITY_GROUP_ID%|${LSFComputeNodeSGGroupId}|" \
                      -e "s|%CFN_LSF_COMPUTE_NODE_INSTANCE_PROFILE_ARN%|${LSFComputeNodeInstanceProfileArn}|" \
                      -e "s|%CFN_LSF_CLUSTER_NAME%|${LSFClusterName}|" \
-                     -e "s|%CFN_EFS_FS_DNS_NAME%|$FSXN_SVM_DNS_NAME|" \
+                     -e "s|%CFN_FSXN_SVM_DNS_NAME%|$FSXN_SVM_DNS_NAME|" \
                      -e "s|%CFN_LSF_INSTALL_DIR%|$LSF_INSTALL_DIR|" \
                      -e "s|%CFN_DCV_USER_NAME%|${UserName}|" \
                      -e "s|%CFN_LSF_COMPUTE_NODE_SPOT_FLEET_ROLE_ARN%|${LSFComputeNodeSpotFleetRoleArn}|" \
@@ -563,7 +539,8 @@ Resources:
               set -x
               exec > >(tee /var/log/user-data.log|logger -t user-data ) 2>&1
 
-              echo "*** BEGIN LOGIN SERVER BOOTSTRAP ***"
+              echo "*** BEGIN LOGIN SERVER BOOTSTRAP - `/bin/date` ***"
+
               export LSF_INSTALL_DIR="${LSFInstallPath}/${LSFClusterName}"
               export LSF_INSTALL_DIR_ROOT="/`echo $LSF_INSTALL_DIR | cut -d / -f2`"
               export FSXN_SVM_DNS_NAME="${FSxOntapStorageVirtualMachine}.${FSxOntapFS}.fsx.${AWS::Region}.amazonaws.com"
@@ -610,7 +587,7 @@ Resources:
                 tar -xvzf nice-dcv-2022.0-12123-el7-x86_64.tgz
                 cd nice-dcv-2022.0-12123-el7-x86_64
                 yum -y install nice-dcv-server-2022.0.12123-1.el7.x86_64.rpm \
-                               nice-dcv-web-viewer-2022.0.12123-1.el7.x86_64.rpm
+                               nice-dcv-web-viewer-2022.0.12123-1.el7.x86_64.rpm \
                                nice-xdcv-2022.0.424-1.el7.x86_64.rpm \
                                nice-dcv-gl-2022.0.961-1.el7.x86_64.rpm \
                                nice-dcv-gltest-2019.1.220-1.el7.x86_64.rpm
@@ -710,7 +687,8 @@ Resources:
               echo "false" > /tmp/wait-handle-sent
               stop_disable_svc firewalld
               stop_disable_svc libvirtd
-              echo "*** END LOGIN SERVER BOOTSTRAP. REBOOTING... ***"
+              echo "*** END LOGIN SERVER BOOTSTRAP - `/bin/date` ***"
+              echo "Rebooting"
               reboot
 
               }
@@ -946,62 +924,6 @@ Resources:
       FromPort: 22
       ToPort: 22
       CidrIp: !Ref SshSource
-
-  LSFElasticFileSystem:
-    Type: AWS::EFS::FileSystem
-    Properties:
-      PerformanceMode: !Ref EFSPerformanceMode
-      ThroughputMode: !Ref EFSThroughputMode
-      Encrypted: True
-      FileSystemTags:
-        - Key: Name
-          Value: !Join [ ' - ', [ 'Infra Tools',!Ref 'AWS::StackName' ] ]
-
-  LSFEFSMountTarget:
-      Type: AWS::EFS::MountTarget
-      Properties:
-        FileSystemId: !Ref LSFElasticFileSystem
-        SubnetId: !Ref MasterServerSubnet
-        SecurityGroups:
-          -
-            !Ref LSFEFSMountTargetSG
-
-  LSFEFSMountTargetSG:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: "SG for EFS mount target"
-      VpcId: !Ref VpcId
-
-    
-  LSFEFSMountTargetSGRule01:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !Ref LSFEFSMountTargetSG
-      Description: "NFS from LSF Masters"
-      IpProtocol: "tcp"
-      FromPort: 2049
-      ToPort: 2049
-      SourceSecurityGroupId: !Ref LSFMasterSG
-
-  LSFEFSMountTargetSGRule02:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !Ref LSFEFSMountTargetSG
-      Description: "NFS from compute nodes"
-      IpProtocol: "tcp"
-      FromPort: 2049
-      ToPort: 2049
-      SourceSecurityGroupId: !Ref LSFComputeNodeSG
-
-  LSFEFSMountTargetSGRule03:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !Ref LSFEFSMountTargetSG
-      Description: "NFS from login server"
-      IpProtocol: "tcp"
-      FromPort: 2049
-      ToPort: 2049
-      SourceSecurityGroupId: !Ref LoginServerSG
 
   FSxOntapFS:
     Type: "AWS::FSx::FileSystem"
