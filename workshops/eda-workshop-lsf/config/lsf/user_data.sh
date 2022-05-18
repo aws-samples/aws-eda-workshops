@@ -34,12 +34,7 @@ done
 
 # mount shared file systems
 mkdir $LSF_INSTALL_DIR_ROOT
-mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport ${EFS_FS_DNS_NAME}:/ $LSF_INSTALL_DIR_ROOT
-
-mkdir $FS_MOUNT_POINT
-
-# Using default mount options.  Tune as necessary.
-mount $NFS_SERVER_EXPORT $FS_MOUNT_POINT
+mount -t nfs -o rw,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 $FSXN_SVM_DNS_NAME:/vol1 $LSF_INSTALL_DIR_ROOT
 
 ## Set up the LSF environment
 
