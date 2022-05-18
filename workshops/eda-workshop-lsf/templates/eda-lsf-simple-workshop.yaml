@@ -1,48 +1,48 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: |
-  This template deploys a login server, an LSF master server, a supporting EFS file system, 
+  This template deploys a login server, an LSF master server, a supporting NFS file system, 
   and installs LSF software that you provide.
   
-  **WARNING** This template creates Amazon EC2 instances, an EFS file system, and related resources. 
+  **WARNING** This template creates Amazon EC2 instances, an FSx for NetApp ONTAP file system, and related resources. 
   You will be billed for the AWS resources used if you create a stack from this template.
 
 Mappings:
   RegionMap:
     us-east-1:  
       CentOS75: ami-9887c6e7
-      FPGADev15: ami-0a71d776cea7922c1
+      FPGADev: ami-0cf12acd587e51b42
       ALinux2: ami-035be7bafff33b6b6
     us-east-2:  
       CentOS75: ami-0f2b4fc905b0bd1f1
-      FPGADev15: ami-0d3e8847d15d9ad72
+      FPGADev: ami-0f522eea547ffbdde
       ALinux2: ami-04328208f4f0cf1fe
     us-west-1:
       CentOS75: ami-074e2d6769f445be5
-      FPGADev15: ami-06fd3aab7a08e942d
+      FPGADev: ami-02ed13c760b58790d
       ALinux2: ami-0799ad445b5727125
     us-west-2:
       CentOS75: ami-3ecc8f46
-      FPGADev15: ami-068ef4610de0dfb70
+      FPGADev: ami-00736db43ba03656a
       ALinux2: ami-032509850cf9ee54e
     eu-west-1:           # Dublin
       CentOS75: ami-3548444c
-      FPGADev15: ami-0521b6e4d86dad1f1
+      FPGADev: ami-01f373e791bb05667
       ALinux2: ami-0fad7378adf284ce0
     ap-southeast-1:      # Singapore
       CentOS75: ami-8e0205f2
-      FPGADev15: ami-0c4b3ff18b42e34a8
+      FPGADev: ami-0d2658414ef6f29cf
       ALinux2: ami-04677bdaa3c2b6e24
     ap-southeast-2:      # Sydney
       CentOS75: ami-d8c21dba
-      FPGADev15: ami-000e49a33676e256a
+      FPGADev: ami-0651d0a596bb7c014
       ALinux2: ami-0c9d48b5db609ad6e
     ap-northeast-2:      # Seoul
       CentOS75: ami-06cf2a72dadf92410
-      FPGADev15: ami-0bbca7ce2aa871d41
+      FPGADev: ami-03162ccf408e174a1
       ALinux2: ami-018a9a930060d38aa
     ap-northeast-1:      # Tokyo
       CentOS75: ami-045f38c93733dd48d
-      FPGADev15: ami-0f741966c7ef2c378
+      FPGADev: ami-051c91d3186bfdb7d
       ALinux2: ami-0d7ed3ddb85b521a6
 
 Metadata:
@@ -167,13 +167,13 @@ Parameters:
       NOTE: You must first subscribe to this AMI in the AWS Marketplace 
       at https://aws.amazon.com/marketplace/pp/B06VVYBLZZ
     Type: "String"
-    Default: "FPGADev15"
+    Default: "FPGADev"
     AllowedValues:
-      - FPGADev15
+      - FPGADev
   LoginServerInstanceType:
     Description: The instance type for the login server
     Type: "String"
-    Default: "m5.2xlarge"
+    Default: "m5d.2xlarge"
     AllowedValues:
       - t3.medium
       - t3.xlarge
@@ -182,16 +182,17 @@ Parameters:
       - m5.xlarge
       - m5.2xlarge
       - m5.24xlarge
+      - m5d.2xlarge
   LSFClusterName:
     Description: The LSF cluster name
     Type: "String"
     Default: "mycluster"
   LSFInstallPath:
     Description: >
-      The shared NFS path for installing LSF. This will be created on the included EFS file system
+      The shared NFS path for installing LSF. This will be created on the included NFS file system
       and mounted on all nodes in the cluster.
     Type: "String"
-    Default: "/efs/tools/ibm/lsf"
+    Default: "/fsxn/tools/ibm/lsf"
   CustomerLSFInstallUri:
     Description: >
       The S3 URI to the LSF installer script package. 
@@ -268,7 +269,7 @@ Resources:
 
   LSFMasterInstance:
     Type: "AWS::EC2::Instance"
-    DependsOn: LSFEFSMountTarget
+    DependsOn: FSxOntapFS
     CreationPolicy:
       ResourceSignal:    
         Count: 1
@@ -305,7 +306,7 @@ Resources:
 
               export LSF_INSTALL_DIR="${LSFInstallPath}/${LSFClusterName}"
               export LSF_INSTALL_DIR_ROOT="/`echo $LSF_INSTALL_DIR | cut -d / -f2`"
-              export EFS_FS_DNS_NAME="${LSFElasticFileSystem}.efs.${AWS::Region}.amazonaws.com"
+              export FSXN_SVM_DNS_NAME="${FSxOntapStorageVirtualMachine}.${FSxOntapFS}.fsx.${AWS::Region}.amazonaws.com"
               export LSF_ADMIN=lsfadmin
               export LSF_INSTALL_PKG=`echo ${CustomerLSFInstallUri} | awk -F "/" '{print $NF}'`
               export LSF_BIN_PKG=`echo ${CustomerLSFBinsUri} | awk -F "/" '{print $NF}'`
@@ -334,22 +335,21 @@ Resources:
               systemctl start amazon-ssm-agent
 
               ## Mount NFS file system for LSF install
-              #mount point
+              # Create mount point
               mkdir $LSF_INSTALL_DIR_ROOT 
               
-              #mount NFS file system
-              mount -t nfs4 -o rw,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 $EFS_FS_DNS_NAME:/ $LSF_INSTALL_DIR_ROOT
-              #add to fstab
-              echo "$EFS_FS_DNS_NAME:/ $LSF_INSTALL_DIR_ROOT nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> \
-                /etc/fstab
+              # Mount FSxN file system
+              mount -t nfs -o rw,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 $FSXN_SVM_DNS_NAME:/vol1 $LSF_INSTALL_DIR_ROOT
 
+              #add to fstab
+              echo "$FSXN_SVM_DNS_NAME:/vol1 $LSF_INSTALL_DIR_ROOT nfs nfsvers=3,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> \
+                /etc/fstab
+              
               mkdir -p {$LSF_INSTALL_DIR,$LSF_INSTALL_DIR_ROOT/proj,$LSF_INSTALL_DIR_ROOT/scratch}
               chmod 777 $LSF_INSTALL_DIR_ROOT/{proj,scratch}
               mkdir /var/log/lsf && chmod 777 /var/log/lsf
 
-              # TODO: Setup CloudWatch Logs daemon and send LSF logs to CloudWatch
-              # TODO: Install CodeDeploy agent so that we can push LSF config file changes from CodeCommit repo
-              # See docs
+              # TODO: Setup CloudWatch Logs daemon and send LSF logs to CloudWatch              # See docs
 
               ##############################################
               # Install LSF using customer-provided packages
@@ -416,7 +416,7 @@ Resources:
                      -e "s|%CFN_COMPUTE_SECURITY_GROUP_ID%|${LSFComputeNodeSGGroupId}|" \
                      -e "s|%CFN_LSF_COMPUTE_NODE_INSTANCE_PROFILE_ARN%|${LSFComputeNodeInstanceProfileArn}|" \
                      -e "s|%CFN_LSF_CLUSTER_NAME%|${LSFClusterName}|" \
-                     -e "s|%CFN_EFS_FS_DNS_NAME%|$EFS_FS_DNS_NAME|" \
+                     -e "s|%CFN_EFS_FS_DNS_NAME%|$FSXN_SVM_DNS_NAME|" \
                      -e "s|%CFN_LSF_INSTALL_DIR%|$LSF_INSTALL_DIR|" \
                      -e "s|%CFN_DCV_USER_NAME%|${UserName}|" \
                      -e "s|%CFN_LSF_COMPUTE_NODE_SPOT_FLEET_ROLE_ARN%|${LSFComputeNodeSpotFleetRoleArn}|" \
@@ -566,7 +566,7 @@ Resources:
               echo "*** BEGIN LOGIN SERVER BOOTSTRAP ***"
               export LSF_INSTALL_DIR="${LSFInstallPath}/${LSFClusterName}"
               export LSF_INSTALL_DIR_ROOT="/`echo $LSF_INSTALL_DIR | cut -d / -f2`"
-              export EFS_FS_DNS_NAME="${LSFElasticFileSystem}.efs.${AWS::Region}.amazonaws.com"
+              export FSXN_SVM_DNS_NAME="${FSxOntapStorageVirtualMachine}.${FSxOntapFS}.fsx.${AWS::Region}.amazonaws.com"
               export LSF_ADMIN=lsfadmin
 
               user_name="${UserName}"
@@ -583,11 +583,11 @@ Resources:
               #mount point
               mkdir $LSF_INSTALL_DIR_ROOT
 
-              # mount EFS file system
-              mount -t nfs4 -o rw,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 $EFS_FS_DNS_NAME:/ $LSF_INSTALL_DIR_ROOT
+               # Mount FSxN file system
+              mount -t nfs -o rw,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 $FSXN_SVM_DNS_NAME:/vol1 $LSF_INSTALL_DIR_ROOT
 
               #add to fstab
-              echo "$EFS_FS_DNS_NAME:/ $LSF_INSTALL_DIR_ROOT nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> \
+              echo "$FSXN_SVM_DNS_NAME:/vol1 $LSF_INSTALL_DIR_ROOT nfs nfsvers=3,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> \
                 /etc/fstab
 
               # Set up LSF envirionment
@@ -597,19 +597,22 @@ Resources:
               echo "Installing DCV..."
 
               function install_prereqs {
-                sudo yum -y upgrade
                 sudo yum -y groupinstall "GNOME Desktop"
+                sudo yum -y upgrade
               }
 
               function install_dcv {
                 mkdir /tmp/dcv-inst.d
                 pushd /tmp/dcv-inst.d
-                rpm --import https://s3-eu-west-1.amazonaws.com/nice-dcv-publish/NICE-GPG-KEY
-                wget https://d1uj6qtbmh3dt5.cloudfront.net/2019.1/Servers/nice-dcv-2019.1-7423-el7.tgz
-                tar xvf nice-dcv-2019.1-7423-el7.tgz
-                cd nice-dcv-2019.1-7423-el7/
-                yum -y install nice-dcv-server-2019.1.7423-1.el7.x86_64.rpm \
-                               nice-xdcv-2019.1.226-1.el7.x86_64.rpm \
+                # DCV update
+                rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
+                wget https://d1uj6qtbmh3dt5.cloudfront.net/2022.0/Servers/nice-dcv-2022.0-12123-el7-x86_64.tgz
+                tar -xvzf nice-dcv-2022.0-12123-el7-x86_64.tgz
+                cd nice-dcv-2022.0-12123-el7-x86_64
+                yum -y install nice-dcv-server-2022.0.12123-1.el7.x86_64.rpm \
+                               nice-dcv-web-viewer-2022.0.12123-1.el7.x86_64.rpm
+                               nice-xdcv-2022.0.424-1.el7.x86_64.rpm \
+                               nice-dcv-gl-2022.0.961-1.el7.x86_64.rpm \
                                nice-dcv-gltest-2019.1.220-1.el7.x86_64.rpm
                 popd
               }
@@ -999,6 +1002,89 @@ Resources:
       FromPort: 2049
       ToPort: 2049
       SourceSecurityGroupId: !Ref LoginServerSG
+
+  FSxOntapFS:
+    Type: "AWS::FSx::FileSystem"
+    Properties:
+      FileSystemType: "ONTAP"
+      StorageType: SSD
+      StorageCapacity: 1024
+      SubnetIds:
+        - !Ref ComputeNodeSubnet
+      SecurityGroupIds: 
+        - !Ref FSxOntapSG
+      OntapConfiguration:
+        DeploymentType: "SINGLE_AZ_1"
+        PreferredSubnetId: !Ref ComputeNodeSubnet
+        ThroughputCapacity: 512
+        DiskIopsConfiguration:
+          Iops: 10000
+          Mode: "USER_PROVISIONED"
+      Tags:
+        - Key: "Name"
+          Value: "FSxN-FS"
+  FSxOntapStorageVirtualMachine:
+    Type: "AWS::FSx::StorageVirtualMachine"
+    Properties:
+        FileSystemId: !Ref FSxOntapFS
+        Name: "svm1"
+        RootVolumeSecurityStyle: "UNIX"
+        Tags:
+          - Key: "Name"
+            Value: "FSxN-SVM"
+  FSxOntapVolume:
+    Type: "AWS::FSx::Volume"
+    Properties:
+      Name: "vol1"
+      VolumeType: "ONTAP"
+      OntapConfiguration:
+        JunctionPath: "/vol1"
+        SecurityStyle: "UNIX"
+        SizeInMegabytes: 512000
+        StorageEfficiencyEnabled: False
+        StorageVirtualMachineId: !Ref FSxOntapStorageVirtualMachine
+        TieringPolicy:
+          CoolingPeriod: 41
+          Name: "AUTO"
+      Tags:
+        - Key: "Name"
+          Value: "FSxN-vol1"
+
+  FSxOntapSG:
+   Type: "AWS::EC2::SecurityGroup"
+   Properties:
+     GroupDescription: "SG for FSxN file systems"
+     VpcId: !Ref VpcId
+     SecurityGroupIngress:
+     - IpProtocol: tcp
+       FromPort: 22
+       ToPort: 22
+       SourceSecurityGroupId: !Ref LSFMasterSG
+  
+  FSxOntapSGRule01:
+   Type: AWS::EC2::SecurityGroupIngress
+   Properties:
+     GroupId: !Ref FSxOntapSG
+     Description: "All traffic from LSF masters"
+     IpProtocol: -1
+     SourceSecurityGroupId: !Ref LSFMasterSG
+  
+  FSxOntapSGRule02:
+   Type: AWS::EC2::SecurityGroupIngress
+   Properties:
+     GroupId: !Ref FSxOntapSG
+     Description: "NFS from LSF compute nodes"
+     IpProtocol: -1
+     SourceSecurityGroupId: !Ref LSFComputeNodeSG
+ 
+  FSxOntapSGRule03:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+     GroupId: !Ref FSxOntapSG
+     Description: "NFS from LSF login servers"
+     IpProtocol: -1
+     SourceSecurityGroupId: !Ref LoginServerSG
+
 
 Outputs:
   LoginServerSsh:
