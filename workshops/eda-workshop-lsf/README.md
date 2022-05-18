@@ -5,7 +5,7 @@
 
 The CloudFormation templates in this workshop deploy a fully functional IBM Spectrum LSF compute cluster with all resources and tools required to run an EDA verification workload on a sample design in the AWS Cloud. This workshop uses the IBM Spectrum LSF Resource Connector feature to dynamically provision AWS compute instances to satisfy workload demand in the LSF queues.
 
-![workflow](docs/images/aws-eda-workshop-workflow.png)
+![workflow](docs/images/eda-lsf-workshop-workflow.png)
 
 ## Prerequisites
 
