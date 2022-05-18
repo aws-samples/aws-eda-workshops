@@ -163,7 +163,7 @@ Parameters:
   LoginServerInstanceType:
     Description: The instance type for the login server
     Type: "String"
-    Default: "m5d.2xlarge"
+    Default: "m5.4xlarge"
     AllowedValues:
       - t3.medium
       - t3.xlarge
@@ -171,6 +171,7 @@ Parameters:
       - m4.2xlarge
       - m5.xlarge
       - m5.2xlarge
+      - m5.4xlarge
       - m5.24xlarge
       - m5d.2xlarge
   LSFClusterName:
@@ -581,16 +582,13 @@ Resources:
               function install_dcv {
                 mkdir /tmp/dcv-inst.d
                 pushd /tmp/dcv-inst.d
-                # DCV update
                 rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
                 wget https://d1uj6qtbmh3dt5.cloudfront.net/2022.0/Servers/nice-dcv-2022.0-12123-el7-x86_64.tgz
-                tar -xvzf nice-dcv-2022.0-12123-el7-x86_64.tgz
-                cd nice-dcv-2022.0-12123-el7-x86_64
-                yum -y install nice-dcv-server-2022.0.12123-1.el7.x86_64.rpm \
-                               nice-dcv-web-viewer-2022.0.12123-1.el7.x86_64.rpm \
-                               nice-xdcv-2022.0.424-1.el7.x86_64.rpm \
-                               nice-dcv-gl-2022.0.961-1.el7.x86_64.rpm \
-                               nice-dcv-gltest-2019.1.220-1.el7.x86_64.rpm
+                tar -xvzf nice-dcv*.tgz
+                cd nice-dcv*
+                yum -y install nice-dcv-server*.rpm \
+                               nice-dcv-web-viewer*.rpm \
+                               nice-xdcv*.rpm
                 popd
               }
 
@@ -622,10 +620,8 @@ Resources:
 
               stop_disable_svc firewalld
               stop_disable_svc libvirtd
-              systemctl isolate multi-user.target
-              systemctl isolate graphical.target
-              DISPLAY=:0 XAUTHORITY=\$(ps aux | grep "X.*\\-auth" | grep -v grep | awk -F"-auth " '{print \$2}' | awk '{print \$1}') xhost | grep "SI:localuser:dcv$"
-              dcv create-session --type=virtual --owner ${!user_name} --user ${!user_name} virt
+              sudo systemctl set-default multi-user.target
+              dcv create-session --type=virtual --owner ${!user_name} --user ${!user_name} --gl off simuser
               dcv list-sessions
 
               my_wait_handle="${!my_wait_handle}"
@@ -739,10 +735,17 @@ Resources:
         FromPort: 22
         ToPort: 22
         CidrIp: !Ref SshSource
+        Description: "SSH from remote client"
       - IpProtocol: tcp
         FromPort: 8443
         ToPort: 8443
         CidrIp: !Ref SshSource
+        Description: "DCV WebSocket traffic"
+      - IpProtocol: udp
+        FromPort: 8443
+        ToPort: 8443
+        CidrIp: !Ref SshSource
+        Description: "DCV QUIC UDP traffic"
 
   LSFMasterRole:
       Type: "AWS::IAM::Role"
@@ -982,6 +985,7 @@ Resources:
        FromPort: 22
        ToPort: 22
        SourceSecurityGroupId: !Ref LSFMasterSG
+       Description: "SSH from LSF Mgmt Server"
   
   FSxOntapSGRule01:
    Type: AWS::EC2::SecurityGroupIngress
