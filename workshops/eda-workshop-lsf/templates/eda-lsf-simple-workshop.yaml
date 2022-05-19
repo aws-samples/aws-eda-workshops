@@ -541,16 +541,22 @@ Resources:
               exec > >(tee /var/log/user-data.log|logger -t user-data ) 2>&1
 
               echo "*** BEGIN LOGIN SERVER BOOTSTRAP - `/bin/date` ***"
-
+              my_wait_handle="${InstanceWaitHandle}"
               export LSF_INSTALL_DIR="${LSFInstallPath}/${LSFClusterName}"
               export LSF_INSTALL_DIR_ROOT="/`echo $LSF_INSTALL_DIR | cut -d / -f2`"
               export FSXN_SVM_DNS_NAME="${FSxOntapStorageVirtualMachine}.${FSxOntapFS}.fsx.${AWS::Region}.amazonaws.com"
               export LSF_ADMIN=lsfadmin
 
-              user_name="${UserName}"
-              user_pass="${UserPass}"
+              pip3 install awscli
 
-              my_wait_handle="${InstanceWaitHandle}"
+              # Set DCV username and password
+              export SM_PASSWORD=`/usr/local/bin/aws secretsmanager get-secret-value \
+                                   --secret-id ${DCVCredentialsSecret} \
+                                   --output text --query 'SecretString' \
+                                  | python -c 'import json, sys; print(json.load(sys.stdin)["password"])'`
+
+              user_name="${UserName}"
+              user_pass=$SM_PASSWORD
 
               # Install SSM so we can use SSM Session Manager and avoid ssh logins.
               yum install -q -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
@@ -708,6 +714,7 @@ Resources:
         ManagedPolicyArns:
           - "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
           - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+          - "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
         Policies:
           - PolicyName: DcvLicenseBucketPolicy
             PolicyDocument:
@@ -798,7 +805,13 @@ Resources:
                     - iam:ListRoles
                     - iam:ListInstanceProfiles
                     - iam:CreateServiceLinkedRole
-                  Resource: '*'
+                  Resource:
+                    - !GetAtt LSFSpotFleetRole.Arn
+                    - !GetAtt LSFComputeNodeRole.Arn
+                  Condition:
+                      StringEquals:
+                        iam:PassedToService:
+                            "ec2.amazonaws.com"
                 - Effect: Allow
                   Action:
                     - s3:GetObject
@@ -1010,6 +1023,16 @@ Resources:
      Description: "NFS from LSF login servers"
      IpProtocol: -1
      SourceSecurityGroupId: !Ref LoginServerSG
+
+  DCVCredentialsSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub '${AWS::StackName}/DCVCredentialsSecret'
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "simuser"}'
+        GenerateStringKey: "password"
+        PasswordLength: 16
+        ExcludeCharacters: '"@/\'
 
 
 Outputs:
