@@ -80,7 +80,6 @@ Metadata:
         Parameters:
           - LoginServerInstanceType
           - UserName
-          - UserPass
 
     ParameterLabels:
       VpcId:
@@ -107,8 +106,6 @@ Metadata:
         default: Login server instance type
       UserName:
         default: DCV login username
-      UserPass:
-        default: DCV login password
       CustomerLSFInstallUri:
         default: LSF install script location
       CustomerLSFBinsUri:
@@ -218,20 +215,6 @@ Parameters:
     MinLength: '4'
     Type: String
     ConstraintDescription: Must be at least four letters in length
-  UserPass:
-    Default: Ch4ng3M3!
-    Description: >
-      The password for DCV remote desktop login. The default password is Ch4ng3M3!.
-      The password must be at least 8 characters in length and contain at least one 
-      element from three of the following sets - lowercase letters, uppercase letters,
-      base 10 digits, non-alphanumeric characters
-    MinLength: '8'
-    NoEcho: true
-    Type: String
-    AllowedPattern: ^((?=.*[a-z])(?=.*[A-Z])(?=.*[\d])|(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_])|(?=.*[a-z])(?=.*[\d])(?=.*[\W_])|(?=.*[A-Z])(?=.*[\d])(?=.*[\W_])).+$
-    ConstraintDescription: >
-      Password must contain at least one element from three of the following sets - 
-      lowercase letters, uppercase letters, base 10 digits, non-alphanumeric characters
 
 Resources:
   InstanceWaitHandle:
@@ -537,7 +520,7 @@ Resources:
           Fn::Sub: |
               #!/bin/bash
 
-              set -x
+              set +x
               exec > >(tee /var/log/user-data.log|logger -t user-data ) 2>&1
 
               echo "*** BEGIN LOGIN SERVER BOOTSTRAP - `/bin/date` ***"
@@ -547,18 +530,19 @@ Resources:
               export FSXN_SVM_DNS_NAME="${FSxOntapStorageVirtualMachine}.${FSxOntapFS}.fsx.${AWS::Region}.amazonaws.com"
               export LSF_ADMIN=lsfadmin
 
-              pip3 install awscli
+              pip3 -q install awscli
 
               # Set DCV username and password
               export SM_PASSWORD=`/usr/local/bin/aws secretsmanager get-secret-value \
-                                   --secret-id ${DCVCredentialsSecret} \
-                                   --output text --query 'SecretString' \
-                                  | python -c 'import json, sys; print(json.load(sys.stdin)["password"])'`
+                                    --region ${AWS::Region} \
+                                    --secret-id ${DCVCredentialsSecret} \
+                                    --output text --query 'SecretString' \
+                                   | python -c 'import json, sys; print(json.load(sys.stdin)["password"])'`
 
               user_name="${UserName}"
               user_pass=$SM_PASSWORD
 
-              # Install SSM so we can use SSM Session Manager and avoid ssh logins.
+              # Install SSM so we can use SSM Session Manager to avoid ssh logins.
               yum install -q -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
               systemctl enable amazon-ssm-agent
               systemctl start amazon-ssm-agent
@@ -595,6 +579,7 @@ Resources:
                 yum -y install nice-dcv-server*.rpm \
                                nice-dcv-web-viewer*.rpm \
                                nice-xdcv*.rpm
+                sed -i -e 's/#enable-quic-frontend=true/enable-quic-frontend=true/' /etc/dcv/dcv.conf
                 popd
               }
 
