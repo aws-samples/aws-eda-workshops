@@ -28,7 +28,7 @@ Deploying this cluster in a new virtual private cloud (VPC) with default paramet
 
 The tutorial sets up the following:
 
-- A VPC configured with public and private subnets to provide you with your own virtual network on AWS.*
+- A VPC configured with public and private subnets to provide you with your own virtual network on AWS.
 - In the public subnet, a managed NAT gateway to allow outbound internet access for resources in the private subnets.
 - In the public subnet, a Linux login/submission host running NICE DCV to allow remote desktop and Secure Shell (SSH) access to the environment.
 - In the private subnet, an LSF master running IBM Spectrum LSF with the Resource Connector feature enabled, Amazon EC2 compute instances that are dynamically provisioned by LSF, and a Linux-based NFS server for runtime scratch data.
