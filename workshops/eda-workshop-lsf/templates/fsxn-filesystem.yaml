@@ -68,4 +68,4 @@ Outputs:
     Description: FSxN file system SVM DNS name
     Value: !Join [ '', [ !Ref FSxOntapStorageVirtualMachine, ".", !Ref FSxOntapFS, !Sub ".fsx.${AWS::Region}.amazonaws.com" ] ]
     Export:
-      Name: !Join [ '-', [ !Ref LSFClusterName, "FSxN-FS" ] ]
+      Name: !Join [ '_', [ !Ref LSFClusterName, "FSxOntapFS" ] ]

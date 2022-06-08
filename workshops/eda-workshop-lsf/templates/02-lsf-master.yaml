@@ -182,7 +182,7 @@ Resources:
               mount -t nfs -o "rsize=262144,wsize=262144,hard,vers=3,tcp,mountproto=tcp" $FSXN_SVM_DNS_NAME:/vol1 $LSF_INSTALL_DIR_ROOT
 
               #add to fstab
-              echo "${FSxN-FS}:/vol1 ${FileSystemMountPoint} nfs nfsvers=3,rsize=262144,wsize=262144,tcp,hard 0 0" >> \
+              echo "${FSxOntapFS}:/vol1 ${FileSystemMountPoint} nfs nfsvers=3,rsize=262144,wsize=262144,tcp,hard 0 0" >> \
                 /etc/fstab
 
               mkdir -p $LSF_INSTALL_DIR
@@ -256,7 +256,7 @@ Resources:
                      -e "s|%CFN_COMPUTE_SECURITY_GROUP_ID%|${LSFComputeNodeSGGroupId}|" \
                      -e "s|%CFN_LSF_COMPUTE_NODE_INSTANCE_PROFILE_ARN%|${LSFComputeNodeInstanceProfileArn}|" \
                      -e "s|%CFN_LSF_CLUSTER_NAME%|${LSFClusterName}|" \
-                     -e "s|%CFN_FSXN_SVM_DNS_NAME%|${FSxN-FS}|" \
+                     -e "s|%CFN_FSXN_SVM_DNS_NAME%|${FSxOntapFS}|" \
                      -e "s|%CFN_NFS_MOUNT_POINT%|${FileSystemMountPoint}|" \
                      -e "s|%CFN_LSF_INSTALL_DIR%|$LSF_INSTALL_DIR|" \
                      -e "s|%CFN_DCV_USER_NAME%|${DCVUserName}|" \
@@ -376,8 +376,8 @@ Resources:
                 Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"LSFComputeNodeSG" ] ]
               LSFComputeNodeSubnet:
                 Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"PrivateSubnet" ] ]
-              FSxN-FS:
-                Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"FSxN-FS" ] ]
+              FSxOntapFS:
+                Fn::ImportValue: !Join [ '_', [ !Ref LSFClusterName,"FSxOntapFS" ] ]
 
   LSFMasterRole:
       Type: "AWS::IAM::Role"
