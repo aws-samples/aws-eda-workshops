@@ -28,9 +28,6 @@ Resources:
         DeploymentType: "SINGLE_AZ_1"
         PreferredSubnetId:
           Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"PrivateSubnet" ] ]
-        RouteTableIds: 
-          - Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"PrivateRouteTable" ] ]
-          - Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"PublicRouteTable" ] ]
         ThroughputCapacity: 512
         DiskIopsConfiguration:
           Iops: 10000
