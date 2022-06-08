@@ -21,15 +21,16 @@ Resources:
       StorageType: SSD
       StorageCapacity: 1024
       SubnetIds:
-        - !Join [ '-', [ !ImportValue LSFClusterName,"PrivateSubnet" ] ]
+        - Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"PrivateSubnet" ] ]
       SecurityGroupIds: 
-        - !Join [ '-', [ !ImportValue LSFClusterName,"FSxOntapSG" ] ]
+        - Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"FSxOntapSG" ] ]
       OntapConfiguration:
         DeploymentType: "SINGLE_AZ_1"
-        PreferredSubnetId: !Join [ '-', [ !ImportValue LSFClusterName,"PrivateSubnet" ] ]
+        PreferredSubnetId:
+          Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"PrivateSubnet" ] ]
         RouteTableIds: 
-           - !Join [ '-', [ !ImportValue LSFClusterName,"PrivateRouteTable" ] ]
-           - !Join [ '-', [ !ImportValue LSFClusterName,"PublicRouteTable" ] ]
+          - Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"PrivateRouteTable" ] ]
+          - Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"PublicRouteTable" ] ]
         ThroughputCapacity: 512
         DiskIopsConfiguration:
           Iops: 10000
