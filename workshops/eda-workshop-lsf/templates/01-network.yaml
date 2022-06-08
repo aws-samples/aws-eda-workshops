@@ -190,6 +190,43 @@ Resources:
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3' 
       VpcId: !Ref VPCId  
 
+  VPCFlowLog:
+    Type: AWS::EC2::FlowLog
+    Properties:
+      DeliverLogsPermissionArn: !GetAtt FlowLogRole.Arn
+      LogGroupName: !Ref FlowLogGroup
+      ResourceId: !Ref VPCId
+      ResourceType: VPC
+      TrafficType: ALL
+
+  FlowLogGroup:
+      Type: 'AWS::Logs::LogGroup'
+      Properties:
+        RetentionInDays: 3
+
+  FlowLogRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: 'vpc-flow-logs.amazonaws.com'
+          Action: 'sts:AssumeRole'
+      Policies:
+      - PolicyName: 'flowlogs-policy'
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - 'logs:CreateLogStream'
+            - 'logs:PutLogEvents'
+            - 'logs:DescribeLogGroups'
+            - 'logs:DescribeLogStreams'
+            Resource: !GetAtt 'FlowLogGroup.Arn'
+
   LSFMasterSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -201,7 +238,7 @@ Resources:
             IpProtocol: "-1"
 
   LSFMasterSGRule01:
-    Type: "AWS::EC2::SecurityGroupIngress"
+    Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !Ref LSFMasterSG
       Description: "SSH ingress"
@@ -211,7 +248,7 @@ Resources:
       CidrIp: !Ref SshSource
 
   LSFMasterSGRule02:
-    Type: "AWS::EC2::SecurityGroupIngress"
+    Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !Ref LSFMasterSG
       Description: "All traffic from LSF Compute Nodes"
@@ -219,7 +256,7 @@ Resources:
       SourceSecurityGroupId: !Ref LSFComputeNodeSG
 
   LSFMasterSGRule03:
-    Type: "AWS::EC2::SecurityGroupIngress"
+    Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !Ref LSFMasterSG
       Description: "All traffic from Login Server"
@@ -227,13 +264,13 @@ Resources:
       SourceSecurityGroupId: !Ref LoginServerSG
 
   LSFComputeNodeSG:
-    Type: "AWS::EC2::SecurityGroup"
+    Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "SG for LSF Compute Nodes"
-      VpcId: !Ref VpcId
+      VpcId: !Ref VPCId
 
   LSFComputeNodeSGRule01:
-    Type: "AWS::EC2::SecurityGroupIngress"
+    Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !Ref LSFComputeNodeSG
       Description: "All traffic from LSF Master" 
@@ -241,7 +278,7 @@ Resources:
       SourceSecurityGroupId: !Ref LSFMasterSG
 
   LSFComputeNodeSGRule02:
-    Type: "AWS::EC2::SecurityGroupIngress"
+    Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !Ref LSFComputeNodeSG
       Description: "All traffic from other LSF exec hosts" 
@@ -249,7 +286,7 @@ Resources:
       SourceSecurityGroupId: !Ref LSFComputeNodeSG
 
   LSFComputeNodeSGRule03:
-    Type: "AWS::EC2::SecurityGroupIngress"
+    Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !Ref LSFComputeNodeSG
       Description: "SSH Ingress" 
@@ -259,10 +296,10 @@ Resources:
       CidrIp: !Ref SshSource
 
   LoginServerSG:
-    Type: "AWS::EC2::SecurityGroup"
+    Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "SG for Login Servers"
-      VpcId: !Ref VpcId
+      VpcId: !Ref VPCId
       SecurityGroupIngress:
       - IpProtocol: tcp
         FromPort: 22
@@ -281,10 +318,10 @@ Resources:
         Description: "DCV QUIC UDP traffic"
 
   FSxOntapSG:
-   Type: "AWS::EC2::SecurityGroup"
+   Type: AWS::EC2::SecurityGroup
    Properties:
      GroupDescription: "SG for FSxN file systems"
-     VpcId: !Ref VpcId
+     VpcId: !Ref VPCId
      SecurityGroupIngress:
      - IpProtocol: tcp
        FromPort: 22
@@ -315,6 +352,7 @@ Resources:
      Description: "NFS traffic from LSF login servers"
      IpProtocol: -1
      SourceSecurityGroupId: !Ref LoginServerSG
+
 
 Outputs:
   NoIngressSecurityGroup:
