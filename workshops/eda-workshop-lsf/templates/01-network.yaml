@@ -2,8 +2,8 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: |
   This template deploys a VPC with a public and private subnet in one
   Availability Zone, an Internet Gateway with a default route to it on the public subnet. 
-  The template deploys a NAT Gateway and a default route to it
-  in the private subnet.  Also, VPC security groups are created of the instances and EFS mount targets.
+  The template also deploys a NAT Gateway and a default route to it
+  in the private subnet.  Also, VPC security groups are created of the instances and FSxN file systems.
   
   **WARNING** This template creates AWS resources.
   You will be billed for the AWS resources used if you create a stack from this template.
@@ -121,8 +121,12 @@ Resources:
       GroupName: no-ingress-sg
       VpcId: !Ref VPCId
 
+  # Explicit 'retain' required for this route table. 
+  # FSxN can't delete its file systems without a route table. 
   PrivateRouteTable1:
     Type: 'AWS::EC2::RouteTable'
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       Tags:
         - Key: Name
@@ -171,13 +175,41 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnet1
 
+  S3VPCEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action: "*"
+            Resource: "*"
+      RouteTableIds: 
+      - !Ref PublicRouteTable
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3' 
+      VpcId: !Ref VPCId  
+
   LSFMasterSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "SG for LSF Master"
       VpcId: !Ref VPCId
+      SecurityGroupEgress:
+          - CidrIp: 0.0.0.0/0
+            Description: Allows egress to all ports
+            IpProtocol: "-1"
 
-  # TODO: restrict to LSF port traffic
+  LSFMasterSGRule01:
+    Type: "AWS::EC2::SecurityGroupIngress"
+    Properties:
+      GroupId: !Ref LSFMasterSG
+      Description: "SSH ingress"
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: !Ref SshSource
+
   LSFMasterSGRule02:
     Type: "AWS::EC2::SecurityGroupIngress"
     Properties:
@@ -190,7 +222,7 @@ Resources:
     Type: "AWS::EC2::SecurityGroupIngress"
     Properties:
       GroupId: !Ref LSFMasterSG
-      Description: "All traffic from Login Servers"
+      Description: "All traffic from Login Server"
       IpProtocol: "-1"
       SourceSecurityGroupId: !Ref LoginServerSG
 
@@ -198,7 +230,7 @@ Resources:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
       GroupDescription: "SG for LSF Compute Nodes"
-      VpcId: !Ref VPCId
+      VpcId: !Ref VpcId
 
   LSFComputeNodeSGRule01:
     Type: "AWS::EC2::SecurityGroupIngress"
@@ -216,105 +248,83 @@ Resources:
       IpProtocol: "-1"
       SourceSecurityGroupId: !Ref LSFComputeNodeSG
 
+  LSFComputeNodeSGRule03:
+    Type: "AWS::EC2::SecurityGroupIngress"
+    Properties:
+      GroupId: !Ref LSFComputeNodeSG
+      Description: "SSH Ingress" 
+      IpProtocol: "tcp"
+      FromPort: 22
+      ToPort: 22
+      CidrIp: !Ref SshSource
+
   LoginServerSG:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
       GroupDescription: "SG for Login Servers"
-      VpcId: !Ref VPCId
+      VpcId: !Ref VpcId
       SecurityGroupIngress:
       - IpProtocol: tcp
         FromPort: 22
         ToPort: 22
         CidrIp: !Ref SshSource
+        Description: "SSH from remote client"
       - IpProtocol: tcp
         FromPort: 8443
         ToPort: 8443
         CidrIp: !Ref SshSource
-
-  NFSServerSG:
-    Type: "AWS::EC2::SecurityGroup"
-    Properties:
-      GroupDescription: "SG for NFS Servers"
-      VpcId: !Ref VPCId
-      SecurityGroupIngress:
-      - IpProtocol: tcp
-        FromPort: 22
-        ToPort: 22
+        Description: "DCV WebSocket traffic"
+      - IpProtocol: udp
+        FromPort: 8443
+        ToPort: 8443
         CidrIp: !Ref SshSource
+        Description: "DCV QUIC UDP traffic"
 
-  NFSServerSGRule01:
+  FSxOntapSG:
+   Type: "AWS::EC2::SecurityGroup"
+   Properties:
+     GroupDescription: "SG for FSxN file systems"
+     VpcId: !Ref VpcId
+     SecurityGroupIngress:
+     - IpProtocol: tcp
+       FromPort: 22
+       ToPort: 22
+       SourceSecurityGroupId: !Ref LSFMasterSG
+       Description: "SSH from LSF Mgmt Server"
+  
+  FSxOntapSGRule01:
+   Type: AWS::EC2::SecurityGroupIngress
+   Properties:
+     GroupId: !Ref FSxOntapSG
+     Description: "NFS traffic from LSF Mgmt Server"
+     IpProtocol: -1
+     SourceSecurityGroupId: !Ref LSFMasterSG
+  
+  FSxOntapSGRule02:
+   Type: AWS::EC2::SecurityGroupIngress
+   Properties:
+     GroupId: !Ref FSxOntapSG
+     Description: "NFS traffic from LSF compute nodes"
+     IpProtocol: -1
+     SourceSecurityGroupId: !Ref LSFComputeNodeSG
+ 
+  FSxOntapSGRule03:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
-      GroupId: !Ref NFSServerSG
-      Description: "NFS from LSF masters"
-      IpProtocol: "tcp"
-      FromPort: 2049
-      ToPort: 2049
-      SourceSecurityGroupId: !Ref LSFMasterSG
-
-  NFSServerSGRule02:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !Ref NFSServerSG
-      Description: "NFS from LSF compute nodes"
-      IpProtocol: "tcp"
-      FromPort: 2049
-      ToPort: 2049
-      SourceSecurityGroupId: !Ref LSFComputeNodeSG
-
-  NFSServerSGRule03:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !Ref NFSServerSG
-      Description: "NFS from LSF login servers"
-      IpProtocol: "tcp"
-      FromPort: 2049
-      ToPort: 2049
-      SourceSecurityGroupId: !Ref LoginServerSG
-
-  LSFEFSMountTargetSG:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: "SG for EFS mount target"
-      VpcId: !Ref VPCId
-
-  LSFEFSMountTargetSGRule01:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !Ref LSFEFSMountTargetSG
-      Description: "NFS from LSF masters"
-      IpProtocol: "tcp"
-      FromPort: 2049
-      ToPort: 2049
-      SourceSecurityGroupId: !Ref LSFMasterSG
-
-  LSFEFSMountTargetSGRule02:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !Ref LSFEFSMountTargetSG
-      Description: "NFS from compute nodes"
-      IpProtocol: "tcp"
-      FromPort: 2049
-      ToPort: 2049
-      SourceSecurityGroupId: !Ref LSFComputeNodeSG
-
-  LSFEFSMountTargetSGRule03:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !Ref LSFEFSMountTargetSG
-      Description: "NFS from login servers"
-      IpProtocol: "tcp"
-      FromPort: 2049
-      ToPort: 2049
-      SourceSecurityGroupId: !Ref LoginServerSG
+     GroupId: !Ref FSxOntapSG
+     Description: "NFS traffic from LSF login servers"
+     IpProtocol: -1
+     SourceSecurityGroupId: !Ref LoginServerSG
 
 Outputs:
   NoIngressSecurityGroup:
     Description: Security group with no ingress rule
     Value: !Ref NoIngressSecurityGroup
+
   PrivateSubnet1:
     Description: A reference to the private subnet
     Value: !Ref PrivateSubnet1
+
   PublicSubnet1:
     Description: A reference to the public subnet
     Value: !Ref PublicSubnet1
@@ -345,6 +355,20 @@ Outputs:
     Export:
       Name: !Join [ '-', [ !Ref LSFClusterName,"PrivateSubnet" ] ]
 
+  PublicRouteTable:
+    Description: Route Table for Public Subnet
+    Value:
+      Ref: PublicRouteTable
+    Export:
+      Name: !Join [ '-', [ !Ref LSFClusterName,"PublicRouteTable" ] ]
+
+  PrivateRouteTable:
+    Description: Route Table for Private Subnet
+    Value:
+      Ref: PrivateRouteTable1
+    Export:
+      Name: !Join [ '-', [ !Ref LSFClusterName,"PrivateRouteTable" ] ]
+
   LSFMasterSG:
     Description: Security group for LSF Master
     Value:
@@ -366,19 +390,12 @@ Outputs:
     Export:
       Name: !Join [ '-', [ !Ref LSFClusterName,"LoginServerSG" ] ]
 
-  NFSServerSG:
-    Description: Security group export for NFS Servers
+  FSxOntapSG:
+    Description: Security group for NFS Servers
     Value:
-      Ref: NFSServerSG
+      Ref: FSxOntapSG
     Export:
-      Name: !Join [ '-', [ !Ref LSFClusterName,"NFSServerSG" ] ]
-
-  LSFEFSMountTargetSG:
-    Description: Security group export for LSF Compute Nodes
-    Value:
-      Ref: LSFEFSMountTargetSG
-    Export:
-      Name: !Join [ '-', [ !Ref LSFClusterName,"LSFEFSMountTargetSG" ] ]
+      Name: !Join [ '-', [ !Ref LSFClusterName,"FSxOntapSG" ] ]
 
 
 

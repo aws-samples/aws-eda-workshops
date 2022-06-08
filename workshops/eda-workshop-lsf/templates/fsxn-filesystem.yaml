@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  This stack deploys a single-AZ Amazon FSx for NetApp ONTAP file system.
+  
+  **WARNING** This template creates AWS resources. 
+  You will be billed for the AWS resources used if you create a stack from this template.
+
+Parameters:
+
+  LSFClusterName:
+    Description: "The name of the LSF cluster."
+    Type: "String"
+    Default: "cde-1"
+
+Resources:
+
+  FSxOntapFS:
+    Type: "AWS::FSx::FileSystem"
+    Properties:
+      FileSystemType: "ONTAP"
+      StorageType: SSD
+      StorageCapacity: 1024
+      SubnetIds:
+        - Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"PrivateSubnet" ] ]
+      SecurityGroupIds: 
+        - Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"FSxOntapSG" ] ]
+      OntapConfiguration:
+        DeploymentType: "SINGLE_AZ_1"
+        PreferredSubnetId: 
+          Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"PrivateSubnet" ] ]
+        RouteTableIds: 
+           - !Join [ '-', [ !Ref LSFClusterName,"PrivateRouteTable" ] ]
+           - !Join [ '-', [ !Ref LSFClusterName,"PublicRouteTable" ] ]
+        ThroughputCapacity: 512
+        DiskIopsConfiguration:
+          Iops: 10000
+          Mode: "USER_PROVISIONED"
+        #FsxAdminPassword: !Sub '{{resolve:secretsmanager:${Secret}:SecretString:KEY}}'
+      Tags:
+        - Key: "Name"
+          Value: !Join [ '-', [ !Ref LSFClusterName,"FSxN-FS" ] ]
+  FSxOntapStorageVirtualMachine:
+    Type: "AWS::FSx::StorageVirtualMachine"
+    Properties:
+        FileSystemId: !Ref FSxOntapFS
+        Name: "svm1"
+        RootVolumeSecurityStyle: "UNIX"
+        Tags:
+          - Key: "Name"
+            Value: !Join [ '-', [ !Ref LSFClusterName,"FSxN-SVM" ] ]
+  FSxOntapVolume:
+    Type: "AWS::FSx::Volume"
+    Properties:
+      Name: "vol1"
+      VolumeType: "ONTAP"
+      OntapConfiguration:
+        JunctionPath: "/vol1"
+        SecurityStyle: "UNIX"
+        SizeInMegabytes: 512000
+        StorageEfficiencyEnabled: False
+        StorageVirtualMachineId: !Ref FSxOntapStorageVirtualMachine
+        TieringPolicy:
+          CoolingPeriod: 41
+          Name: "AUTO"
+      Tags:
+        - Key: "Name"
+          Value: !Join [ '-', [ !Ref LSFClusterName,"FSxN-vol1" ] ]
+
+Outputs:
+  FSxNDnsName:
+    Description: FSxN file system SVM DNS name
+    Value: !Join [ '', [ !Ref FSxOntapStorageVirtualMachine, ".", !Ref FSxOntapFS, !Sub ".fsx.${AWS::Region}.amazonaws.com" ] ]
+    Export:
+      Name: !Join [ '-', [ !Ref LSFClusterName, "FSxN-FS" ] ]

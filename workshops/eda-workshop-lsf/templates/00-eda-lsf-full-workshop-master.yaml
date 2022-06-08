@@ -2,7 +2,7 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: |
   Deploys a full EDA computing infrastructure that includes a new VPC, login server with
-  remote desktop, LSF master, EFS file system, and a shared NFS file system.
+  remote desktop, LSF management server, and a shared NFS file system.
   
   This root stack launches a nested stack for each infrastructure component.
   
@@ -45,7 +45,6 @@ Metadata:
           - LoginServerInstanceType
           - LoginServerAMI
           - UserName
-          - UserPass
 
     ParameterLabels:
       AdminKeyPair:
@@ -90,8 +89,6 @@ Metadata:
         default: Login server AMI
       UserName:
         default: DCV remote desktop login username
-      UserPass:
-        default: DCV remote desktop login password
 
 Parameters:
   AdminKeyPair:
@@ -122,9 +119,9 @@ Parameters:
       Choose 'CentOS' if you intend to run your own workloads in this environment.
       NOTE: You must first subscribe to these AMIs in the AWS Marketplace.  See included documentation for details.
     Type: String
-    Default: FPGADev15
+    Default: FPGADev
     AllowedValues:
-      - FPGADev15
+      - FPGADev
       - CentOS75
 
   LSFClusterName:
@@ -133,9 +130,7 @@ Parameters:
     Default: myawscluster
 
   LSFInstallPath:
-    Description: >
-      The shared NFS path for installing LSF. This will be created on the included EFS file system
-      and mounted on all nodes in the cluster.
+    Description: Path where LSF will be installed.
     Type: "String"
     Default: "/tools/ibm/lsf"
     AllowedPattern: ^/.+
@@ -143,7 +138,7 @@ Parameters:
   FileSystemMountPoint:
     Description: The local directory on which the NFS file system is mounted
     Type: String
-    Default: /ec2-nfs
+    Default: /fsxn
     AllowedPattern: ^/.+
 
   ScratchDir:
@@ -169,7 +164,7 @@ Parameters:
   LoginServerInstanceType:
     Description: The instance type for the login server.
     Type: String
-    Default: m5.xlarge
+    Default: m5.4xlarge
     AllowedValues:
       - t3.medium
       - t3.xlarge
@@ -177,6 +172,7 @@ Parameters:
       - m4.2xlarge
       - m5.xlarge
       - m5.2xlarge
+      - m5.4xlarge
       - c5d.9xlarge
 
   LoginServerAMI:
@@ -184,10 +180,10 @@ Parameters:
       AMI (OS image) for the master server.  NOTE You must first subscribe to this 
       AMI in the AWS Marketplace at https://aws.amazon.com/marketplace/pp/B06VVYBLZZ"
     Type: String
-    Default: FPGADev15
+    Default: FPGADev
     AllowedValues:
       - CentOS75
-      - FPGADev15
+      - FPGADev
 
   VpcAz:
     Description: The availability zone for this compute environment
@@ -196,14 +192,14 @@ Parameters:
 
   VpcCIDR:
     Default: 172.30.0.0/16
-    Description: The IP range in CIDR notation for this VPC. This should be a /16.
+    Description: The IP range in CIDR notation for the new VPC. This should be a /16.
     Type: String
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
     ConstraintDescription: The CIDR block parameter must be in the form x.x.x.x/16-28
 
   PublicSubnet1CIDR:
     Default: 172.30.32.0/24
-    Description: The login and remote desktop servers will reside in this subnet. 
+    Description: The login/remote desktop server will reside in this subnet. 
       Enter the IP range in CIDR notation for the public subnet.  This should be a /24.
     Type: String
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
@@ -211,7 +207,7 @@ Parameters:
 
   PrivateSubnet1CIDR:
     Default: 172.30.0.0/19
-    Description: The LSF master and compute nodes, license servers, and NFS servers will reside in this subnet.
+    Description: The LSF management, compute nodes, and NFS server will reside in this subnet.
       Enter the IP range in CIDR notation for the private subnet. This should be a /19.
     Type: String
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
@@ -259,17 +255,6 @@ Parameters:
     MinLength: '4'
     Type: String
 
-  UserPass:
-    Default: Ch4ng3M3!
-    Description: Password for DCV remote desktop login. The default password is Ch4ng3M3!
-    MinLength: '8'
-    NoEcho: true
-    Type: String
-    AllowedPattern: ^((?=.*[a-z])(?=.*[A-Z])(?=.*[\d])|(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_])|(?=.*[a-z])(?=.*[\d])(?=.*[\W_])|(?=.*[A-Z])(?=.*[\d])(?=.*[\W_])).+$
-    ConstraintDescription: 'Password must contain at least one element from three
-      of the following sets: lowercase letters, uppercase letters, base 10 digits,
-      non-alphanumeric characters'
-
 Resources:
   NetworkStack:
     Type: AWS::CloudFormation::Stack
@@ -281,8 +266,15 @@ Resources:
         PrivateSubnet1CIDR: !Ref PrivateSubnet1CIDR
         LSFClusterName: !Ref LSFClusterName
         SshSource: !Ref SshSource
-      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/templates/01-network.yaml
+      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/dev/workshops/eda-workshop-lsf/templates/01-network.yaml
 
+  SecretsStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        LSFClusterName: !Ref LSFClusterName
+      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/dev/workshops/eda-workshop-lsf/templates/secrets.yaml
+  
   LSFServiceStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: NFSServerStack
@@ -294,15 +286,13 @@ Resources:
         LSFClusterName: !Ref LSFClusterName
         LSFInstallPath: !Ref LSFInstallPath
         FileSystemMountPoint: !Ref FileSystemMountPoint
-        ScratchDir: !Ref ScratchDir
-        ProjectDir: !Ref ProjectDir
         CustomerLSFInstallUri: !Ref CustomerLSFInstallUri
         CustomerLSFBinsUri: !Ref CustomerLSFBinsUri
         CustomerLSFFixPackUri: !Ref CustomerLSFFixPackUri
         CustomerLSFEntitlementUri: !Ref CustomerLSFEntitlementUri
         AdminKeyPair: !Ref AdminKeyPair
         DCVUserName: !Ref UserName
-      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/templates/02-lsf-master.yaml
+      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/dev/workshops/eda-workshop-lsf/templates/02-lsf-master.yaml
 
   NFSServerStack:
     Type: AWS::CloudFormation::Stack
@@ -310,9 +300,7 @@ Resources:
     Properties:
       Parameters:
         LSFClusterName: !Ref LSFClusterName
-        AdminKeyPair: !Ref AdminKeyPair
-        SshSource: !Ref SshSource
-      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/templates/04-nfs_server_instanceStore_zfs.yaml
+      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/dev/workshops/eda-workshop-lsf/templates/fsxn-filesystem.yaml
 
   LoginServerStack:
     Type: AWS::CloudFormation::Stack
@@ -328,8 +316,7 @@ Resources:
         ScratchDir: !Ref ScratchDir
         ProjectDir: !Ref ProjectDir
         UserName: !Ref UserName
-        UserPass: !Ref UserPass
-      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/templates/03-login-server-dcv.yaml
+      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/dev/workshops/eda-workshop-lsf/templates/03-login-server-dcv.yaml
 
 Outputs:
   RootStackName:
