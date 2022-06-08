@@ -62,7 +62,7 @@ Parameters:
     ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
 
 Resources:
-  VPCId:
+  EDAVPC:
     Type: 'AWS::EC2::VPC'
     Properties:
       CidrBlock: !Ref VpcCIDR
@@ -98,7 +98,7 @@ Resources:
     Type: 'AWS::EC2::VPCGatewayAttachment'
     Properties:
       InternetGatewayId: !Ref InternetGateway
-      VpcId: !Ref VPCId
+      VpcId: !Ref EDAVPC
 
   NatGateway1:
     Type: 'AWS::EC2::NatGateway'
@@ -119,7 +119,7 @@ Resources:
     Properties:
       GroupDescription: Security group with no ingress rule
       GroupName: no-ingress-sg
-      VpcId: !Ref VPCId
+      VpcId: !Ref EDAVPC
 
   # Explicit 'retain' required for this route table. 
   # FSxN can't delete its file systems without a route table. 
@@ -131,7 +131,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub '${LSFClusterName} Private Routes'
-      VpcId: !Ref VPCId
+      VpcId: !Ref EDAVPC
 
   PrivateSubnet1:
     Type: 'AWS::EC2::Subnet'
@@ -156,7 +156,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub '${LSFClusterName} Public Routes'
-      VpcId: !Ref VPCId
+      VpcId: !Ref EDAVPC
 
   PublicSubnet1:
     Type: 'AWS::EC2::Subnet'
@@ -167,7 +167,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub '${LSFClusterName} Public Subnet'
-      VpcId: !Ref VPCId
+      VpcId: !Ref EDAVPC
 
   PublicSubnet1RouteTableAssociation:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
@@ -188,14 +188,14 @@ Resources:
       RouteTableIds: 
       - !Ref PublicRouteTable
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3' 
-      VpcId: !Ref VPCId  
+      VpcId: !Ref EDAVPC  
 
   VPCFlowLog:
     Type: AWS::EC2::FlowLog
     Properties:
       DeliverLogsPermissionArn: !GetAtt FlowLogRole.Arn
       LogGroupName: !Ref FlowLogGroup
-      ResourceId: !Ref VPCId
+      ResourceId: !Ref EDAVPC
       ResourceType: VPC
       TrafficType: ALL
 
@@ -231,7 +231,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "SG for LSF Master"
-      VpcId: !Ref VPCId
+      VpcId: !Ref EDAVPC
       SecurityGroupEgress:
           - CidrIp: 0.0.0.0/0
             Description: Allows egress to all ports
@@ -267,7 +267,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "SG for LSF Compute Nodes"
-      VpcId: !Ref VPCId
+      VpcId: !Ref EDAVPC
 
   LSFComputeNodeSGRule01:
     Type: AWS::EC2::SecurityGroupIngress
@@ -299,7 +299,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "SG for Login Servers"
-      VpcId: !Ref VPCId
+      VpcId: !Ref EDAVPC
       SecurityGroupIngress:
       - IpProtocol: tcp
         FromPort: 22
@@ -321,7 +321,7 @@ Resources:
    Type: AWS::EC2::SecurityGroup
    Properties:
      GroupDescription: "SG for FSxN file systems"
-     VpcId: !Ref VPCId
+     VpcId: !Ref EDAVPC
      SecurityGroupIngress:
      - IpProtocol: tcp
        FromPort: 22
@@ -369,12 +369,12 @@ Outputs:
 
   EnvVpc:
     Description: The ID of the VPC
-    Value: !Ref VPCId
+    Value: !Ref EDAVPC
     Export:
-      Name: !Join [ '-', [ !Ref LSFClusterName, "VPCId" ] ]
+      Name: !Join [ '-', [ !Ref LSFClusterName, "EDAVPC" ] ]
 
   VpcCIDR:
-    Description: The ID of the VPC
+    Description: The CIDR of the VPC
     Value: !Ref VpcCIDR
     Export:
       Name: !Join [ '-', [ !Ref LSFClusterName, "VpcCIDR" ] ]
