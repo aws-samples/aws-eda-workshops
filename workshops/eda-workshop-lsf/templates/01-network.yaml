@@ -142,7 +142,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub '${LSFClusterName} Private Subnet'
-      VpcId: !Ref VPCId
+      VpcId: !Ref EDAVPC
 
   PrivateSubnet1RouteTableAssociation:
     Properties:
