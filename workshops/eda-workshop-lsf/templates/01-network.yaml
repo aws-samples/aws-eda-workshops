@@ -130,8 +130,28 @@ Resources:
     Properties:
       Tags:
         - Key: Name
-          Value: !Sub '${LSFClusterName} Private Routes'
+          Value: !Sub '${LSFClusterName}PrivateRoutes'
       VpcId: !Ref EDAVPC
+
+  PublicRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub '${LSFClusterName}PublicRoutes'
+      VpcId: !Ref EDAVPC
+
+  PrivateSubnet1RouteTableAssociation:
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      SubnetId: !Ref PrivateSubnet1
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+
+  PublicSubnet1RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
 
   PrivateSubnet1:
     Type: 'AWS::EC2::Subnet'
@@ -144,20 +164,6 @@ Resources:
           Value: !Sub '${LSFClusterName} Private Subnet'
       VpcId: !Ref EDAVPC
 
-  PrivateSubnet1RouteTableAssociation:
-    Properties:
-      RouteTableId: !Ref PrivateRouteTable1
-      SubnetId: !Ref PrivateSubnet1
-    Type: 'AWS::EC2::SubnetRouteTableAssociation'
-
-  PublicRouteTable:
-    Type: 'AWS::EC2::RouteTable'
-    Properties:
-      Tags:
-        - Key: Name
-          Value: !Sub '${LSFClusterName} Public Routes'
-      VpcId: !Ref EDAVPC
-
   PublicSubnet1:
     Type: 'AWS::EC2::Subnet'
     Properties:
@@ -168,12 +174,6 @@ Resources:
         - Key: Name
           Value: !Sub '${LSFClusterName} Public Subnet'
       VpcId: !Ref EDAVPC
-
-  PublicSubnet1RouteTableAssociation:
-    Type: 'AWS::EC2::SubnetRouteTableAssociation'
-    Properties:
-      RouteTableId: !Ref PublicRouteTable
-      SubnetId: !Ref PublicSubnet1
 
   S3VPCEndpoint:
     Type: 'AWS::EC2::VPCEndpoint'

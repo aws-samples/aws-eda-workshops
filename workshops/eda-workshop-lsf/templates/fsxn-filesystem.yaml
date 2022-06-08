@@ -29,8 +29,8 @@ Resources:
         PreferredSubnetId: 
           Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"PrivateSubnet" ] ]
         RouteTableIds: 
-           - !Join [ '-', [ !Ref LSFClusterName,"PrivateRouteTable" ] ]
-           - !Join [ '-', [ !Ref LSFClusterName,"PublicRouteTable" ] ]
+           - !Join [ '-', [ !ImportValue LSFClusterName,"PrivateRouteTable" ] ]
+           - !Join [ '-', [ !ImportValue LSFClusterName,"PublicRouteTable" ] ]
         ThroughputCapacity: 512
         DiskIopsConfiguration:
           Iops: 10000
