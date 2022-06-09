@@ -26,6 +26,7 @@ Resources:
         - Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"FSxOntapSG" ] ]
       OntapConfiguration:
         DeploymentType: "SINGLE_AZ_1"
+        AutomaticBackupRetentionDays: 0
         PreferredSubnetId:
           Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"PrivateSubnet" ] ]
         ThroughputCapacity: 512
