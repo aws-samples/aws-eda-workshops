@@ -32,7 +32,7 @@ Resources:
         DiskIopsConfiguration:
           Iops: 10000
           Mode: "USER_PROVISIONED"
-        #FsxAdminPassword: !Sub '{{resolve:secretsmanager:${Secret}:SecretString:KEY}}'
+        FsxAdminPassword: !Join ['', ['{{resolve:secretsmanager:', !Ref FSxAdminSecret, ':SecretString:password}}' ]]
       Tags:
         - Key: "Name"
           Value: !Join [ '-', [ !Ref LSFClusterName,"FSxN-FS" ] ]
@@ -62,6 +62,17 @@ Resources:
       Tags:
         - Key: "Name"
           Value: !Join [ '-', [ !Ref LSFClusterName,"FSxN-vol1" ] ]
+
+  FSxAdminSecret:
+      Type: AWS::SecretsManager::Secret
+      Properties:
+        Name: !Sub '${AWS::StackName}/FSxCredentialsSecret'
+        GenerateSecretString:
+          SecretStringTemplate: '{"username": "fsxadmin"}'
+          GenerateStringKey: password
+          PasswordLength: 16
+          RequireEachIncludedType: True
+          ExcludeCharacters: '"@/\!'
 
 Outputs:
   FSxNDnsName:

@@ -130,6 +130,16 @@ Resources:
       Timeout: '3600'
     Type: AWS::CloudFormation::WaitCondition
 
+  DCVCredentialsSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub '${AWS::StackName}/DCVCredentialsSecret'
+      GenerateSecretString:
+        SecretStringTemplate: !Sub '{"username": "${UserName}"}'
+        GenerateStringKey: password
+        PasswordLength: 16
+        ExcludeCharacters: '"@/\'
+
   LoginServerInstance:
     Type: "AWS::EC2::Instance"
     Properties:
@@ -171,7 +181,7 @@ Resources:
               # Set DCV username and password
               export SM_PASSWORD=`/usr/local/bin/aws secretsmanager get-secret-value \
                                     --region ${AWS::Region} \
-                                    --secret-id ${DCVCredentialsSecretArn} \
+                                    --secret-id ${DCVCredentialsSecret} \
                                     --output text --query 'SecretString' \
                                    | python -c 'import json, sys; print(json.load(sys.stdin)["password"])'`
 
@@ -331,9 +341,6 @@ Resources:
             -
               FSxOntapFS:
                 Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"FSxOntapFS" ] ]
-              DCVCredentialsSecretArn:
-                Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName, "DCVSecretARN" ] ]
-
 
   LoginServerRole:
       Type: "AWS::IAM::Role"
