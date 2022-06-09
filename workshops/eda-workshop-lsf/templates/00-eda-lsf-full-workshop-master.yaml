@@ -267,13 +267,6 @@ Resources:
         LSFClusterName: !Ref LSFClusterName
         SshSource: !Ref SshSource
       TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/dev/workshops/eda-workshop-lsf/templates/01-network.yaml
-
-  SecretsStack:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      Parameters:
-        LSFClusterName: !Ref LSFClusterName
-      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/dev/workshops/eda-workshop-lsf/templates/secrets.yaml
   
   LSFServiceStack:
     Type: AWS::CloudFormation::Stack
