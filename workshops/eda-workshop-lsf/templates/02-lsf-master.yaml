@@ -179,7 +179,7 @@ Resources:
               mkdir ${FileSystemMountPoint}
               
               #mount NFS file system
-              mount -t nfs -o "rsize=262144,wsize=262144,hard,vers=3,tcp,mountproto=tcp" $FSXN_SVM_DNS_NAME:/vol1 $LSF_INSTALL_DIR_ROOT
+              mount -t nfs -o "rsize=262144,wsize=262144,hard,vers=3,tcp,mountproto=tcp" ${FSxOntapFS}:/vol1 $LSF_INSTALL_DIR_ROOT
 
               #add to fstab
               echo "${FSxOntapFS}:/vol1 ${FileSystemMountPoint} nfs nfsvers=3,rsize=262144,wsize=262144,tcp,hard 0 0" >> \
