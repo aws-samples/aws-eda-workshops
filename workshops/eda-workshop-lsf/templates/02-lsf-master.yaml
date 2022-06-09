@@ -377,7 +377,7 @@ Resources:
               LSFComputeNodeSubnet:
                 Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"PrivateSubnet" ] ]
               FSxOntapFS:
-                Fn::ImportValue: !Join [ '_', [ !Ref LSFClusterName,"FSxOntapFS" ] ]
+                Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"FSxOntapFS" ] ]
 
   LSFMasterRole:
       Type: "AWS::IAM::Role"
