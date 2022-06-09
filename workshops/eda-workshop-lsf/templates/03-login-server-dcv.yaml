@@ -219,6 +219,7 @@ Resources:
               echo "Installing DCV..."
 
               function install_prereqs {
+                sudo yum clean all
                 sudo yum -y upgrade                
                 sudo yum -y groupinstall "GNOME Desktop"
               }
@@ -359,6 +360,7 @@ Resources:
         ManagedPolicyArns:
           - "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
           - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+          - "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
         Policies:
           - PolicyName: DcvLicenseBucketPolicy
             PolicyDocument:
