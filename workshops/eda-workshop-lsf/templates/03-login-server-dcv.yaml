@@ -213,7 +213,7 @@ Resources:
                 && chmod 777 ${FileSystemMountPoint}/{${ScratchDir},${ProjectDir}}
 
               # Set up LSF envirionment
-              echo "source ${FileSystemMountPoint}$LSF_INSTALL_DIR/conf/profile.lsf" > /etc/profile.d/lsf.sh
+              echo "source $LSF_INSTALL_DIR/conf/profile.lsf" > /etc/profile.d/lsf.sh
 
               ### Install DCV ###
               echo "Installing DCV..."
