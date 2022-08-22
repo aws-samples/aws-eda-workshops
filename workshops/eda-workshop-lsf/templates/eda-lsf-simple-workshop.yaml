@@ -573,7 +573,7 @@ Resources:
                 mkdir /tmp/dcv-inst.d
                 pushd /tmp/dcv-inst.d
                 rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
-                wget https://d1uj6qtbmh3dt5.cloudfront.net/2022.0/Servers/nice-dcv-2022.0-12123-el7-x86_64.tgz
+                wget https://d1uj6qtbmh3dt5.cloudfront.net/2022.1/Servers/nice-dcv-2022.1-13300-el7-x86_64.tgz
                 tar -xvzf nice-dcv*.tgz
                 cd nice-dcv*
                 yum -y install nice-dcv-server*.rpm \
