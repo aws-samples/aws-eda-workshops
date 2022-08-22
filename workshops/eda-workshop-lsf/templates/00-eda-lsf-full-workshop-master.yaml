@@ -308,7 +308,7 @@ Resources:
         ScratchDir: !Ref ScratchDir
         ProjectDir: !Ref ProjectDir
         UserName: !Ref UserName
-      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/dev/workshops/eda-workshop-lsf/templates/03-login-server-dcv.yaml
+      TemplateURL: https://s3.amazonaws.com/aws-eda-workshop-files/dev/workshops/eda-workshop-lsf/templates/03-dcv-login-server.yaml
 
 Outputs:
   RootStackName:
