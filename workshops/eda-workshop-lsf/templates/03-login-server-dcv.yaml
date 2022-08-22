@@ -221,7 +221,6 @@ Resources:
               function install_prereqs {
                 # Exclude non-responsive mirror.
                 sed -i -e "s/^#exclude.*/exclude=mirror.es.its.nyu.edu/" /etc/yum/pluginconf.d/fastestmirror.conf
-                http://mirror.es.its.nyu.edu/epel/7/x86_64/repodata/repomd.xml:
                 sudo yum clean all
                 sudo yum -y upgrade                
                 sudo yum -y groupinstall "GNOME Desktop"
