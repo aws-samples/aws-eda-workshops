@@ -188,7 +188,6 @@ Parameters:
   VpcAz:
     Description: The availability zone for this compute environment
     Type: 'AWS::EC2::AvailabilityZone::Name'
-    Default: us-east-1a
 
   VpcCIDR:
     Default: 172.30.0.0/16
