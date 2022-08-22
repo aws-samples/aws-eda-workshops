@@ -20,7 +20,7 @@ This tutorial provides instructions for running an example logic simulation work
 ### Step 2. Clone the AWS F1 FPGA Development Kit repo
 
 
-1. Clone the example workload from the `aws-fpga-sa-demo` Github repo into the `proj` directory on the NFS file system. The default location is `/fsxn/proj`.
+1. Open a new terminal in the DCV remote desktop session and clone the example workload from the `aws-fpga-sa-demo` Github repo into the `proj` directory on the NFS file system. The default location is `/fsxn/proj`.
 
    ```bash
    cd /fsxn/proj

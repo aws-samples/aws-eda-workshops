@@ -6,10 +6,21 @@ This tutorial provides instructions for running an example logic simulation work
 
 **Note** There is are no additional charges to use the **AWS F1 FPGA Development Kit** or the  **Xilinx Vivado** tools in the **AWS FPGA Developer AMI**.  You are only charged for the underlying AWS resources consumed by running the AMI and included software.
 
-### Step 1. Clone the AWS F1 FPGA Development Kit repo
+### Step 1. Log into the DCV remote desktop session
+
+1. Download and install the [NICE DCV remote desktop native client](https://download.nice-dcv.com) on your local laptop/desktop computer.
+1. Launch the DCV client application. 
+1. Paste the public IP address of the **Login Server** into the field. Click "Trust & Connect" when prompted. 
+1. Enter the Username and Password.  You can find these credentials in AWS Secrets Manager in the AWS Console:
+   1. Go to the Secrets Manager service and select the **DCVCredentialsSecret** secret.
+   1. Click on the **Retrieve secret value** button.
+   1. Copy the **username** and **password** and paste them into the appropriate DCV client fields.
+1. If you have trouble connecting, ensure the security group on the login server includes the IP address of your client.
+
+### Step 2. Clone the AWS F1 FPGA Development Kit repo
 This repo contains example design data, IP, and a simple workflow to execute verification tests at scale.
 
-1. From the DCV remote desktop session that you established in the previous module, clone the example workload from the `aws-fpga-sa-demo` Github repo into the `proj` directory on the NFS file system. The default location is `/fsxn/proj`.
+1. Open a new terminal in the DCV remote desktop session that you established in the previous module, clone the example workload from the `aws-fpga-sa-demo` Github repo into the `proj` directory on the NFS file system. The default location is `/fsxn/proj`.
 
    ```bash
    cd /fsxn/proj
@@ -20,7 +31,7 @@ This repo contains example design data, IP, and a simple workflow to execute ver
 
     `cd /fsxn/proj/aws-fpga-sa-demo/eda-workshop`
 
-### Step 2. Run build job
+### Step 3. Run build job
 
 This first job will set up the runtime environment for the simulations that you will submit to LSF in Step 3 below.
 
@@ -31,7 +42,7 @@ This first job will set up the runtime environment for the simulations that you 
 
 1. **Watch job status**. This job will generate demand to LSF Resource Connector for an EC2 instance.  Shortly after you submit the job, you should see a new "LSF Exec Host" instance in the EC2 Dashboard in the AWS console. It should take 2-5 minutes for this new instance to join the cluster and accept the job. Use the `bjobs` command to watch the status of the job.  Once it enters the `RUN` state, move on to the next step.
 
-### Step 3. Run verification tests at scale
+### Step 4. Run verification tests at scale
 
 Now we are ready to scale out the simulations.  Like with the build job above, when these jobs hit the queue LSF will generate demand for EC2 instances, and Resource Connector will start up the appropriate number and type of instances to satisfy the pending jobs in the queue.
 
