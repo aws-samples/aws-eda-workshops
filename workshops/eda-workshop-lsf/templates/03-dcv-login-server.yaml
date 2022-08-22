@@ -229,13 +229,14 @@ Resources:
               function install_dcv {
                 mkdir /tmp/dcv-inst.d
                 pushd /tmp/dcv-inst.d
-                rpm --import https://s3-eu-west-1.amazonaws.com/nice-dcv-publish/NICE-GPG-KEY
-                wget https://d1uj6qtbmh3dt5.cloudfront.net/2019.1/Servers/nice-dcv-2019.1-7423-el7.tgz
-                tar xvf nice-dcv-2019.1-7423-el7.tgz
-                cd nice-dcv-2019.1-7423-el7/
-                yum -y install nice-dcv-server-2019.1.7423-1.el7.x86_64.rpm \
-                               nice-xdcv-2019.1.226-1.el7.x86_64.rpm \
-                               nice-dcv-gltest-2019.1.220-1.el7.x86_64.rpm
+                rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
+                wget https://d1uj6qtbmh3dt5.cloudfront.net/2022.1/Servers/nice-dcv-2022.1-13300-el7-x86_64.tgz
+                tar -xvzf nice-dcv*.tgz
+                cd nice-dcv*
+                yum -y install nice-dcv-server*.rpm \
+                               nice-dcv-web-viewer*.rpm \
+                               nice-xdcv*.rpm
+                sed -i -e 's/#enable-quic-frontend=true/enable-quic-frontend=true/' /etc/dcv/dcv.conf
                 popd
               }
 
