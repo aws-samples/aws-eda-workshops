@@ -249,6 +249,18 @@ if [[ \$REQUIRE_REBOOT -eq 1 ]]; then
 fi" > /root/fsx_lustre.sh
 chmod +x /root/fsx_lustre.sh
 
+echo "Creating /usr/local/sbin/cleanup_ami.sh"
+echo -e "#!/bin/bash
+
+rm -rf /var/tmp/* /tmp/*
+rm -rf /var/lib/cloud/instances/*
+rm -f /var/lib/cloud/instance
+rm -rf /etc/ssh/ssh_host_*
+rm -f /etc/udev/rules.d/70-persistent-net.rules
+grep -l \"Created by cloud-init on instance boot automatically\" /etc/sysconfig/network-scripts/ifcfg-* | xargs rm -f
+rm -rf /var/crash/*" > /usr/local/sbin/cleanup_ami.sh
+chmod +x /user/local/sbin/cleanup_ami.sh
+
 echo "Will reboot instance now to load new kernel! After reboot, the script at /root/fsx_lustre.sh will install FSx for Lustre client corresponding to the new kernel version. See details in /root/fsx_lustre.sh.log"
 echo "@reboot /bin/bash /root/fsx_lustre.sh >> /root/fsx_lustre.sh.log 2>&1" | crontab -
 /sbin/reboot
