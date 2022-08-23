@@ -268,10 +268,11 @@ Resources:
 
               stop_disable_svc firewalld
               stop_disable_svc libvirtd
-              systemctl isolate multi-user.target
-              systemctl isolate graphical.target
-              DISPLAY=:0 XAUTHORITY=\$(ps aux | grep "X.*\\-auth" | grep -v grep | awk -F"-auth " '{print \$2}' | awk '{print \$1}') xhost | grep "SI:localuser:dcv$"
-              dcv create-session --type=virtual --owner ${!user_name} --user ${!user_name} virt
+              sudo systemctl set-default multi-user.target
+              #systemctl isolate multi-user.target
+              #systemctl isolate graphical.target
+              #DISPLAY=:0 XAUTHORITY=\$(ps aux | grep "X.*\\-auth" | grep -v grep | awk -F"-auth " '{print \$2}' | awk '{print \$1}') xhost | grep "SI:localuser:dcv$"
+              dcv create-session --type=virtual --owner ${!user_name} --user ${!user_name} --gl off simuser
               dcv list-sessions
 
               my_wait_handle="${!my_wait_handle}"
