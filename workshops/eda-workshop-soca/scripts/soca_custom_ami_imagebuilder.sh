@@ -248,4 +248,4 @@ rm -rf /etc/ssh/ssh_host_*
 rm -f /etc/udev/rules.d/70-persistent-net.rules
 grep -l \"Created by cloud-init on instance boot automatically\" /etc/sysconfig/network-scripts/ifcfg-* | xargs rm -f
 rm -rf /var/crash/*" > /usr/local/sbin/cleanup_ami.sh
-chmod +x /user/local/sbin/cleanup_ami.sh
+chmod +x /usr/local/sbin/cleanup_ami.sh
