@@ -6,6 +6,7 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
+mkdir -p /root/bootstrap
 exec > >(tee /root/bootstrap/idea_preinstalled_packages.log ) 2>&1
 
 OS_NAME=`awk -F= '/^NAME=/{print $2}' /etc/os-release`
