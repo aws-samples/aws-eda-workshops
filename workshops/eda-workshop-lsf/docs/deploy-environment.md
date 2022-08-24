@@ -198,6 +198,8 @@ Sign in to your AWS account, and follow these instructions to subscribe:
 
    `ssh -i /path/to/private_key centos@<host_ip>`
 
+   >NOTE: If you have trouble connecting, ensure the security group on the login server includes the IP address of your client.
+
 1. Run the `lsid` command to verify that LSF installed properly and is running. You should see something similar to the following:
     ```
     IBM Spectrum LSF Standard 10.1.0.11, Nov 12 2020

@@ -30,7 +30,7 @@ The deployed cloud infrastructure consists of:
 
 * Amazon EC2 compute instances that are dynamically provisioned by LSF
 
-* An Amazon Elastic File System (EFS) file system for the LSF distribution and configuration files, project, and scratch data.
+* An Amazon FSx for NetApp ONTAP file system for share file storage.
 
 ### Workshop  Workflow
 
