@@ -31,10 +31,10 @@ The tutorial sets up the following:
 - A VPC configured with public and private subnets to provide you with your own virtual network on AWS.
 - In the public subnet, a managed NAT gateway to allow outbound internet access for resources in the private subnets.
 - In the public subnet, a Linux login/submission host running NICE DCV to allow remote desktop and Secure Shell (SSH) access to the environment.
-- In the private subnet, an LSF master running IBM Spectrum LSF with the Resource Connector feature enabled, Amazon EC2 compute instances that are dynamically provisioned by LSF, and a Linux-based NFS server for runtime scratch data.
-- An Amazon Elastic File System (EFS) file system for the LSF distribution and configuration files.
+- In the private subnet, an LSF master running IBM Spectrum LSF with the Resource Connector feature enabled to dynamically provisioned Amazon EC2 compute instances based on demand from the LSF queues.
+- An Amazon FSx for NetApp ONTAP file system for share file storage.
 
-> NOTE: This tutorial also provides an option to launch the cluster in an existing VPC.  The architecture will be similar to the diagram above, but it will not include a Linux-based NFS server and will instead rely on EFS as the sole shared NFS file system.
+> NOTE: This tutorial also provides an option to launch the cluster into an existing VPC.
 
 ## Planning the Deployment
 
@@ -78,15 +78,14 @@ If necessary, request [service limit increases](https://console.aws.amazon.com/s
 |NAT gateway|1|
 |IAM security groups|4|
 |IAM roles|4|
-|EFS file systems|1|
-|i3.16xlarge instance|1|
+|FSx for NetApp ONTAP file system|1|
 |m5.xlarge instance|1|
 |m5.2xlarge instance|1|
 |c5.2xlarge instance|Up to 20|
 
 #### Regions
 
-This deployment includes Amazon Elastic File System (EFS), which isn’t currently supported in all AWS Regions. For a current list of supported regions, see [AWS Regions and Endpoints](https://docs.aws.amazon.com/general/latest/gr/rande.html#elasticfilesystem-region) in the AWS documentation.
+This deployment includes an Amazon FSx for NetApp ONTAP file system, which isn’t currently supported in all AWS Regions. Please refer to [Regional Products and Services](https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/) for details of Amazon FSx for NetApp ONTAP service availability by region. 
 
 #### Key pair
 
@@ -101,9 +100,9 @@ To deploy the environment, you must log in to the AWS Management Console with IA
 
 This tutorial provides two deployment options:
 
-- **Deploy the cluster into a new VPC**. This option builds a new AWS environment consisting of the VPC, subnets, NAT gateways, security groups, an NFS server, an LSF master, and other infrastructure components, and then deploys LSF into this new VPC.
+- **Deploy the cluster into a new VPC**. This option builds a new AWS environment consisting of the VPC, subnets, NAT gateways, security groups, an FSx for NetApp ONTAP NFS server, an LSF master, and other infrastructure components, and then installs and configures LSF into this new VPC.
 
-- **Deploy the cluster into an existing VPC**. This option provisions the cluster in an existing VPC.  Instead of a Linux-based NFS server, this environment relies on EFS for the NFS file system.
+- **Deploy the cluster into an existing VPC**. This option is the same as above but it provisions the cluster in an existing VPC. 
 
 This tutorial provides separate CloudFormation templates for these options. It also lets you configure CIDR blocks, instance types, and other settings, as discussed later in this guide.
 
