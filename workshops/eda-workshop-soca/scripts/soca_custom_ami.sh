@@ -44,7 +44,7 @@ elif [ $OS == "rhel7" ]; then
 fi
 
 echo "Installing Packages typically needed for EDA applications"
-yum install -y vim vim-X11 xterm compat-db47 glibc glibc.i686 openssl098e compat-expat1.i686 dstat \
+yum install -y vim vim-X11 xterm tcsh compat-db47 glibc glibc.i686 openssl098e compat-expat1.i686 dstat \
     motif libXp libXaw libICE.i686 libpng.i686 libXau.i686 libuuid.i686 libSM.i686 libxcb.i686 \
     plotutils libXext.i686 libXt.i686 libXmu.i686 libXp.i686 libXrender.i686 bzip2-libs.i686 \
     freetype.i686 fontconfig.i686 libXft.i686 libjpeg-turbo.i686 motif.i686 apr.i686 libdb \
@@ -248,6 +248,18 @@ if [[ \$REQUIRE_REBOOT -eq 1 ]]; then
     /sbin/reboot
 fi" > /root/fsx_lustre.sh
 chmod +x /root/fsx_lustre.sh
+
+echo "Creating /usr/local/sbin/cleanup_ami.sh"
+echo -e "#!/bin/bash
+
+rm -rf /var/tmp/* /tmp/*
+rm -rf /var/lib/cloud/instances/*
+rm -f /var/lib/cloud/instance
+rm -rf /etc/ssh/ssh_host_*
+rm -f /etc/udev/rules.d/70-persistent-net.rules
+grep -l \"Created by cloud-init on instance boot automatically\" /etc/sysconfig/network-scripts/ifcfg-* | xargs rm -f
+rm -rf /var/crash/*" > /usr/local/sbin/cleanup_ami.sh
+chmod +x /user/local/sbin/cleanup_ami.sh
 
 echo "Will reboot instance now to load new kernel! After reboot, the script at /root/fsx_lustre.sh will install FSx for Lustre client corresponding to the new kernel version. See details in /root/fsx_lustre.sh.log"
 echo "@reboot /bin/bash /root/fsx_lustre.sh >> /root/fsx_lustre.sh.log 2>&1" | crontab -
