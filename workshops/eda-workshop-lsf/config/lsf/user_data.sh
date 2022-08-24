@@ -12,7 +12,6 @@ echo "*** BEGIN LSF HOST BOOTSTRAP ***"
 export PATH=/sbin:/usr/sbin:/usr/local/bin:/bin:/usr/bin
 export AWS_DEFAULT_REGION="$( curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed -e 's/[a-z]*$//' )"
 export EC2_INSTANCE_TYPE="$( curl -s http://169.254.169.254/latest/meta-data/instance-type | sed -e 's/\./_/' )"
-export LSF_INSTALL_DIR_ROOT="/`echo $LSF_INSTALL_DIR | cut -d / -f2`"
 export LSF_ADMIN=lsfadmin
 
 # Add the LSF admin account
@@ -33,8 +32,8 @@ do
 done
 
 # mount shared file systems
-mkdir $LSF_INSTALL_DIR_ROOT
-mount -t nfs -o rw,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 $FSXN_SVM_DNS_NAME:/vol1 $LSF_INSTALL_DIR_ROOT
+mkdir $NFS_MOUNT_POINT
+mount -t nfs -o rw,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 $FSXN_SVM_DNS_NAME:/vol1 $NFS_MOUNT_POINT
 
 ## Set up the LSF environment
 
@@ -42,7 +41,7 @@ mount -t nfs -o rw,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 $FSXN_SV
 mkdir /var/log/lsf && chmod 777 /var/log/lsf
 mkdir /etc/lsf && chmod 777 /etc/lsf
 
-LSF_TOP=$LSF_INSTALL_DIR
+LSF_TOP=${NFS_MOUNT_POINT}${LSF_INSTALL_DIR}
 source $LSF_TOP/conf/profile.lsf
 
 # Create local lsf.conf file and update LSF_LOCAL_RESOURCES
