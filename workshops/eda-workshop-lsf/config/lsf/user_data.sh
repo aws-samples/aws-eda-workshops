@@ -41,7 +41,7 @@ mount -t nfs -o rw,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 $FSXN_SV
 mkdir /var/log/lsf && chmod 777 /var/log/lsf
 mkdir /etc/lsf && chmod 777 /etc/lsf
 
-LSF_TOP=${NFS_MOUNT_POINT}${LSF_INSTALL_DIR}
+LSF_TOP=${LSF_INSTALL_DIR}
 source $LSF_TOP/conf/profile.lsf
 
 # Create local lsf.conf file and update LSF_LOCAL_RESOURCES
