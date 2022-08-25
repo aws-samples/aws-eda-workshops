@@ -6,7 +6,8 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-exec > >(tee /root/soca_preinstalled_packages.log ) 2>&1
+mkdir -p /root/bootstrap
+exec > >(tee /root/bootstrap/idea_preinstalled_packages.log ) 2>&1
 
 OS_NAME=`awk -F= '/^NAME=/{print $2}' /etc/os-release`
 OS_VERSION=`awk -F= '/^VERSION_ID=/{print $2}' /etc/os-release`
@@ -238,3 +239,14 @@ elif [ $OS == "amazonlinux2" ]; then
     amazon-linux-extras install -y lustre2.10
 fi" > /root/fsx_lustre.sh
 chmod +x /root/fsx_lustre.sh
+
+echo "Creating /usr/local/sbin/cleanup_ami.sh"
+echo -e "#!/bin/bash
+rm -rf /var/tmp/* /tmp/*
+rm -rf /var/lib/cloud/instances/*
+rm -f /var/lib/cloud/instance
+rm -rf /etc/ssh/ssh_host_*
+rm -f /etc/udev/rules.d/70-persistent-net.rules
+grep -l \"Created by cloud-init on instance boot automatically\" /etc/sysconfig/network-scripts/ifcfg-* | xargs rm -f
+rm -rf /var/crash/*" > /usr/local/sbin/cleanup_ami.sh
+chmod +x /usr/local/sbin/cleanup_ami.sh
