@@ -11,8 +11,8 @@ This tutorial provides instructions for running an example logic simulation work
 1. Download and install the [NICE DCV remote desktop native client](https://download.nice-dcv.com) on your local laptop/desktop computer.
 1. Launch the DCV client application. 
 1. Paste the public IP address of the **Login Server** into the field. Click "Trust & Connect" when prompted. 
-1. Enter the Username and Password.  You can find these credentials in AWS Secrets Manager in the AWS Console:
-   1. Go to the Secrets Manager service and select the **DCVCredentialsSecret** secret.
+1. Enter the Username and Password.  You can find these credentials in **AWS Secrets Manager** in the AWS Console:
+   1. Go to the Secrets Manager service and select the ***/DCVCredentialsSecret** secret.
    1. Click on the **Retrieve secret value** button.
    1. Copy the **username** and **password** and paste them into the appropriate DCV client fields.
 1. If you have trouble connecting, ensure the security group on the login server includes the IP address of your client.
