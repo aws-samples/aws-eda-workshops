@@ -157,12 +157,15 @@ sed -i 's/\(Instance.*\)\\{\(.*\)\\}/\1{\2}/g' /opt/aws/amazon-cloudwatch-agent/
 echo "Install DCV"
 cd ~
 machine=$(uname -m)
+DCV_X86_64_URL="https://d1uj6qtbmh3dt5.cloudfront.net/2022.1/Servers/nice-dcv-2022.1-13216-el7-x86_64.tgz"
+DCV_X86_64_TGZ="nice-dcv-2022.1-13216-el7-x86_64.tgz"
+DCV_X86_64_VERSION="2022.1-13216-el7-x86_64"
 if [[ $machine == "x86_64" ]]; then
     wget $DCV_X86_64_URL
-    if [[ $(md5sum $DCV_X86_64_TGZ | awk '{print $1}') != $DCV_X86_64_HASH ]];  then
-        echo -e "FATAL ERROR: Checksum for DCV failed. File may be compromised." > /etc/motd
-        exit 1
-    fi
+    #if [[ $(md5sum $DCV_X86_64_TGZ | awk '{print $1}') != $DCV_X86_64_HASH ]];  then
+    #    echo -e "FATAL ERROR: Checksum for DCV failed. File may be compromised." > /etc/motd
+    #    exit 1
+    #fi
     tar zxvf $DCV_X86_64_TGZ
     cd nice-dcv-$DCV_X86_64_VERSION
 elif [[ $machine == "aarch64" ]]; then
@@ -181,11 +184,33 @@ rpm -ivh nice-xdcv-*.${machine}.rpm --nodeps
 rpm -ivh nice-dcv-server*.${machine}.rpm --nodeps
 rpm -ivh nice-dcv-web-viewer-*.${machine}.rpm --nodeps
 
+DCV_SESSION_MANAGER_AGENT_X86_64_URL="https://d1uj6qtbmh3dt5.cloudfront.net/2022.1/SessionManagerAgents/nice-dcv-session-manager-agent-2022.1.592-1.el7.x86_64.rpm"
+DCV_SESSION_MANAGER_AGENT_X86_64_VERSION="2022.1.592-1.el7.x86_64"
+
+echo "# installing dcv agent ..."
+if [[ $machine == "x86_64" ]]; then
+  # x86_64
+  AGENT_URL=${DCV_SESSION_MANAGER_AGENT_X86_64_URL}
+  AGENT_VERSION=${DCV_SESSION_MANAGER_AGENT_X86_64_VERSION}
+else
+  # aarch64
+  AGENT_URL=${DCV_SESSION_MANAGER_AGENT_AARCH64_URL}
+  AGENT_VERSION=${DCV_SESSION_MANAGER_AGENT_AARCH64_VERSION}
+fi
+
+wget ${AGENT_URL}
+yum install -y nice-dcv-session-manager-agent-${AGENT_VERSION}.rpm
+echo "# installing dcv agent complete ..."
+rm -rf nice-dcv-session-manager-agent-${AGENT_VERSION}.rpm
+  
 # Enable DCV support for USB remotization
 yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 yum install -y dkms
 DCVUSBDRIVERINSTALLER=$(which dcvusbdriverinstaller)
 $DCVUSBDRIVERINSTALLER --quiet
+
+echo "Installing microphone redirect..."
+yum install -y pulseaudio-utils
 
 echo "Creating script to install FSx for Lustre client: /root/fsx_lustre.sh"
 echo -e "#!/bin/bash
