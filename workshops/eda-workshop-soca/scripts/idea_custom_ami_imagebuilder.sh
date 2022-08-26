@@ -23,7 +23,7 @@ else
 fi
 
 echo "Installing System packages"
-yum install -y wget
+yum install -y wget deltarpm
 cd /root
 wget https://raw.githubusercontent.com/awslabs/scale-out-computing-on-aws/master/source/scripts/config.cfg
 source /root/config.cfg
