@@ -66,6 +66,8 @@ systemctl disable pbs
 systemctl disable libvirtd
 systemctl disable firewalld
 
+rm -rf /root/${OPENPBS_TGZ} /root/openpbs-${OPENPBS_VERSION}
+
 # Disable SELinux
 sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
 
@@ -182,6 +184,8 @@ fi
 rpm -ivh nice-xdcv-*.${machine}.rpm --nodeps
 rpm -ivh nice-dcv-server*.${machine}.rpm --nodeps
 rpm -ivh nice-dcv-web-viewer-*.${machine}.rpm --nodeps
+
+rm -rf /root/${DCV_X86_64_TGZ} /root/nice-dcv*
 
 DCV_SESSION_MANAGER_AGENT_X86_64_URL="https://d1uj6qtbmh3dt5.cloudfront.net/2022.1/SessionManagerAgents/nice-dcv-session-manager-agent-2022.1.592-1.el7.x86_64.rpm"
 DCV_SESSION_MANAGER_AGENT_X86_64_VERSION="2022.1.592-1.el7.x86_64"
