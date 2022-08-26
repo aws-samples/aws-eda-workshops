@@ -9,16 +9,15 @@ fi
 mkdir -p /root/bootstrap
 exec > >(tee /root/bootstrap/idea_preinstalled_packages.log ) 2>&1
 
-OS_NAME=`awk -F= '/^NAME=/{print $2}' /etc/os-release`
-OS_VERSION=`awk -F= '/^VERSION_ID=/{print $2}' /etc/os-release`
-if [ "$OS_NAME" == "\"Red Hat Enterprise Linux Server\"" ] && [ "$OS_VERSION" == \"7.9\" ]; then
+source /etc/os-release
+if [ "$NAME" == "\"Red Hat Enterprise Linux Server\"" ] && [ "${VERSION_ID}" == \"7.9\" ]; then
     OS="rhel7"
-elif [ "$OS_NAME" == "\"CentOS Linux\"" ] && [ "$OS_VERSION" == "\"7\"" ]; then
+elif [ "$NAME" == "\"CentOS Linux\"" ] && [ "${VERSION_ID}" == "\"7\"" ]; then
     OS="centos7"
-elif [ "$OS_NAME" == "\"Amazon Linux\"" ] && [ "$OS_VERSION" == "\"2\"" ]; then
+elif [ "$NAME" == "\"Amazon Linux\"" ] && [ "${VERSION_ID}" == "\"2\"" ]; then
     OS="amazonlinux2"
 else
-    echo "Unsupported OS! OS_NAME: $OS_NAME, OS_VERSION: $OS_VERSION"
+    echo "Unsupported OS! NAME: $NAME, VERSION: ${VERSION_ID}"
     exit
 fi
 
