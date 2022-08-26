@@ -11,7 +11,7 @@ exec > >(tee /root/bootstrap/idea_preinstalled_packages.log ) 2>&1
 
 OS_NAME=`awk -F= '/^NAME=/{print $2}' /etc/os-release`
 OS_VERSION=`awk -F= '/^VERSION_ID=/{print $2}' /etc/os-release`
-if [ "$OS_NAME" == "\"Red Hat Enterprise Linux Server\"" ] && [ "$OS_VERSION" == \"7.6\" ]; then
+if [ "$OS_NAME" == "\"Red Hat Enterprise Linux Server\"" ] && [ "$OS_VERSION" == \"7.9\" ]; then
     OS="rhel7"
 elif [ "$OS_NAME" == "\"CentOS Linux\"" ] && [ "$OS_VERSION" == "\"7\"" ]; then
     OS="centos7"
@@ -37,9 +37,9 @@ elif [ $OS == "amazonlinux2" ]; then
     #amazon-linux-extras install mate-desktop1.x
     #bash -c 'echo PREFERRED=/usr/bin/mate-session > /etc/sysconfig/desktop'
 elif [ $OS == "rhel7" ]; then
-    # Tested only on RHEL7.6
+    # Tested only on RHEL7.9
     yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-    yum install -y $(echo ${SYSTEM_PKGS[*]} ${SCHEDULER_PKGS[*]}) --enablerepo rhui-REGION-rhel-server-optional
+    yum install -y $(echo ${SYSTEM_PKGS[*]} ${SCHEDULER_PKGS[*]}) --enablerepo rhel-7-server-rhui-optional-rpms
     yum install -y $(echo ${OPENLDAP_SERVER_PKGS[*]} ${SSSD_PKGS[*]})
     yum groupinstall -y "Server with GUI"
 fi
