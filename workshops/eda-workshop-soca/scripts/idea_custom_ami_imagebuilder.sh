@@ -9,21 +9,20 @@ fi
 mkdir -p /root/bootstrap
 exec > >(tee /root/bootstrap/idea_preinstalled_packages.log ) 2>&1
 
-OS_NAME=`awk -F= '/^NAME=/{print $2}' /etc/os-release`
-OS_VERSION=`awk -F= '/^VERSION_ID=/{print $2}' /etc/os-release`
-if [ "$OS_NAME" == "\"Red Hat Enterprise Linux Server\"" ] && [ "$OS_VERSION" == \"7.6\" ]; then
+source /etc/os-release
+if [ "$NAME" == "\"Red Hat Enterprise Linux Server\"" ] && [ "${VERSION_ID}" == \"7.9\" ]; then
     OS="rhel7"
-elif [ "$OS_NAME" == "\"CentOS Linux\"" ] && [ "$OS_VERSION" == "\"7\"" ]; then
+elif [ "$NAME" == "\"CentOS Linux\"" ] && [ "${VERSION_ID}" == "\"7\"" ]; then
     OS="centos7"
-elif [ "$OS_NAME" == "\"Amazon Linux\"" ] && [ "$OS_VERSION" == "\"2\"" ]; then
+elif [ "$NAME" == "\"Amazon Linux\"" ] && [ "${VERSION_ID}" == "\"2\"" ]; then
     OS="amazonlinux2"
 else
-    echo "Unsupported OS! OS_NAME: $OS_NAME, OS_VERSION: $OS_VERSION"
+    echo "Unsupported OS! NAME: $NAME, VERSION: ${VERSION_ID}"
     exit
 fi
 
 echo "Installing System packages"
-yum install -y wget
+yum install -y wget deltarpm
 cd /root
 wget https://raw.githubusercontent.com/awslabs/scale-out-computing-on-aws/master/source/scripts/config.cfg
 source /root/config.cfg
@@ -37,9 +36,9 @@ elif [ $OS == "amazonlinux2" ]; then
     #amazon-linux-extras install mate-desktop1.x
     #bash -c 'echo PREFERRED=/usr/bin/mate-session > /etc/sysconfig/desktop'
 elif [ $OS == "rhel7" ]; then
-    # Tested only on RHEL7.6
+    # Tested only on RHEL7.9
     yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-    yum install -y $(echo ${SYSTEM_PKGS[*]} ${SCHEDULER_PKGS[*]}) --enablerepo rhui-REGION-rhel-server-optional
+    yum install -y $(echo ${SYSTEM_PKGS[*]} ${SCHEDULER_PKGS[*]}) --enablerepo rhel-7-server-rhui-optional-rpms
     yum install -y $(echo ${OPENLDAP_SERVER_PKGS[*]} ${SSSD_PKGS[*]})
     yum groupinstall -y "Server with GUI"
 fi
@@ -66,6 +65,8 @@ chmod 4755 /opt/pbs/sbin/pbs_iff /opt/pbs/sbin/pbs_rcp
 systemctl disable pbs
 systemctl disable libvirtd
 systemctl disable firewalld
+
+rm -rf /root/${OPENPBS_TGZ} /root/openpbs-${OPENPBS_VERSION}
 
 # Disable SELinux
 sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
@@ -157,12 +158,15 @@ sed -i 's/\(Instance.*\)\\{\(.*\)\\}/\1{\2}/g' /opt/aws/amazon-cloudwatch-agent/
 echo "Install DCV"
 cd ~
 machine=$(uname -m)
+DCV_X86_64_URL="https://d1uj6qtbmh3dt5.cloudfront.net/2022.1/Servers/nice-dcv-2022.1-13216-el7-x86_64.tgz"
+DCV_X86_64_TGZ="nice-dcv-2022.1-13216-el7-x86_64.tgz"
+DCV_X86_64_VERSION="2022.1-13216-el7-x86_64"
 if [[ $machine == "x86_64" ]]; then
     wget $DCV_X86_64_URL
-    if [[ $(md5sum $DCV_X86_64_TGZ | awk '{print $1}') != $DCV_X86_64_HASH ]];  then
-        echo -e "FATAL ERROR: Checksum for DCV failed. File may be compromised." > /etc/motd
-        exit 1
-    fi
+    #if [[ $(md5sum $DCV_X86_64_TGZ | awk '{print $1}') != $DCV_X86_64_HASH ]];  then
+    #    echo -e "FATAL ERROR: Checksum for DCV failed. File may be compromised." > /etc/motd
+    #    exit 1
+    #fi
     tar zxvf $DCV_X86_64_TGZ
     cd nice-dcv-$DCV_X86_64_VERSION
 elif [[ $machine == "aarch64" ]]; then
@@ -181,11 +185,35 @@ rpm -ivh nice-xdcv-*.${machine}.rpm --nodeps
 rpm -ivh nice-dcv-server*.${machine}.rpm --nodeps
 rpm -ivh nice-dcv-web-viewer-*.${machine}.rpm --nodeps
 
+rm -rf /root/${DCV_X86_64_TGZ} /root/nice-dcv*
+
+DCV_SESSION_MANAGER_AGENT_X86_64_URL="https://d1uj6qtbmh3dt5.cloudfront.net/2022.1/SessionManagerAgents/nice-dcv-session-manager-agent-2022.1.592-1.el7.x86_64.rpm"
+DCV_SESSION_MANAGER_AGENT_X86_64_VERSION="2022.1.592-1.el7.x86_64"
+
+echo "# installing dcv agent ..."
+if [[ $machine == "x86_64" ]]; then
+  # x86_64
+  AGENT_URL=${DCV_SESSION_MANAGER_AGENT_X86_64_URL}
+  AGENT_VERSION=${DCV_SESSION_MANAGER_AGENT_X86_64_VERSION}
+else
+  # aarch64
+  AGENT_URL=${DCV_SESSION_MANAGER_AGENT_AARCH64_URL}
+  AGENT_VERSION=${DCV_SESSION_MANAGER_AGENT_AARCH64_VERSION}
+fi
+
+wget ${AGENT_URL}
+yum install -y nice-dcv-session-manager-agent-${AGENT_VERSION}.rpm
+echo "# installing dcv agent complete ..."
+rm -rf nice-dcv-session-manager-agent-${AGENT_VERSION}.rpm
+  
 # Enable DCV support for USB remotization
 yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 yum install -y dkms
 DCVUSBDRIVERINSTALLER=$(which dcvusbdriverinstaller)
 $DCVUSBDRIVERINSTALLER --quiet
+
+echo "Installing microphone redirect..."
+yum install -y pulseaudio-utils
 
 echo "Creating script to install FSx for Lustre client: /root/fsx_lustre.sh"
 echo -e "#!/bin/bash
