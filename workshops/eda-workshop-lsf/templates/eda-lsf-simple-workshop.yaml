@@ -122,7 +122,6 @@ Parameters:
   AdminKeyPair:
     Description: The name of an existing EC2 Key Pair for cluster SSH logins
     Type: "AWS::EC2::KeyPair::KeyName"
-    Default: "morrmt"
     AllowedPattern: ".+"
   SshSource:
     Description: >
