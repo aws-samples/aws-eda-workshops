@@ -214,7 +214,7 @@ Resources:
               LSF_TOP="$LSF_INSTALL_DIR"
               LSF_ADMINS="$LSF_ADMIN"
               LSF_CLUSTER_NAME="${LSFClusterName}"
-              LSF_MASTER_LIST="$HOSTNAME"
+              LSF_MASTER_LIST="${!HOSTNAME%%.*}"
               SILENT_INSTALL="Y"
               LSF_SILENT_INSTALL_TARLIST="ALL"
               ACCEPT_LICENSE="Y"
