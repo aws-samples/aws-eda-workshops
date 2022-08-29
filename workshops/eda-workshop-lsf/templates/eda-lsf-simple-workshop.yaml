@@ -377,6 +377,7 @@ Resources:
                      -e "s|%CFN_LSF_CLUSTER_NAME%|${LSFClusterName}|" \
                      -e "s|%CFN_FSXN_SVM_DNS_NAME%|$FSXN_SVM_DNS_NAME|" \
                      -e "s|%CFN_LSF_INSTALL_DIR%|$LSF_INSTALL_DIR|" \
+                     -e "s|%CFN_NFS_MOUNT_POINT%|$LSF_INSTALL_DIR_ROOT|" \
                      -e "s|%CFN_DCV_USER_NAME%|${UserName}|" \
                      -e "s|%CFN_LSF_COMPUTE_NODE_SPOT_FLEET_ROLE_ARN%|${LSFComputeNodeSpotFleetRoleArn}|" \
                   $LSF_ENVDIR/resource_connector/aws/conf/awsprov_templates.json
