@@ -180,13 +180,7 @@ rpm -ivh nice-xdcv-*.${machine}.rpm --nodeps
 rpm -ivh nice-dcv-server*.${machine}.rpm --nodeps
 rpm -ivh nice-dcv-web-viewer-*.${machine}.rpm --nodeps
 
-# Enable DCV support for USB remotization
-yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-yum install -y dkms
-DCVUSBDRIVERINSTALLER=$(which dcvusbdriverinstaller)
-$DCVUSBDRIVERINSTALLER --quiet
-
-echo "Creating script to install FSx for Lustre client: /root/fsx_lustre.sh"
+echo "Creating post_reboot.sh script: /root/post_reboot.sh"
 echo -e "#!/bin/bash
 
 set -x
@@ -195,6 +189,13 @@ if [[ \$EUID -ne 0 ]]; then
    echo \"Error: This script must be run as root\"
    exit 1
 fi
+
+# Enable DCV support for USB remotization
+yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+yum install -y dkms
+DCVUSBDRIVERINSTALLER=$(which dcvusbdriverinstaller)
+$DCVUSBDRIVERINSTALLER --quiet
+
 REQUIRE_REBOOT=0
 echo \"Installing FSx lustre client\"
 kernel=\$(uname -r)
@@ -246,8 +247,8 @@ fi
 if [[ \$REQUIRE_REBOOT -eq 1 ]]; then
     echo \"Rebooting to load FSx for Lustre drivers!\"
     /sbin/reboot
-fi" > /root/fsx_lustre.sh
-chmod +x /root/fsx_lustre.sh
+fi" > /root/post_reboot.sh
+chmod +x /root/post_reboot.sh
 
 echo "Creating /usr/local/sbin/cleanup_ami.sh"
 echo -e "#!/bin/bash
@@ -261,6 +262,6 @@ grep -l \"Created by cloud-init on instance boot automatically\" /etc/sysconfig/
 rm -rf /var/crash/*" > /usr/local/sbin/cleanup_ami.sh
 chmod +x /usr/local/sbin/cleanup_ami.sh
 
-echo "Will reboot instance now to load new kernel! After reboot, the script at /root/fsx_lustre.sh will install FSx for Lustre client corresponding to the new kernel version. See details in /root/fsx_lustre.sh.log"
-echo "@reboot /bin/bash /root/fsx_lustre.sh >> /root/fsx_lustre.sh.log 2>&1" | crontab -
+echo "Will reboot instance now to load new kernel! After reboot, the script at /root/post_reboot.sh.sh will install FSx for Lustre client corresponding to the new kernel version. See details in /root/post_reboot.sh.log"
+echo "@reboot /bin/bash /root/post_reboot.sh >> /root/post_reboot.sh.log 2>&1" | crontab -
 /sbin/reboot
