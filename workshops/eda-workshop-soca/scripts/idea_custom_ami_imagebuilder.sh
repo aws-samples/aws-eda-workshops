@@ -212,7 +212,7 @@ yum install -y pulseaudio-utils
 echo "Creating post_reboot.sh script: /root/post_reboot.sh"
 echo -e "#!/bin/bash
 set -x
-exec > >(tee /root/post_reboot.sh.log ) 2>&1
+exec > >(tee /root/bootstrap/post_reboot.sh.log ) 2>&1
 
 if [[ \$EUID -ne 0 ]]; then
    echo \"Error: This script must be run as root\"
