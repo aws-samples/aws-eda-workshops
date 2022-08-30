@@ -206,24 +206,24 @@ yum install -y nice-dcv-session-manager-agent-${AGENT_VERSION}.rpm
 echo "# installing dcv agent complete ..."
 rm -rf nice-dcv-session-manager-agent-${AGENT_VERSION}.rpm
   
-# Enable DCV support for USB remotization
-yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-yum install -y dkms
-DCVUSBDRIVERINSTALLER=$(which dcvusbdriverinstaller)
-$DCVUSBDRIVERINSTALLER --quiet
-
 echo "Installing microphone redirect..."
 yum install -y pulseaudio-utils
 
-echo "Creating script to install FSx for Lustre client: /root/fsx_lustre.sh"
+echo "Creating post_reboot.sh script: /root/post_reboot.sh"
 echo -e "#!/bin/bash
 set -x
-exec > >(tee /root/fsx_lustre.sh.log ) 2>&1
+exec > >(tee /root/post_reboot.sh.log ) 2>&1
 
 if [[ \$EUID -ne 0 ]]; then
    echo \"Error: This script must be run as root\"
    exit 1
 fi
+
+# Enable DCV support for USB remotization
+yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+yum install -y dkms
+DCVUSBDRIVERINSTALLER=$(which dcvusbdriverinstaller)
+$DCVUSBDRIVERINSTALLER --quiet
 
 echo \"Installing FSx lustre client\"
 kernel=\$(uname -r)
@@ -265,8 +265,8 @@ if [ $OS == "centos7" ] || [ $OS == "rhel7" ]; then
     fi
 elif [ $OS == "amazonlinux2" ]; then
     amazon-linux-extras install -y lustre2.10
-fi" > /root/fsx_lustre.sh
-chmod +x /root/fsx_lustre.sh
+fi" > /root/post_reboot.sh
+chmod +x /root/post_reboot.sh
 
 echo "Creating /usr/local/sbin/cleanup_ami.sh"
 echo -e "#!/bin/bash
