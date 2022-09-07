@@ -10,7 +10,7 @@ mkdir -p /root/bootstrap
 exec > >(tee /root/bootstrap/idea_preinstalled_packages.log ) 2>&1
 
 source /etc/os-release
-if [[ "$NAME" == "\"Red Hat Enterprise Linux Server\"" ]] && [[ "${VERSION_ID}" == \"7.9\" ]]; then
+if [[ "$NAME" == "Red Hat Enterprise Linux Server" ]] && [[ "${VERSION_ID}" == "7.9" ]]; then
     OS="rhel7"
 elif [[ "$NAME" == "CentOS Linux" ]] && [[ "${VERSION_ID}" == "7" ]]; then
     OS="centos7"
