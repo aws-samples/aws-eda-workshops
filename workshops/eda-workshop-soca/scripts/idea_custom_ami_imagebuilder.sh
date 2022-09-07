@@ -12,7 +12,7 @@ exec > >(tee /root/bootstrap/idea_preinstalled_packages.log ) 2>&1
 source /etc/os-release
 if [[ "$NAME" == "\"Red Hat Enterprise Linux Server\"" ]] && [[ "${VERSION_ID}" == \"7.9\" ]]; then
     OS="rhel7"
-elif [[ "$NAME" == "\"CentOS Linux\"" ]] && [[ "${VERSION_ID}" == "7" ]]; then
+elif [[ "$NAME" == "CentOS Linux" ]] && [[ "${VERSION_ID}" == "7" ]]; then
     OS="centos7"
 elif [[ "$NAME" == "\"Amazon Linux\"" ]] && [[ "${VERSION_ID}" == "\"2\"" ]]; then
     OS="amazonlinux2"
