@@ -53,13 +53,18 @@ yum install -y vim vim-X11 xterm compat-db47 glibc glibc.i686 openssl098e compat
 
 #Install OpenPBS
 echo "Installing OpenPBS"
+OPENPBS_URL="https://github.com/openpbs/openpbs/archive/v22.05.11.tar.gz"
+OPENPBS_TGZ="v22.05.11.tar.gz"
+OPENPBS_VERSION="22.05.11"
 wget $OPENPBS_URL
 tar zxvf $OPENPBS_TGZ
 cd openpbs-$OPENPBS_VERSION
 ./autogen.sh
-./configure --prefix=/opt/pbs
-make -j6
-make install -j6
+./configure PBS_VERSION=${OPENPBS_VERSION} --prefix=/opt/pbs
+local NUM_PROCS=`nproc --all`
+local MAKE_FLAGS="-j${NUM_PROCS}"
+make ${MAKE_FLAGS}
+make install ${MAKE_FLAGS}
 /opt/pbs/libexec/pbs_postinstall
 chmod 4755 /opt/pbs/sbin/pbs_iff /opt/pbs/sbin/pbs_rcp
 systemctl disable pbs
