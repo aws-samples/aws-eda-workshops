@@ -241,7 +241,7 @@ if [ $OS == "centos7" ] || [ $OS == "rhel7" ]; then
        echo \"ERROR: Can't install FSx for Lustre client as kernel version: ${kernel} isn't matching expected versions: (x86_64: 3.10.0-957, -1062, -1127, -1160, aarch64: 4.18.0-193)!\"
     fi
 elif [ $OS == "amazonlinux2" ]; then
-    amazon-linux-extras install -y lustre2.10
+    amazon-linux-extras install -y lustre
     REQUIRE_REBOOT=1
 fi
 if [[ \$REQUIRE_REBOOT -eq 1 ]]; then
@@ -254,8 +254,8 @@ echo "Creating /usr/local/sbin/cleanup_ami.sh"
 echo -e "#!/bin/bash
 
 rm -rf /var/tmp/* /tmp/* /var/crash/*
-rm -rf /var/lib/cloud/instances/*
-rm -f /var/lib/cloud/instance
+#rm -rf /var/lib/cloud/instances/*
+#rm -f /var/lib/cloud/instance
 rm -rf /etc/ssh/ssh_host_*
 rm -f /etc/udev/rules.d/70-persistent-net.rules
 grep -l \"Created by cloud-init on instance boot automatically\" /etc/sysconfig/network-scripts/ifcfg-* | xargs rm -f
