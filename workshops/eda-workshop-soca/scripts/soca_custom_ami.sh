@@ -69,11 +69,25 @@ systemctl disable firewalld
 # Disable SELinux
 sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
 
-# Install pip and awscli
-echo "Installing pip and awscli"
-yum install -y python3-pip
-PIP=$(which pip3)
-$PIP install awscli
+# Install awscli
+echo "Installing awscliv2"
+AWSCLI_X86_64_URL="https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+AWSCLI_AARCH64_URL="https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip"
+if [[ "$OS" == "amazonlinux2" ]]; then
+  yum remove -y awscli
+fi
+local machine=$(uname -m)
+if [[ $machine == "x86_64" ]]; then
+  curl -s $AWSCLI_X86_64_URL -o "awscliv2.zip"
+  elif [[ $machine == "aarch64" ]]; then
+  curl -s $AWSCLI_AARCH64_URL -o "awscliv2.zip"
+fi
+which unzip > /dev/null 2>&1
+if [[ "$?" != "0" ]]; then
+  yum install -y unzip
+fi
+unzip -q awscliv2.zip
+./aws/install --bin-dir /bin --update
 
 # Configure system limits
 echo "Configuring system limits"
