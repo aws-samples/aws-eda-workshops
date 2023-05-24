@@ -1,0 +1,34 @@
+EC2 Fleet is a new AWS feature that extends the existing Spot Fleet, 
+which gives you a unique ability to create fleets of EC2 instances 
+composed of a combination of EC2 on-demand, reserved, and spot instances, 
+by using a single API. 
+
+Requirements: LSF 10.1 fix 601205 
+https://community.ibm.com/community/user/businessanalytics/blogs/martin-gao/2022/08/12/optimizing-the-speed-of-deployment-on-cloud](https://community.ibm.com/community/user/businessanalytics/blogs/martin-gao/2022/08/12/optimizing-the-speed-of-deployment-on-cloud
+
+{
+    "templateId": "ec2-fleet-c5-2xl",
+    "priority": 4,
+    "maxNumber": 1000,
+    "attributes": {
+        "type":    ["String", "X86_64"],
+        "ncores":  ["Numeric", "4"],
+        "ncpus":   ["Numeric", "4"],
+        "mem":     ["Numeric", "15000"],
+        "instance_type":    ["String", "spot"],
+        "!spot":   ["Boolean", "1"],
+        "aws":     ["Boolean", "1"]
+    },
+    "imageId": "%CFN_COMPUTE_AMI%",
+    "subnetId": "%CFN_COMPUTE_NODE_SUBNET%",
+    "vmType": "c5.2xlarge,c5.4xlarge,c5.9xlarge,m5.xlarge,m5.2xlarge,m5.4xlarge,m5.8xlarge",
+    "ec2FleetConfig": "/path/to/ec2-fleet-conf.json",
+    "onDemandTargetCapacityRatio": "1", 
+    "keyName": "%CFN_ADMIN_KEYPAIR%",
+    "securityGroupIds": ["%CFN_COMPUTE_SECURITY_GROUP_ID%"],
+    "placementGroupName": "",
+    "tenancy": "default",
+    "instanceProfile":  "%CFN_LSF_COMPUTE_NODE_INSTANCE_PROFILE_ARN%",
+    "instanceTags":     "Name=LSF Exec Host;Cluster=%CFN_LSF_CLUSTER_NAME%",
+    "userData":         "EFS_FS_DNS_NAME=%CFN_EFS_FS_DNS_NAME%;LSF_INSTALL_DIR=%CFN_LSF_INSTALL_DIR%;PROJ_DIR=%CFN_PROJ_DIR%;SCRATCH_DIR=%CFN_SCRATCH_DIR%;FS_MOUNT_POINT=%CFN_FS_MOUNT_POINT%;NFS_SERVER_EXPORT=%CFN_NFS_SERVER_EXPORT%;DCV_USER_NAME=%CFN_DCV_USER_NAME%;spot=!spot"
+}
