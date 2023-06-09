@@ -76,7 +76,7 @@ AWSCLI_AARCH64_URL="https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip"
 if [[ "$OS" == "amazonlinux2" ]]; then
   yum remove -y awscli
 fi
-local machine=$(uname -m)
+machine=$(uname -m)
 if [[ $machine == "x86_64" ]]; then
   curl -s $AWSCLI_X86_64_URL -o "awscliv2.zip"
   elif [[ $machine == "aarch64" ]]; then
