@@ -57,7 +57,7 @@ wget $OPENPBS_URL
 tar zxvf $OPENPBS_TGZ
 cd openpbs-$OPENPBS_VERSION
 ./autogen.sh
-./configure --prefix=/opt/pbs
+./configure PBS_VERSION=${OPENPBS_VERSION} --prefix=/opt/pbs
 make -j6
 make install -j6
 /opt/pbs/libexec/pbs_postinstall
