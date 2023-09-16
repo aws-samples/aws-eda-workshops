@@ -43,8 +43,9 @@ Parameters:
     Type: "String"
     AllowedValues:
       - bursting
+      - elastic
       - provisioned
-    Default: "bursting"
+    Default: "elastic"
 
 Resources:
   LSFElasticFileSystem:
