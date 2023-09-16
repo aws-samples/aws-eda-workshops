@@ -182,20 +182,23 @@ Resources:
               NFS_DNS_NAME=${NfsDnsName}
               if [[ "$NFS_DNS_NAME" == *"efs"* ]]; then
                 JUNCTION_PATH="/"
+                NFS_OPTIONS="nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport"
               # Check if the NFS_DNS_NAME contains "fsx"
               elif [[ "$NFS_DNS_NAME" == *"fsx"* ]]; then
                 JUNCTION_PATH="/vol1"
+                NFS_OPTIONS="rsize=262144,wsize=262144,hard,vers=3,tcp,mountproto=tcp"
               else
                 # Set a default value or handle other cases if needed
                 JUNCTION_PATH="unknown"
+                NFS_OPTIONS="unknown"
               fi
 
               # Print NFS mount
               echo "Mounting ${NfsDnsName}:$JUNCTION_PATH"
-              mount -t nfs -o "rsize=262144,wsize=262144,hard,vers=3,tcp,mountproto=tcp" ${NfsDnsName}:$JUNCTION_PATH ${FileSystemMountPoint}
+              mount -t nfs -o $NFS_OPTIONS ${NfsDnsName}:$JUNCTION_PATH ${FileSystemMountPoint}
 
               #add to fstab
-              echo "${NfsDnsName}:$JUNCTION_PATH ${FileSystemMountPoint} nfs nfsvers=3,rsize=262144,wsize=262144,tcp,hard 0 0" >> \
+              echo "${NfsDnsName}:$JUNCTION_PATH ${FileSystemMountPoint} nfs $NFS_OPTIONS 0 0" >> \
                 /etc/fstab
 
               mkdir -p $LSF_INSTALL_DIR
