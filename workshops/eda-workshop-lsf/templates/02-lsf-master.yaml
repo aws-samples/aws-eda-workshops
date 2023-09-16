@@ -140,6 +140,10 @@ Resources:
               set -x
               exec > >(tee /var/log/user-data.log|logger -t user-data ) 2>&1
 
+              # Print user data
+              INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+              cat /var/lib/cloud/instances/$INSTANCE_ID/user-data.txt
+
               echo "*** BEGIN LSF MASTER BOOTSTRAP ***"
 
               export LSF_INSTALL_DIR="${FileSystemMountPoint}${LSFInstallPath}/${LSFClusterName}"
@@ -170,25 +174,36 @@ Resources:
               systemctl enable amazon-ssm-agent
               systemctl start amazon-ssm-agent
 
-              ## Mount NFS file system for LSF install
-              #mount point
+              # Mount NFS file system for LSF install
               mkdir ${FileSystemMountPoint}
-              
-              #mount NFS file system
-              mount -t nfs -o "rsize=262144,wsize=262144,hard,vers=3,tcp,mountproto=tcp" ${NfsDnsName}:/vol1 ${FileSystemMountPoint}
+
+              # Check if the NFS_DNS_NAME is "efs", "FSxN"
+              # Todo FSxZ
+              NFS_DNS_NAME=${NfsDnsName}
+              if [[ "$NFS_DNS_NAME" == *"efs"* ]]; then
+                JUNCTION_PATH="/"
+              # Check if the NFS_DNS_NAME contains "fsx"
+              elif [[ "$NFS_DNS_NAME" == *"fsx"* ]]; then
+                JUNCTION_PATH="/vol1"
+              else
+                # Set a default value or handle other cases if needed
+                JUNCTION_PATH="unknown"
+              fi
+
+              # Print NFS mount
+              echo "Mounting ${NfsDnsName}:$JUNCTION_PATH"
+              mount -t nfs -o "rsize=262144,wsize=262144,hard,vers=3,tcp,mountproto=tcp" ${NfsDnsName}:$JUNCTION_PATH ${FileSystemMountPoint}
 
               #add to fstab
-              echo "${NfsDnsName}:/vol1 ${FileSystemMountPoint} nfs nfsvers=3,rsize=262144,wsize=262144,tcp,hard 0 0" >> \
+              echo "${NfsDnsName}:$JUNCTION_PATH ${FileSystemMountPoint} nfs nfsvers=3,rsize=262144,wsize=262144,tcp,hard 0 0" >> \
                 /etc/fstab
 
               mkdir -p $LSF_INSTALL_DIR
               mkdir /var/log/lsf && chmod 777 /var/log/lsf
 
-              # TODO: Setup CloudWatch Logs daemon and send LSF logs to CloudWatch
-
-              ##############################################
-              # Install LSF using customer-provided packages
-              ##############################################
+              ##################################################################
+              # Install LSF using customer-provided packages                   #
+              ##################################################################
 
               # Add LSF admin account
               adduser -m -u 1500 $LSF_ADMIN
@@ -279,12 +294,10 @@ Resources:
                 -O $LSF_ENVDIR/lsbatch/${LSFClusterName}/configdir/lsb.params
 
               # lsf.cluster.*  Uncomment params to support dynamic hosts
-              # TODO: set LSF_HOST_ADDR_RANGE to CIDR block of VPC or compute subnet
               sed -i -e 's/#\sLSF_HOST_ADDR_RANGE/LSF_HOST_ADDR_RANGE/' \
                      -e 's/#\sFLOAT_CLIENTS/FLOAT_CLIENTS/' \
-                  $LSF_ENVDIR/lsf.cluster.*
+                     $LSF_ENVDIR/lsf.cluster.*
 
-              
               # mosquitto.conf.  Enables mostquitto daemon, which RC uses to show bhosts -rc output.
               cat << EOF > $LSF_ENVDIR/mosquitto.conf
               log_dest file /var/log/lsf/mosquitto.log
@@ -296,7 +309,6 @@ Resources:
               # Set logging to local file system
               sed -i -e 's|^LSF_LOGDIR.*|LSF_LOGDIR=/var/log/lsf|' $LSF_ENVDIR/lsf.conf
 
-              # lsf.conf. Append RC config to config file that was created by LSF installer.
               cat << EOF >> $LSF_ENVDIR/lsf.conf
 
               LSF_STRIP_DOMAIN=.ec2.internal:.${AWS::Region}.compute.internal
@@ -497,3 +509,66 @@ Resources:
       Path: "/"
       Roles:
         - !Ref LSFComputeNodeRole
+
+  CloudWatchAgentConfiguration:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: SSM Parameter holding CloudWatchAgent configuration
+      Name: AmazonCloudWatch-linux
+      Type: String
+      Value: |
+        {
+          "agent": {
+            "metrics_collection_interval": 60,
+            "logfile": "/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log",
+            "debug": false
+          },
+          "logs": {
+            "logs_collected": {
+              "files": {
+                "collect_list": [
+                  {
+                    "file_path": "/var/log/lsf/**",
+                    "log_group_name": "/var/log/lsf",
+                    "log_stream_name": "{instance_id}"
+                  }
+                ]
+              }
+            }
+          },
+          "metrics": {
+            "namespace": "CWAgent",
+            "append_dimensions": {
+              "InstanceId": "${aws:InstanceId}"
+            },
+            "metrics_collected": {
+              "mem": {
+                "measurement": ["mem_used_percent"],
+                "metrics_collection_interval": 60
+              }
+            }
+          }
+        }
+
+  AmazonCloudWatchSetConfig:
+    Type: AWS::SSM::Association
+    Properties:
+      ApplyOnlyAtCronInterval: false
+      AssociationName: AmazonCloudWatchSetConfig
+      Name: AmazonCloudWatch-ManageAgent
+      Parameters:
+        action:
+          - configure
+        mode:
+          - ec2
+        optionalConfigurationLocation:
+          - AmazonCloudWatch-linux
+        optionalConfigurationSource:
+          - ssm
+        optionalRestart:
+          - "yes"
+      ScheduleExpression: cron(0 */30 * * * ? *)
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - "*"

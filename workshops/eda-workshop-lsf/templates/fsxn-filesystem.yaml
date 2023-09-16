@@ -10,7 +10,7 @@ Parameters:
   LSFClusterName:
     Description: "The name of the LSF cluster."
     Type: "String"
-    Default: "cde-1"
+    Default: "LSFCluster"
 
 Resources:
 
