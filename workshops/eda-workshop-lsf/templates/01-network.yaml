@@ -320,29 +320,18 @@ Resources:
   NfsSG:
    Type: AWS::EC2::SecurityGroup
    Properties:
-     GroupDescription: "SG for FSxN file systems"
+     GroupDescription: "SG for NFS file systems. Requires atleast ports 22, 111, 635, 2049 for NFSv3"
      VpcId: !Ref EDAVPC
      SecurityGroupIngress:
-     - IpProtocol: tcp
-       FromPort: 22
-       ToPort: 22
+     - IpProtocol: -1
        SourceSecurityGroupId: !Ref LSFMasterSG
-       Description: "SSH from LSF Mgmt Server"
-     - IpProtocol: tcp
-       FromPort: 2049
-       ToPort: 2049
-       SourceSecurityGroupId: !Ref LSFMasterSG
-       Description: "NFS from LSF Mgmt Server"
-     - IpProtocol: tcp
-       FromPort: 2049
-       ToPort: 2049
+       Description: "All from LSF Mgmt Server"
+     - IpProtocol: -1
        SourceSecurityGroupId: !Ref LSFComputeNodeSG
-       Description: "NFS traffic from LSF compute nodes"
-     - IpProtocol: tcp
-       FromPort: 2049
-       ToPort: 2049
+       Description: "All from compute nodes"
+     - IpProtocol: -1
        SourceSecurityGroupId: !Ref LoginServerSG
-       Description: "NFS traffic from LSF login servers"
+       Description: "All from login servers"
 
 Outputs:
   NoIngressSecurityGroup:

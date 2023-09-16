@@ -207,6 +207,8 @@ Resources:
 
               # Add LSF admin account
               adduser -m -u 1500 $LSF_ADMIN
+              echo "source $LSF_INSTALL_DIR/conf/profile.lsf" >> /home/$LSF_ADMIN/.bashrc
+              chown 1500:1500 /home/$LSF_ADMIN/.bashrc
 
               # Download customer-provided LSF binaries and entitlement file
               aws --quiet s3 cp ${CustomerLSFInstallUri} /tmp
@@ -514,7 +516,7 @@ Resources:
     Type: AWS::SSM::Parameter
     Properties:
       Description: SSM Parameter holding CloudWatchAgent configuration
-      Name: AmazonCloudWatch-linux
+      Name: AmazonCloudWatch-linux-lsf-mgmt
       Type: String
       Value: |
         {
@@ -562,13 +564,35 @@ Resources:
         mode:
           - ec2
         optionalConfigurationLocation:
-          - AmazonCloudWatch-linux
+          - AmazonCloudWatch-linux-lsf-mgmt
         optionalConfigurationSource:
           - ssm
         optionalRestart:
           - "yes"
       ScheduleExpression: cron(0 */30 * * * ? *)
       Targets:
-        - Key: InstanceIds
+        - Key: tag:Name
           Values:
-            - "*"
+            - !Join [ '-', [ 'LSF Mgmt Host',!Ref LSFClusterName ] ]
+
+  InstallCloudWatch:
+    Type: AWS::SSM::Association
+    Properties:
+      Name: AWS-ConfigureAWSPackage
+      ApplyOnlyAtCronInterval: false
+      AssociationName: InstallUpgradeCloudWatch
+      Parameters:
+        action:
+          - Install
+        additionalArguments:
+          - "{}"
+        installationType:
+          - Uninstall and reinstall
+        name:
+          - AmazonCloudWatchAgent
+      ScheduleExpression: cron(0 */30 * * * ? *)
+      Targets:
+        - Key: tag:Name
+          Values:
+            - !Join [ '-', [ 'LSF Mgmt Host',!Ref LSFClusterName ] ]
+
