@@ -57,7 +57,7 @@ wget $OPENPBS_URL
 tar zxvf $OPENPBS_TGZ
 cd openpbs-$OPENPBS_VERSION
 ./autogen.sh
-./configure --prefix=/opt/pbs
+./configure PBS_VERSION=${OPENPBS_VERSION} --prefix=/opt/pbs
 make -j6
 make install -j6
 /opt/pbs/libexec/pbs_postinstall
@@ -70,13 +70,14 @@ systemctl disable firewalld
 sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
 
 # Install awscli
+cd ~
 echo "Installing awscliv2"
 AWSCLI_X86_64_URL="https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
 AWSCLI_AARCH64_URL="https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip"
 if [[ "$OS" == "amazonlinux2" ]]; then
   yum remove -y awscli
 fi
-local machine=$(uname -m)
+machine=$(uname -m)
 if [[ $machine == "x86_64" ]]; then
   curl -s $AWSCLI_X86_64_URL -o "awscliv2.zip"
   elif [[ $machine == "aarch64" ]]; then
