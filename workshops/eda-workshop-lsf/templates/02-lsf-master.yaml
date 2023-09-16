@@ -56,12 +56,9 @@ Parameters:
     Type: "String"
     Default: "m5.2xlarge"
   MasterServerAMI:
-    Description: AMI (OS image) for the master server. 
-      NOTE - You must first subscribe to this AMI in the AWS Marketplace at https://aws.amazon.com/marketplace/pp/B00O7WM7QW
-    Type: "String"
-    Default: "ALinux2"
-    AllowedValues:
-      - ALinux2
+    Description: AMI (OS image) for the master server.
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
   ComputeAMI:
     Description: AMI (OS image) for the compute nodes.  
       NOTE - You must first subscribe to this AMI in the AWS Marketplace at https://aws.amazon.com/marketplace/pp/B00O7WM7QW"
@@ -73,15 +70,18 @@ Parameters:
   LSFClusterName:
     Description: "The name of the LSF cluster."
     Type: "String"
-    Default: "cde-1"
+    Description: |- 
+      An environment name that will be prefixed to resource names.
+      Should be equal to the value in the network stack.
+    Default: "LSFCluster"
   LSFInstallPath:
     Description: Path where LSF will be installed.
     Type: "String"
     Default: "/tools/ibm/lsf"
   FileSystemMountPoint:
-    Description: Directory where the FSxN file system will be mounted.
+    Description: Directory where the NFS file system will be mounted (EFS, FSxN or FSxZ).
     Type: "String"
-    Default: "/fsxn"
+    Default: "/nfs"
   CustomerLSFInstallUri:
     Description: >
       The S3 URI to the LSF installation script package. 
@@ -117,15 +117,11 @@ Resources:
         Timeout: PT15M
     Properties:
       InstanceType: !Ref MasterInstanceType
-      ImageId:
-        Fn::FindInMap:
-        - RegionMap
-        - !Ref AWS::Region
-        - !Ref MasterServerAMI
+      ImageId: !Ref MasterServerAMI
       SubnetId:
-          Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"PrivateSubnet" ] ]
+          Fn::ImportValue: !Sub '${LSFClusterName}-PrivateSubnet'
       SecurityGroupIds:
-        - Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"LSFMasterSG" ] ]
+        - Fn::ImportValue:  !Sub '${LSFClusterName}-LSFMasterSG'
       KeyName: !Ref AdminKeyPair
       IamInstanceProfile: !Ref LSFMasterInstanceProfile
       Tags:
@@ -179,10 +175,10 @@ Resources:
               mkdir ${FileSystemMountPoint}
               
               #mount NFS file system
-              mount -t nfs -o "rsize=262144,wsize=262144,hard,vers=3,tcp,mountproto=tcp" ${FSxOntapFS}:/vol1 ${FileSystemMountPoint}
+              mount -t nfs -o "rsize=262144,wsize=262144,hard,vers=3,tcp,mountproto=tcp" ${NfsDnsName}:/vol1 ${FileSystemMountPoint}
 
               #add to fstab
-              echo "${FSxOntapFS}:/vol1 ${FileSystemMountPoint} nfs nfsvers=3,rsize=262144,wsize=262144,tcp,hard 0 0" >> \
+              echo "${NfsDnsName}:/vol1 ${FileSystemMountPoint} nfs nfsvers=3,rsize=262144,wsize=262144,tcp,hard 0 0" >> \
                 /etc/fstab
 
               mkdir -p $LSF_INSTALL_DIR
@@ -256,7 +252,7 @@ Resources:
                      -e "s|%CFN_COMPUTE_SECURITY_GROUP_ID%|${LSFComputeNodeSGGroupId}|" \
                      -e "s|%CFN_LSF_COMPUTE_NODE_INSTANCE_PROFILE_ARN%|${LSFComputeNodeInstanceProfileArn}|" \
                      -e "s|%CFN_LSF_CLUSTER_NAME%|${LSFClusterName}|" \
-                     -e "s|%CFN_FSXN_SVM_DNS_NAME%|${FSxOntapFS}|" \
+                     -e "s|%CFN_FSXN_SVM_DNS_NAME%|${NfsDnsName}|" \
                      -e "s|%CFN_NFS_MOUNT_POINT%|${FileSystemMountPoint}|" \
                      -e "s|%CFN_LSF_INSTALL_DIR%|$LSF_INSTALL_DIR|" \
                      -e "s|%CFN_DCV_USER_NAME%|${DCVUserName}|" \
@@ -376,8 +372,8 @@ Resources:
                 Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"LSFComputeNodeSG" ] ]
               LSFComputeNodeSubnet:
                 Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"PrivateSubnet" ] ]
-              FSxOntapFS:
-                Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"FSxOntapFS" ] ]
+              NfsDnsName:
+                Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"NfsDnsName" ] ]
 
   LSFMasterRole:
       Type: "AWS::IAM::Role"

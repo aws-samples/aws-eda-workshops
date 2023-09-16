@@ -317,7 +317,7 @@ Resources:
         CidrIp: !Ref SshSource
         Description: "DCV QUIC UDP traffic"
 
-  FSxOntapSG:
+  NfsSG:
    Type: AWS::EC2::SecurityGroup
    Properties:
      GroupDescription: "SG for FSxN file systems"
@@ -328,31 +328,21 @@ Resources:
        ToPort: 22
        SourceSecurityGroupId: !Ref LSFMasterSG
        Description: "SSH from LSF Mgmt Server"
-  
-  FSxOntapSGRule01:
-   Type: AWS::EC2::SecurityGroupIngress
-   Properties:
-     GroupId: !Ref FSxOntapSG
-     Description: "NFS traffic from LSF Mgmt Server"
-     IpProtocol: -1
-     SourceSecurityGroupId: !Ref LSFMasterSG
-  
-  FSxOntapSGRule02:
-   Type: AWS::EC2::SecurityGroupIngress
-   Properties:
-     GroupId: !Ref FSxOntapSG
-     Description: "NFS traffic from LSF compute nodes"
-     IpProtocol: -1
-     SourceSecurityGroupId: !Ref LSFComputeNodeSG
- 
-  FSxOntapSGRule03:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-     GroupId: !Ref FSxOntapSG
-     Description: "NFS traffic from LSF login servers"
-     IpProtocol: -1
-     SourceSecurityGroupId: !Ref LoginServerSG
-
+     - IpProtocol: tcp
+       FromPort: 2049
+       ToPort: 2049
+       SourceSecurityGroupId: !Ref LSFMasterSG
+       Description: "NFS from LSF Mgmt Server"
+     - IpProtocol: tcp
+       FromPort: 2049
+       ToPort: 2049
+       SourceSecurityGroupId: !Ref LSFComputeNodeSG
+       Description: "NFS traffic from LSF compute nodes"
+     - IpProtocol: tcp
+       FromPort: 2049
+       ToPort: 2049
+       SourceSecurityGroupId: !Ref LoginServerSG
+       Description: "NFS traffic from LSF login servers"
 
 Outputs:
   NoIngressSecurityGroup:
@@ -428,12 +418,12 @@ Outputs:
     Export:
       Name: !Join [ '-', [ !Ref LSFClusterName,"LoginServerSG" ] ]
 
-  FSxOntapSG:
+  NfsSG:
     Description: Security group for NFS Servers
     Value:
-      Ref: FSxOntapSG
+      Ref: NfsSG
     Export:
-      Name: !Join [ '-', [ !Ref LSFClusterName,"FSxOntapSG" ] ]
+      Name: !Join [ '-', [ !Ref LSFClusterName,"NfsSG" ] ]
 
 
 
