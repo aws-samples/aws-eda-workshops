@@ -207,8 +207,7 @@ Resources:
 
               # Add LSF admin account
               adduser -m -u 1500 $LSF_ADMIN
-              echo "source $LSF_INSTALL_DIR/conf/profile.lsf" >> /home/$LSF_ADMIN/.bashrc
-              chown 1500:1500 /home/$LSF_ADMIN/.bashrc
+              echo "source $LSF_INSTALL_DIR/conf/profile.lsf" >> /etc/bashrc
 
               # Download customer-provided LSF binaries and entitlement file
               aws --quiet s3 cp ${CustomerLSFInstallUri} /tmp
