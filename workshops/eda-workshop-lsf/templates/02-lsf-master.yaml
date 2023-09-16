@@ -357,8 +357,14 @@ Resources:
               # Configure system scripts to start LSF at boot time
               # Add cshrc.lsf and profile.lsf to system-wide environment
               # Start LSF daemons
+
+              # FP14 implements a new systemd behavior. 
+              # Enable by copying new lsf_daemons into place or hostsetup will fail.
+              # if fp14; then
+              #   cp $LSF_INSTALL_DIR/10.1/instlib/startup.svr4 to <LSF_SERVERDIR>/lsf_daemons
+              # OR just don't use --boot in hostsetup.
+
               $LSF_INSTALL_DIR/10.1/install/hostsetup --top="$LSF_INSTALL_DIR" \
-                                                      --boot="y"    \
                                                       --profile="y" \
                                                       --start="y"
 
