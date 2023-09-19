@@ -1,0 +1,42 @@
+{
+    "LaunchTemplateConfigs": [
+        {
+            "LaunchTemplateSpecification": {
+                "LaunchTemplateId": "lt-07e47351a93fc8b4f",
+                "Version": "1"
+            },
+            "Overrides": [
+                {
+                    "InstanceRequirements": {
+                        "VCpuCount": {
+                            "Min": 2,
+                            "Max": 8
+                        },
+                        "MemoryMib": {
+                            "Min": 4096,
+                            "Max": 32768
+                        },
+                        "MemoryGiBPerVCpu": {
+                            "Max": 16384
+                        },
+                        "RequireHibernateSupport": true
+                    }
+                }
+            ]
+        }
+    ],
+    "TargetCapacitySpecification": {
+        "TotalTargetCapacity": $LSF_TOTAL_TARGET_CAPACITY,
+        "OnDemandTargetCapacity": $LSF_ONDEMAND_TARGET_CAPACITY,
+        "SpotTargetCapacity": $LSF_SPOT_TARGET_CAPACITY,
+        "DefaultTargetCapacityType": "spot"
+    },
+    "OnDemandOptions": {
+        "AllocationStrategy": "prioritized"
+    },
+    "SpotOptions": {
+        "AllocationStrategy": "capacity-optimized-prioritized",
+        "InstanceInterruptionBehavior": "terminate"
+    },
+    "Type": "instant"
+}

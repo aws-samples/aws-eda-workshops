@@ -96,9 +96,9 @@ Conditions:
     - EFS
 
 Parameters:
-  TemplateSourceBucket:
-    Description: From which bucket to deploy the nested stacks
-    Default: 'aws-eda-workshop-files'
+  TemplateSourceBucketEndpoint:
+    Description: Where to pull templates, configs and script from. Format <bucket>.s3.<region>.amazonaws.com
+    Default: 'aws-eda-workshop-files.s3.us-east-1.amazonaws.com'
     Type: String
 
   StorageType:
@@ -127,19 +127,23 @@ Parameters:
 
   MasterServerAMI:
     Description: AMI (OS image) for the master server.
-    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
-    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+    Type: String
+    Default: ALinux2
+    AllowedValues:
+      - ALinux2
 
   ComputeAMI:
-    Description: >
-      'FPGADev' provides access to the Xilinx Vivado EDA software.  Use this when deploying the AWS EDA workshop.
-      Choose 'CentOS' if you intend to run your own workloads in this environment.
-      NOTE: You must first subscribe to these AMIs in the AWS Marketplace.  See included documentation for details.
+    Description: |-
+      'FPGADev' provides access to the Xilinx Vivado EDA software. Use this when
+      deploying the AWS EDA workshop. Choose 'CentOS' if you intend to run your
+      own workloads in this environment. NOTE: You must first subscribe to these
+      AMIs in the AWS Marketplace.  See included documentation for details.
     Type: String
     Default: FPGADev
     AllowedValues:
       - FPGADev
       - CentOS75
+      - ALinux2
 
   LSFClusterName:
     Description: The name of the computing environment.  This will also be the name of the LSF cluster.
@@ -201,6 +205,7 @@ Parameters:
     AllowedValues:
       - CentOS75
       - FPGADev
+      - ALinux2
 
   VpcAz:
     Description: The availability zone for this compute environment
@@ -234,7 +239,7 @@ Parameters:
       Select object in the S3 console and choose Copy Path and paste here.
     Type: String
     Default: s3://<your_bucket>/lsf10.1_lsfinstall_linux_x86_64.tar.Z
-    AllowedPattern: s3\:\/\/.*\/lsf10.1_lsfinstall_linux_x86_64.tar.Z
+    AllowedPattern: s3\:\/\/.*
     ConstraintDescription: S3 path invalid. Please verify LSF package name matches
       the example in the parameter description.
 
@@ -244,7 +249,7 @@ Parameters:
       or Fix Pack package. Select object in the S3 console and choose Copy Path and paste here.
     Type: String
     Default: s3://<your_bucket>/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z
-    AllowedPattern: s3\:\/\/.*\/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z
+    AllowedPattern: s3\:\/\/.*
     ConstraintDescription: S3 path invalid. Please verify LSF package name matches
       the example in the parameter description.
 
@@ -254,7 +259,7 @@ Parameters:
       Select package object in the console and choose Copy Path and paste here.
     Type: "String"
     Default: "s3://<your_bucket>/lsf10.1_linux2.6-glibc2.3-x86_64.545500.tar.Z"
-    #AllowedPattern: ^s3\:\/\/.*\/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z$
+    AllowedPattern: s3\:\/\/.*
 
   CustomerLSFEntitlementUri:
     Description: The S3 URI to the LSF entitlement file, lsf_std_entitlement.dat or lsf_adv_entitlement.dat.
@@ -282,15 +287,16 @@ Resources:
         PrivateSubnet1CIDR: !Ref PrivateSubnet1CIDR
         LSFClusterName: !Ref LSFClusterName
         SshSource: !Ref SshSource
-      TemplateURL: !Sub https://s3.amazonaws.com/${TemplateSourceBucket}/workshops/eda-workshop-lsf/templates/01-network.yaml
+      TemplateURL: !Sub https://${TemplateSourceBucketEndpoint}/workshops/eda-workshop-lsf/templates/01-network.yaml
   
   LSFServiceStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: NFSServerStack
     Properties:
       Parameters:
+        TemplateSourceBucketEndpoint: !Ref TemplateSourceBucketEndpoint
         MasterInstanceType: !Ref MasterInstanceType
-        #MasterServerAMI: !Ref MasterServerAMI
+        MasterServerAMI: !Ref MasterServerAMI
         ComputeAMI: !Ref ComputeAMI
         LSFClusterName: !Ref LSFClusterName
         LSFInstallPath: !Ref LSFInstallPath
@@ -301,7 +307,7 @@ Resources:
         CustomerLSFEntitlementUri: !Ref CustomerLSFEntitlementUri
         AdminKeyPair: !Ref AdminKeyPair
         DCVUserName: !Ref UserName
-      TemplateURL: !Sub https://s3.amazonaws.com/${TemplateSourceBucket}/workshops/eda-workshop-lsf/templates/02-lsf-master.yaml
+      TemplateURL: !Sub https://${TemplateSourceBucketEndpoint}/workshops/eda-workshop-lsf/templates/02-lsf-master.yaml
 
   NFSServerStack:
     Type: AWS::CloudFormation::Stack
@@ -311,8 +317,8 @@ Resources:
         LSFClusterName: !Ref LSFClusterName
       TemplateURL: !If [
           CreateFSxStack,
-          !Sub "https://s3.amazonaws.com/${TemplateSourceBucket}/workshops/eda-workshop-lsf/templates/fsxn-filesystem.yaml",
-          !Sub "https://s3.amazonaws.com/${TemplateSourceBucket}/workshops/eda-workshop-lsf/templates/efs-filesystem.yaml"
+          !Sub "https://${TemplateSourceBucketEndpoint}/workshops/eda-workshop-lsf/templates/fsxn-filesystem.yaml",
+          !Sub "https://${TemplateSourceBucketEndpoint}/workshops/eda-workshop-lsf/templates/efs-filesystem.yaml"
         ]
 
   LoginServerStack:
@@ -329,7 +335,7 @@ Resources:
         ScratchDir: !Ref ScratchDir
         ProjectDir: !Ref ProjectDir
         UserName: !Ref UserName
-      TemplateURL: https://s3.amazonaws.com/${TemplateSourceBucket}/workshops/eda-workshop-lsf/templates/03-dcv-login-server.yaml
+      TemplateURL: !Sub https://${TemplateSourceBucketEndpoint}/workshops/eda-workshop-lsf/templates/03-dcv-login-server.yaml
 
 Outputs:
   RootStackName:
