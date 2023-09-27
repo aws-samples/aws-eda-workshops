@@ -69,6 +69,22 @@ systemctl disable firewalld
 # Disable SELinux
 sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
 
+# Install EFA
+echo "Installing EFA"
+EFA_VERSION="1.26.1"
+EFA_TGZ="aws-efa-installer-1.26.1.tar.gz"
+EFA_URL="curl -O https://efa-installer.amazonaws.com/aws-efa-installer-1.26.1.tar.gz"
+EFA_HASH="884e74671fdef4725501f7cd2d451d0c"
+cd /root/
+curl --silent -O $EFA_URL
+if [[ $(md5sum $EFA_TGZ | awk '{print $1}') != $EFA_HASH ]];  then
+  echo -e "FATAL ERROR: Checksum for EFA failed. File may be compromised." > /etc/motd
+  exit 1
+fi
+tar -xf $EFA_TGZ
+cd aws-efa-installer
+/bin/bash efa_installer.sh -y
+    
 # Install awscli
 cd ~
 echo "Installing awscliv2"
