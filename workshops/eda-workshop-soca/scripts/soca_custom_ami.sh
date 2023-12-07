@@ -71,10 +71,10 @@ sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
 
 # Install EFA
 echo "Installing EFA"
-EFA_VERSION="1.26.1"
-EFA_TGZ="aws-efa-installer-1.26.1.tar.gz"
-EFA_URL="https://efa-installer.amazonaws.com/aws-efa-installer-1.26.1.tar.gz"
-EFA_HASH="884e74671fdef4725501f7cd2d451d0c"
+EFA_VERSION="1.29.0"
+EFA_TGZ="aws-efa-installer-1.29.0.tar.gz"
+EFA_URL="https://efa-installer.amazonaws.com/aws-efa-installer-1.29.0.tar.gz"
+EFA_HASH="39d06a002154d94cd982ed348133f385"
 cd /root/
 curl --silent -O $EFA_URL
 if [[ $(md5sum $EFA_TGZ | awk '{print $1}') != $EFA_HASH ]];  then
