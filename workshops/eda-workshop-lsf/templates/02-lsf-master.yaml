@@ -201,6 +201,7 @@ Resources:
               CFN_COMPUTE_NODE_INSTANCE_PROFILE_ARN="${LSFComputeNodeInstanceProfileArn}"
               CFN_COMPUTE_SPOT_FLEET_ROLE_ARN="${LSFComputeNodeSpotFleetRoleArn}"
               CFN_DCV_USERNAME=${DCVUserName}
+              CFN_LAUNCH_TEMPLATE_ID=${LaunchTemplate}
               LSF_INSTALL_DIR="${FileSystemMountPoint}${LSFInstallPath}/${LSFClusterName}"
               LSF_ADMIN=lsfadmin
               LSF_CLUSTER_NAME=${LSFClusterName}
@@ -232,9 +233,10 @@ Resources:
               # Configure system scripts to start LSF at boot time
               # Add cshrc.lsf and profile.lsf to system-wide environment
               # Start LSF daemons
+
               source $LSF_INSTALL_DIR/conf/profile.lsf
+
               $LSF_INSTALL_DIR/10.1/install/hostsetup --top="$LSF_INSTALL_DIR" \
-                                                      --boot="y"    \
                                                       --profile="y" \
                                                       --start="y"  && \
 
@@ -285,25 +287,27 @@ Resources:
               Statement:
                 - Effect: Allow
                   Action:
+                    - ec2:AssociateIamInstanceProfile
+                    - ec2:CancelSpotFleetRequests
+                    - ec2:CreateFleet     
+                    - ec2:CreateLaunchTemplateVersion
+                    - ec2:CreateTags
+                    - ec2:DeleteLaunchTemplateVersions
                     - ec2:DescribeInstances
                     - ec2:DescribeInstanceStatus
                     - ec2:DescribeKeyPairs
+                    - ec2:DescribeLaunchTemplateVersions
+                    - ec2:DescribeSpotFleetInstances
+                    - ec2:DescribeSpotFleetRequestHistory
+                    - ec2:DescribeSpotFleetRequests
+                    - ec2:DescribeSpotInstanceRequests
+                    - ec2:GetLaunchTemplateData
+                    - ec2:ModifyIdFormat
+                    - ec2:ModifySpotFleetRequest
+                    - ec2:ReplaceIamInstanceProfileAssociation
+                    - ec2:RequestSpotFleet
                     - ec2:RunInstances
                     - ec2:TerminateInstances
-                    - ec2:CreateTags
-                    - ec2:ModifyIdFormat
-                    - ec2:AssociateIamInstanceProfile
-                    - ec2:ReplaceIamInstanceProfileAssociation
-                    - ec2:CancelSpotFleetRequests
-                    - ec2:DescribeSpotFleetInstances
-                    - ec2:DescribeSpotFleetRequests
-                    - ec2:DescribeSpotFleetRequestHistory
-                    - ec2:ModifySpotFleetRequest
-                    - ec2:RequestSpotFleet
-                    - ec2:DescribeSpotInstanceRequests
-                    - ec2:DescribeLaunchTemplateVersions
-                    - ec2:GetLaunchTemplateData
-                    - ec2:CreateLaunchTemplateVersion
                   Resource: '*'
                 - Effect: Allow
                   Action:
@@ -387,7 +391,7 @@ Resources:
     Type: AWS::SSM::Parameter
     Properties:
       Description: SSM Parameter holding CloudWatchAgent configuration
-      Name: AmazonCloudWatch-linux-lsf-mgmt
+      Name: !Sub ${AWS::StackName}-AmazonCloudWatch
       Type: String
       Value: |
         {
@@ -485,7 +489,7 @@ Resources:
         mode:
           - ec2
         optionalConfigurationLocation:
-          - AmazonCloudWatch-linux-lsf-mgmt
+          - !Ref CloudWatchAgentConfiguration
         optionalConfigurationSource:
           - ssm
         optionalRestart:
@@ -517,3 +521,17 @@ Resources:
           Values:
             - !Join [ '-', [ 'LSF Mgmt Host',!Ref LSFClusterName ] ]
 
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties: 
+      LaunchTemplateName: !Sub ${AWS::StackName}-launch-template
+      LaunchTemplateData: 
+        ImageId: !If
+                - UseAmazonLinux2AMI
+                - Ref: LatestAmazonLinux2Ami
+                - !FindInMap [ RegionMap, !Ref "AWS::Region", !Ref ComputeAMI ]
+        KeyName: !Ref AdminKeyPair
+        IamInstanceProfile:
+          Arn: !GetAtt LSFComputeNodeInstanceProfile.Arn
+        SecurityGroupIds: 
+          - Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"LSFComputeNodeSG" ] ]

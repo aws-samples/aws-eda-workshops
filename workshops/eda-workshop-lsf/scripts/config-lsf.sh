@@ -17,7 +17,7 @@ sed -i -e 's|^LSF_LOGDIR.*|LSF_LOGDIR=/var/log/lsf|' $LSF_ENVDIR/lsf.conf  && \
 
 cat <<EOF >> $LSF_ENVDIR/lsf.conf
 LSB_RC_EXTERNAL_HOST_FLAG=aws
-LSB_RC_EXTERNAL_HOST_IDLE_TIME=2 # terminate instance after 2 min idle
+LSB_RC_EXTERNAL_HOST_IDLE_TIME=1 # terminate instance after 1 of min idle
 LSB_RC_QUERY_INTERVAL=15
 LSB_RC_UPDATE_INTERVAL=10
 LSF_DYNAMIC_HOST_TIMEOUT=10m # Wait time before removing unavailable dynamic hosts
@@ -57,17 +57,13 @@ echo 'CONFIGURE IBM LSF RESOURCE CONNECTOR FOR AWS'
 aws s3 cp s3://$AWS_S3_BUCKET_NAME/workshops/eda-workshop-lsf/config/lsf/hostProviders.json \
         $LSF_ENVDIR/resource_connector/hostProviders.json && \
 
-# ec2-fleet-config.json
-aws s3 cp s3://$AWS_S3_BUCKET_NAME/workshops/eda-workshop-lsf/config/lsf/ec2-fleet-config.json \
-        $LSF_ENVDIR/resource_connector/aws/conf/ec2-fleet-config.json && \
-
 # awsprov.config.json
 aws s3 cp s3://$AWS_S3_BUCKET_NAME/workshops/eda-workshop-lsf/config/lsf/awsprov_config.json \
         $LSF_ENVDIR/resource_connector/aws/conf/awsprov_config.json && \
 sed -i -e "s/_CFN_AWS_REGION_/$AWS_CFN_STACK_REGION/" $LSF_ENVDIR/resource_connector/aws/conf/awsprov_config.json && \
 
 # awsprov.templates.json
-aws s3 cp s3://$AWS_S3_BUCKET_NAME/workshops/eda-workshop-lsf/config/lsf/awsprov_templates.json \
+aws s3 cp s3://$AWS_S3_BUCKET_NAME/workshops/eda-workshop-lsf/config/lsf/awsprov_templates_fleet.json \
         $LSF_ENVDIR/resource_connector/aws/conf/awsprov_templates.json && \
 
 sed -i -e "s|%CFN_COMPUTE_AMI%|$CFN_COMPUTE_NODE_AMI|" \
@@ -82,6 +78,13 @@ sed -i -e "s|%CFN_COMPUTE_AMI%|$CFN_COMPUTE_NODE_AMI|" \
         -e "s|%CFN_DCV_USER_NAME%|$CFN_DCV_USERNAME|" \
         -e "s|%CFN_LSF_COMPUTE_NODE_SPOT_FLEET_ROLE_ARN%|$CFN_COMPUTE_SPOT_FLEET_ROLE_ARN|" \
         $LSF_ENVDIR/resource_connector/aws/conf/awsprov_templates.json && \
+
+# ec2-fleet-config.json
+aws s3 cp s3://$AWS_S3_BUCKET_NAME/workshops/eda-workshop-lsf/config/lsf/ec2-fleet-config.json \
+        $LSF_ENVDIR/resource_connector/aws/conf/ec2-fleet-config.json && \
+sed -i -e "s|%CFN_COMPUTE_AMI%|$CFN_COMPUTE_NODE_AMI|" \
+       -e "s|%CFN_COMPUTE_NODE_SUBNET%|$CFN_COMPUTE_NODE_SUBNET|" \
+       -e "s|%CFN_LAUNCH_TEMPLATE_ID%|$CFN_LAUNCH_TEMPLATE_ID|" $LSF_ENVDIR/resource_connector/aws/conf/ec2-fleet-config.json
 
 # user_data script that RC executes on compute nodes
 aws s3 cp s3://$AWS_S3_BUCKET_NAME/workshops/eda-workshop-lsf/config/lsf/user_data.sh \

@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -x
 exec > >(tee /var/log/user-data.log|logger -t user-data ) 2>&1
 
@@ -14,6 +13,8 @@ env
 export PATH=/sbin:/usr/sbin:/usr/local/bin:/bin:/usr/bin
 export AWS_DEFAULT_REGION="$( curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed -e 's/[a-z]*$//' )"
 export EC2_INSTANCE_TYPE="$( curl -s http://169.254.169.254/latest/meta-data/instance-type | sed -e 's/\./_/' )"
+export EC2_INSTANCE_LIFE_CYCLE="$( curl -s http://169.254.169.254/latest/meta-data/instance-life-cycle | sed -e 's/\-/_/' )"
+export CPU_ARCHITECTURE="$(lscpu | awk '/Architecture/ {print toupper($2)}')"
 export LSF_ADMIN=lsfadmin
 
 # Add the LSF admin account
@@ -81,9 +82,20 @@ if [ -n "${rc_account}" ]; then
    echo "Updated LSF_LOCAL_RESOURCES lsf.conf with [resourcemap ${rc_account}*rc_account]"
 fi
 
-if [ -n "${spot}" ]; then
-   sed -i "s/\(LSF_LOCAL_RESOURCES=.*\)\"/\1 [resource ${spot}]\"/" $LSF_ENVDIR/lsf.conf
-   echo "Updated LSF_LOCAL_RESOURCES lsf.conf with [resource ${spot}]"
+# Add on_demand or spot attribute to resource map
+if [ -n "${EC2_INSTANCE_LIFE_CYCLE}" ]; then
+   sed -i "s/\(LSF_LOCAL_RESOURCES=.*\)\"/\1 [resource ${EC2_INSTANCE_LIFE_CYCLE}]\"/" $LSF_ENVDIR/lsf.conf
+   echo "Updated LSF_LOCAL_RESOURCES lsf.conf with [resource ${EC2_INSTANCE_LIFE_CYCLE}]"
+fi
+
+# Add CPU Architecture to type map
+if [ -n "${CPU_ARCHITECTURE}" ]; then
+   # Check if the pattern [type ...] is present in the lsf.conf fil
+   if grep -q "\[type [^]]*\]" $LSF_ENVDIR/lsf.conf; then
+      sed -i "s/\[type [^]]*\]/[type $CPU_ARCHITECTURE]/" $LSF_ENVDIR/lsf.conf
+   else
+      sed -i "s/\(LSF_LOCAL_RESOURCES=.*\)\"/\1 [type ${CPU_ARCHITECTURE}]\"/" $LSF_ENVDIR/lsf.conf
+   fi
 fi
 
 if [ -n "${ssd}" ]; then
@@ -98,3 +110,5 @@ sleep 2
 badmin hstartup
 
 echo "*** END LSF HOST BOOTSTRAP ***"
+
+
