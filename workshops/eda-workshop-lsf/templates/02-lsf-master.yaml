@@ -293,6 +293,7 @@ Resources:
                     - ec2:CreateLaunchTemplateVersion
                     - ec2:CreateTags
                     - ec2:DeleteLaunchTemplateVersions
+                    - ec2:DescribeFleets
                     - ec2:DescribeInstances
                     - ec2:DescribeInstanceStatus
                     - ec2:DescribeKeyPairs
