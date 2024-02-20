@@ -293,6 +293,7 @@ Resources:
                     - ec2:CreateLaunchTemplateVersion
                     - ec2:CreateTags
                     - ec2:DeleteLaunchTemplateVersions
+                    - ec2:DescribeFleetInstances
                     - ec2:DescribeFleets
                     - ec2:DescribeInstances
                     - ec2:DescribeInstanceStatus
@@ -302,6 +303,7 @@ Resources:
                     - ec2:DescribeSpotFleetRequestHistory
                     - ec2:DescribeSpotFleetRequests
                     - ec2:DescribeSpotInstanceRequests
+                    - ec2:DescribeTags
                     - ec2:GetLaunchTemplateData
                     - ec2:ModifyIdFormat
                     - ec2:ModifySpotFleetRequest
