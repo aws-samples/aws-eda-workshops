@@ -1,0 +1,59 @@
+{
+    "LaunchTemplateConfigs": [
+        {
+            "LaunchTemplateSpecification": {
+                "LaunchTemplateId": "%CFN_LAUNCH_TEMPLATE_ID%",
+                "Version": "1"
+            },
+            "Overrides": [
+                {
+                    "InstanceType": "m7i.large",
+                    "SubnetId": "%CFN_COMPUTE_NODE_SUBNET%",
+                    "WeightedCapacity": 1,
+                    "Priority": 71
+                },
+                {
+                    "InstanceType": "m7i.xlarge",
+                    "SubnetId": "%CFN_COMPUTE_NODE_SUBNET%",
+                    "WeightedCapacity": 2,
+                    "Priority": 72
+                },
+                {
+                    "InstanceType": "m6i.large",
+                    "SubnetId": "%CFN_COMPUTE_NODE_SUBNET%",
+                    "WeightedCapacity": 1,
+                    "Priority": 61
+                },
+                {
+                    "InstanceType": "m6i.xlarge",
+                    "SubnetId": "%CFN_COMPUTE_NODE_SUBNET%",
+                    "WeightedCapacity": 2,
+                    "Priority": 62
+                },
+                {
+                    "InstanceType": "m5.large",
+                    "SubnetId": "%CFN_COMPUTE_NODE_SUBNET%",
+                    "WeightedCapacity": 1,
+                    "Priority": 51
+                },
+                {
+                    "InstanceType": "m5.xlarge",
+                    "SubnetId": "%CFN_COMPUTE_NODE_SUBNET%",
+                    "WeightedCapacity": 2,
+                    "Priority": 52
+                }
+            ]
+        }
+    ],
+    "TargetCapacitySpecification": {
+        "TotalTargetCapacity": $LSF_TOTAL_TARGET_CAPACITY,
+        "OnDemandTargetCapacity": $LSF_ONDEMAND_TARGET_CAPACITY,
+        "SpotTargetCapacity": $LSF_SPOT_TARGET_CAPACITY,
+        "DefaultTargetCapacityType": "on-demand"
+    },
+    "SpotOptions": {
+        "AllocationStrategy": "diversified",
+        "InstanceInterruptionBehavior": "terminate"
+    },
+    "Type": "instant"
+}

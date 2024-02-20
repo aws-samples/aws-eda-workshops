@@ -5,7 +5,7 @@ PRIORITY                = 15
 USERS                   = all
 RC_ACCOUNT              = verif
 RC_HOSTS                = aws
-#HOSTS                   = all
+#HOSTS                  = all
 RES_REQ                 = select[aws]
 End Queue
 
@@ -16,6 +16,17 @@ PRIORITY                = 15
 USERS                   = all
 RC_ACCOUNT              = sta
 RC_HOSTS                = aws
-#HOSTS                   = all
+#HOSTS                  = all
 RES_REQ                 = select[aws]
+End Queue
+
+Begin Queue
+QUEUE_NAME              = spot
+DESCRIPTION             = spot workload
+PRIORITY                = 15 
+USERS                   = all
+RC_ACCOUNT              = sta
+RC_HOSTS                = aws
+#HOSTS                  = all
+RES_REQ                 = select[aws && spot]
 End Queue
