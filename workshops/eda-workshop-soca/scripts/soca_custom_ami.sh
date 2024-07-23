@@ -285,8 +285,7 @@ echo "Creating /usr/local/sbin/cleanup_ami.sh"
 echo -e "#!/bin/bash
 
 rm -rf /var/tmp/* /tmp/* /var/crash/*
-#rm -rf /var/lib/cloud/instances/*
-#rm -f /var/lib/cloud/instance
+cloud-init clean
 rm -rf /etc/ssh/ssh_host_*
 rm -f /etc/udev/rules.d/70-persistent-net.rules
 grep -l \"Created by cloud-init on instance boot automatically\" /etc/sysconfig/network-scripts/ifcfg-* | xargs rm -f
