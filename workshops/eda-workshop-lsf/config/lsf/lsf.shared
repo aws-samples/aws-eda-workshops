@@ -8,6 +8,7 @@ TYPENAME
 DEFAULT
 LINUX64
 X86_64
+AARCH64
 LINUX_ARM64
 End HostType
 
@@ -24,7 +25,10 @@ define_ncpus_procs   Boolean    ()       ()       (ncpus := procs)
 define_ncpus_cores   Boolean    ()       ()       (ncpus := cores)
 define_ncpus_threads Boolean    ()       ()       (ncpus := threads)
 aws                  Boolean    ()       ()       (AWS instance)
+cpu_type             String     ()       ()       (CPU vendor, intel, amd or graviton)
+highmem              Boolean    ()       ()       (High memory instance 384GB+)
 spot                 Boolean    ()       ()       (AWS spot instance)
+on_demand            Boolean    ()       ()       (AWS on-demand instance)
 fsx                  Boolean    ()       ()       (Mount Amazon FSx for Lustre on boot)
 ssd                  Boolean    ()       ()       (Local SSD)
 rc_account           String     ()       ()       (Exclusive consumer tag for RC hosts)

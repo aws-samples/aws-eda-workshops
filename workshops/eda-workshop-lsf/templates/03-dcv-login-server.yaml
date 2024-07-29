@@ -29,39 +29,41 @@ Mappings:
     us-east-1:  
       CentOS75: ami-9887c6e7
       FPGADev: ami-0cf12acd587e51b42
-      ALinux2: ami-035be7bafff33b6b6
+      ALinux2: not-used-dynamic-lookup-via-ssm
     us-east-2:  
       CentOS75: ami-0f2b4fc905b0bd1f1
       FPGADev: ami-0f522eea547ffbdde
-      ALinux2: ami-04328208f4f0cf1fe
+      ALinux2: not-used-dynamic-lookup-via-ssm
     us-west-1:
       CentOS75: ami-074e2d6769f445be5
       FPGADev: ami-02ed13c760b58790d
-      ALinux2: ami-0799ad445b5727125
+      ALinux2: not-used-dynamic-lookup-via-ssm
     us-west-2:
       CentOS75: ami-3ecc8f46
       FPGADev: ami-00736db43ba03656a
-      ALinux2: ami-032509850cf9ee54e
+      ALinux2: not-used-dynamic-lookup-via-ssm
     eu-west-1:           # Dublin
       CentOS75: ami-3548444c
       FPGADev: ami-01f373e791bb05667
-      ALinux2: ami-0fad7378adf284ce0
+      ALinux2: not-used-dynamic-lookup-via-ssm
     ap-southeast-1:      # Singapore
       CentOS75: ami-8e0205f2
       FPGADev: ami-0d2658414ef6f29cf
-      ALinux2: ami-04677bdaa3c2b6e24
+      ALinux2: not-used-dynamic-lookup-via-ssm
     ap-southeast-2:      # Sydney
       CentOS75: ami-d8c21dba
       FPGADev: ami-0651d0a596bb7c014
-      ALinux2: ami-0c9d48b5db609ad6e
+      ALinux2: not-used-dynamic-lookup-via-ssm
+      ALinux2: not-used-dynamic-lookup-via-ssm
     ap-northeast-2:      # Seoul
       CentOS75: ami-06cf2a72dadf92410
       FPGADev: ami-03162ccf408e174a1
-      ALinux2: ami-018a9a930060d38aa
+      ALinux2: not-used-dynamic-lookup-via-ssm
     ap-northeast-1:      # Tokyo
       CentOS75: ami-045f38c93733dd48d
       FPGADev: ami-051c91d3186bfdb7d
-      ALinux2: ami-0d7ed3ddb85b521a6
+      ALinux2: not-used-dynamic-lookup-via-ssm
+
 
 Parameters:
   AdminKeyPair:
@@ -118,6 +120,15 @@ Parameters:
     Description: User name for DCV remote desktop login. Default is "simuser".
     MinLength: '4'
     Type: String
+  LatestAmazonLinux2Ami:
+    Description: AMI (OS image) for the master server.
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+
+Conditions:
+  UseAmazonLinux2AMI: !Equals
+    - !Ref LoginServerAMI
+    - ALinux2
 
 Resources:
   InstanceWaitHandle:
@@ -144,11 +155,10 @@ Resources:
     Type: "AWS::EC2::Instance"
     Properties:
       InstanceType: !Ref LoginServerInstanceType
-      ImageId:
-        Fn::FindInMap:
-        - RegionMap
-        - !Ref AWS::Region
-        - !Ref LoginServerAMI
+      ImageId: !If
+          - UseAmazonLinux2AMI
+          - Ref: LatestAmazonLinux2Ami
+          - !FindInMap [ RegionMap, !Ref "AWS::Region", !Ref LoginServerAMI ]
       SubnetId:
           Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"PublicSubnet" ] ]
       SecurityGroupIds:
@@ -199,17 +209,17 @@ Resources:
               ## Mount NFS file system for LSF install
               ## and create working directories
 
-              mkdir ${FileSystemMountPoint}
+              mkdir -p ${FileSystemMountPoint}
 
               # mount points
-              mount -t nfs -o rw,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 ${FSxOntapFS}:/vol1 ${FileSystemMountPoint}
+              mount -t nfs -o rw,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 ${NfsDnsName}:/vol1 ${FileSystemMountPoint}
 
               #add to fstab
-              echo "${FSxOntapFS}:/vol1 ${FileSystemMountPoint} nfs nfsvers=3,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> \
+              echo "${NfsDnsName}:/vol1 ${FileSystemMountPoint} nfs nfsvers=3,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> \
                 /etc/fstab
               
               # create project and scratch directories
-              mkdir ${FileSystemMountPoint}/{${ScratchDir},${ProjectDir}} \
+              mkdir -p ${FileSystemMountPoint}/{${ScratchDir},${ProjectDir}} \
                 && chmod 777 ${FileSystemMountPoint}/{${ScratchDir},${ProjectDir}}
 
               # Set up LSF envirionment
@@ -227,7 +237,7 @@ Resources:
               }
 
               function install_dcv {
-                mkdir /tmp/dcv-inst.d
+                mkdir -p /tmp/dcv-inst.d
                 pushd /tmp/dcv-inst.d
                 rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
                 wget https://d1uj6qtbmh3dt5.cloudfront.net/2022.1/Servers/nice-dcv-2022.1-13300-el7-x86_64.tgz
@@ -255,10 +265,10 @@ Resources:
               function cr_post_reboot {
 
                 if [[ ! -d /opt/dcv-install ]]; then
-                  mkdir /opt/dcv-install
+                  mkdir -p /opt/dcv-install
                 fi
 
-              cat << EOF > /opt/dcv-install/post_reboot.sh
+              cat <<EOF > /opt/dcv-install/post_reboot.sh
               #!/usr/bin/env bash
 
               function stop_disable_svc() {
@@ -299,7 +309,7 @@ Resources:
 
               function cr_service {
 
-              cat << EOF > /etc/systemd/system/post-reboot.service
+              cat <<EOF > /etc/systemd/system/post-reboot.service
               [Unit]
               Description=Post reboot service
 
@@ -344,8 +354,8 @@ Resources:
               ### End Install DCV ###
               
             -
-              FSxOntapFS:
-                Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"FSxOntapFS" ] ]
+              NfsDnsName:
+                Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"NfsDnsName" ] ]
 
   LoginServerRole:
       Type: "AWS::IAM::Role"
@@ -362,7 +372,7 @@ Resources:
               Action:
               - "sts:AssumeRole"
         ManagedPolicyArns:
-          - "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+          - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
           - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
           - "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
         Policies:
