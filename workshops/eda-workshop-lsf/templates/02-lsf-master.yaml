@@ -11,41 +11,46 @@ Mappings:
     us-east-1:  
       CentOS75: ami-9887c6e7
       FPGADev: ami-0cf12acd587e51b42
-      ALinux2: ami-035be7bafff33b6b6
+      ALinux2: not-used-dynamic-lookup-via-ssm
     us-east-2:  
       CentOS75: ami-0f2b4fc905b0bd1f1
       FPGADev: ami-0f522eea547ffbdde
-      ALinux2: ami-04328208f4f0cf1fe
+      ALinux2: not-used-dynamic-lookup-via-ssm
     us-west-1:
       CentOS75: ami-074e2d6769f445be5
       FPGADev: ami-02ed13c760b58790d
-      ALinux2: ami-0799ad445b5727125
+      ALinux2: not-used-dynamic-lookup-via-ssm
     us-west-2:
       CentOS75: ami-3ecc8f46
       FPGADev: ami-00736db43ba03656a
-      ALinux2: ami-032509850cf9ee54e
+      ALinux2: not-used-dynamic-lookup-via-ssm
     eu-west-1:           # Dublin
       CentOS75: ami-3548444c
       FPGADev: ami-01f373e791bb05667
-      ALinux2: ami-0fad7378adf284ce0
+      ALinux2: not-used-dynamic-lookup-via-ssm
     ap-southeast-1:      # Singapore
       CentOS75: ami-8e0205f2
       FPGADev: ami-0d2658414ef6f29cf
-      ALinux2: ami-04677bdaa3c2b6e24
+      ALinux2: not-used-dynamic-lookup-via-ssm
     ap-southeast-2:      # Sydney
       CentOS75: ami-d8c21dba
       FPGADev: ami-0651d0a596bb7c014
-      ALinux2: ami-0c9d48b5db609ad6e
+      ALinux2: not-used-dynamic-lookup-via-ssm
+      ALinux2: not-used-dynamic-lookup-via-ssm
     ap-northeast-2:      # Seoul
       CentOS75: ami-06cf2a72dadf92410
       FPGADev: ami-03162ccf408e174a1
-      ALinux2: ami-018a9a930060d38aa
+      ALinux2: not-used-dynamic-lookup-via-ssm
     ap-northeast-1:      # Tokyo
       CentOS75: ami-045f38c93733dd48d
       FPGADev: ami-051c91d3186bfdb7d
-      ALinux2: ami-0d7ed3ddb85b521a6
+      ALinux2: not-used-dynamic-lookup-via-ssm
 
 Parameters:
+  TemplateSourceBucketEndpoint:
+    Description: From which bucket to deploy the nested stacks and scripts
+    Default: 'aws-eda-workshop-files'
+    Type: String
   AdminKeyPair:
     Description: "Name of an existing EC2 KeyPair to enable SSH access to the master server."
     Type: "AWS::EC2::KeyPair::KeyName"
@@ -55,11 +60,13 @@ Parameters:
     Description: "The desired instance type for the master node of the cluster."
     Type: "String"
     Default: "m5.2xlarge"
+  LatestAmazonLinux2Ami:
+    Description: AMI (OS image) for the master server.
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
   MasterServerAMI:
-    Description: AMI (OS image) for the master server. 
-      NOTE - You must first subscribe to this AMI in the AWS Marketplace at https://aws.amazon.com/marketplace/pp/B00O7WM7QW
     Type: "String"
-    Default: "ALinux2"
+    Default: ALinux2
     AllowedValues:
       - ALinux2
   ComputeAMI:
@@ -68,20 +75,24 @@ Parameters:
     Type: "String"
     Default: "FPGADev"
     AllowedValues:
+      - ALinux2
       - CentOS75
       - FPGADev
   LSFClusterName:
     Description: "The name of the LSF cluster."
     Type: "String"
-    Default: "cde-1"
+    Description: |- 
+      An environment name that will be prefixed to resource names.
+      Should be equal to the value in the network stack.
+    Default: "LSFCluster"
   LSFInstallPath:
     Description: Path where LSF will be installed.
     Type: "String"
     Default: "/tools/ibm/lsf"
   FileSystemMountPoint:
-    Description: Directory where the FSxN file system will be mounted.
+    Description: Directory where the NFS file system will be mounted (EFS, FSxN or FSxZ).
     Type: "String"
-    Default: "/fsxn"
+    Default: "/nfs"
   CustomerLSFInstallUri:
     Description: >
       The S3 URI to the LSF installation script package. 
@@ -108,6 +119,11 @@ Parameters:
     Type: String
     Default: simuser
 
+Conditions:
+  UseAmazonLinux2AMI: !Equals
+    - !Ref ComputeAMI
+    - ALinux2
+
 Resources:
   LSFMasterInstance:
     Type: "AWS::EC2::Instance"
@@ -117,15 +133,14 @@ Resources:
         Timeout: PT15M
     Properties:
       InstanceType: !Ref MasterInstanceType
-      ImageId:
-        Fn::FindInMap:
-        - RegionMap
-        - !Ref AWS::Region
-        - !Ref MasterServerAMI
+      ImageId: !If
+                - UseAmazonLinux2AMI
+                - Ref: LatestAmazonLinux2Ami
+                - !FindInMap [ RegionMap, !Ref "AWS::Region", !Ref MasterServerAMI ] 
       SubnetId:
-          Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"PrivateSubnet" ] ]
+          Fn::ImportValue: !Sub '${LSFClusterName}-PrivateSubnet'
       SecurityGroupIds:
-        - Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"LSFMasterSG" ] ]
+        - Fn::ImportValue:  !Sub '${LSFClusterName}-LSFMasterSG'
       KeyName: !Ref AdminKeyPair
       IamInstanceProfile: !Ref LSFMasterInstanceProfile
       Tags:
@@ -139,251 +154,113 @@ Resources:
         Fn::Base64: 
           Fn::Sub:
             - |
+              Content-Type: multipart/mixed; boundary="//"
+              MIME-Version: 1.0
+
+              --//
+              Content-Type: text/cloud-config; charset="us-ascii"
+              MIME-Version: 1.0
+              Content-Transfer-Encoding: 7bit
+              Content-Disposition: attachment; filename="cloud-config.txt"
+
+              #cloud-config
+              cloud_final_modules:
+              - [scripts-user, always]
+
+              --//
+              Content-Type: text/x-shellscript; charset="us-ascii"
+              MIME-Version: 1.0
+              Content-Transfer-Encoding: 7bit
+              Content-Disposition: attachment; filename="userdata.txt"
+
               #!/bin/bash
 
               set -x
               exec > >(tee /var/log/user-data.log|logger -t user-data ) 2>&1
 
+              # Print user data
+              INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+              cat /var/lib/cloud/instances/$INSTANCE_ID/user-data.txt
+
               echo "*** BEGIN LSF MASTER BOOTSTRAP ***"
 
-              export LSF_INSTALL_DIR="${FileSystemMountPoint}${LSFInstallPath}/${LSFClusterName}"
-              export LSF_ADMIN=lsfadmin
-              export LSF_INSTALL_PKG=`echo ${CustomerLSFInstallUri} | awk -F "/" '{print $NF}'`
-              export LSF_BIN_PKG=`echo ${CustomerLSFBinsUri} | awk -F "/" '{print $NF}'`
-              export LSF_FP_PKG=`echo ${CustomerLSFFixPackUri} | awk -F "/" '{print $NF}'`
-              export LSF_ENTITLEMENT=`echo ${CustomerLSFEntitlementUri} | awk -F "/" '{print $NF}'`
-
-              # Disable Hyperthreading
-              echo "Disabling Hyperthreading"
-              for cpunum in $(cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | cut -s -d, -f2- | tr ',' '\n' | sort -un)
-              do
-                echo 0 > /sys/devices/system/cpu/cpu$cpunum/online
-              done
+              # Create local environment file to re-use later
+              cat <<EOF > /root/bootstrap.env
+              AWS_CFN_STACK_NAME=${AWS::StackName}
+              AWS_CFN_STACK_REGION=${AWS::Region}
+              AWS_S3_BUCKET_ENDPOINT=${TemplateSourceBucketEndpoint}
+              AWS_S3_BUCKET_NAME=$(echo "${TemplateSourceBucketEndpoint}" | cut -d '.' -f 1)
+              CFN_LSF_INSTALL_URI=${CustomerLSFInstallUri}
+              CFN_LSF_BIN_URI=${CustomerLSFBinsUri}
+              CFN_LSF_ENTITLEMENT_URI=${CustomerLSFEntitlementUri} 
+              CFN_LSF_FIXPACK_URI=${CustomerLSFFixPackUri}
+              CFN_EC2_KEY_PAIR=${AdminKeyPair}
+              CFN_COMPUTE_NODE_AMI=${LSFComputeNodeAmi}
+              CFN_COMPUTE_NODE_SUBNET=${LSFComputeNodeSubnet}
+              CFN_COMPUTE_NODE_SG_ID=${LSFComputeNodeSGGroupId}
+              CFN_COMPUTE_NODE_INSTANCE_PROFILE_ARN="${LSFComputeNodeInstanceProfileArn}"
+              CFN_COMPUTE_SPOT_FLEET_ROLE_ARN="${LSFComputeNodeSpotFleetRoleArn}"
+              CFN_DCV_USERNAME=${DCVUserName}
+              CFN_LAUNCH_TEMPLATE_ID=${LaunchTemplate}
+              LSF_INSTALL_DIR="${FileSystemMountPoint}${LSFInstallPath}/${LSFClusterName}"
+              LSF_ADMIN=lsfadmin
+              LSF_CLUSTER_NAME=${LSFClusterName}
+              LSF_INSTALL_PKG=`echo ${CustomerLSFInstallUri} | awk -F "/" '{print $NF}'`
+              LSF_BIN_PKG=`echo ${CustomerLSFBinsUri} | awk -F "/" '{print $NF}'`
+              LSF_FP_PKG=`echo ${CustomerLSFFixPackUri} | awk -F "/" '{print $NF}'`
+              LSF_ENTITLEMENT=`echo ${CustomerLSFEntitlementUri} | awk -F "/" '{print $NF}'`
+              NFS_DNS_NAME=${NfsDnsName}
+              NFS_MOUNT_POINT=${FileSystemMountPoint}
+              EOF
+              export $(grep -v '^#' /root/bootstrap.env | xargs)
 
               # Install cfn-signal helper script to signal bootstrap completion to CloudFormation
-              yum update -y aws-cfn-bootstrap
+              yum install aws-cfn-bootstrap ed java-1.8.0-openjdk wget vim -q -y && \
 
-              # Install LSF installer prereqs
-              yum install ed -q -y
-              yum install java-1.8.0-openjdk -q -y
-              yum install wget -q -y
-              yum install vim -q -y
+              # Prepare NFS
+              aws s3 cp s3://$AWS_S3_BUCKET_NAME/workshops/eda-workshop-lsf/scripts/nfs-bootstrap-master.sh  - | bash && \
 
-              # Install SSM so we can use SSM Session Manager and avoid ssh logins.
-              yum install -q -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
-              systemctl enable amazon-ssm-agent
-              systemctl start amazon-ssm-agent
-
-              ## Mount NFS file system for LSF install
-              #mount point
-              mkdir ${FileSystemMountPoint}
-              
-              #mount NFS file system
-              mount -t nfs -o "rsize=262144,wsize=262144,hard,vers=3,tcp,mountproto=tcp" ${FSxOntapFS}:/vol1 ${FileSystemMountPoint}
-
-              #add to fstab
-              echo "${FSxOntapFS}:/vol1 ${FileSystemMountPoint} nfs nfsvers=3,rsize=262144,wsize=262144,tcp,hard 0 0" >> \
-                /etc/fstab
-
-              mkdir -p $LSF_INSTALL_DIR
-              mkdir /var/log/lsf && chmod 777 /var/log/lsf
-
-              # TODO: Setup CloudWatch Logs daemon and send LSF logs to CloudWatch
-
-              ##############################################
               # Install LSF using customer-provided packages
-              ##############################################
+              aws s3 cp s3://$AWS_S3_BUCKET_NAME/workshops/eda-workshop-lsf/scripts/install-lsf.sh  - | bash  && \
 
-              # Add LSF admin account
-              adduser -m -u 1500 $LSF_ADMIN
+              # Configure lsf configuration (lsf.conf, lsf.cluster.*)
+              aws s3 cp s3://$AWS_S3_BUCKET_NAME/workshops/eda-workshop-lsf/scripts/config-lsf.sh - | bash && \
 
-              # Download customer-provided LSF binaries and entitlement file
-              aws --quiet s3 cp ${CustomerLSFInstallUri} /tmp
-              aws --quiet s3 cp ${CustomerLSFBinsUri} /tmp
-              aws --quiet s3 cp ${CustomerLSFEntitlementUri} /tmp
-              aws --quiet s3 cp ${CustomerLSFFixPackUri} /tmp
-
-              
-              cd /tmp
-              tar xf $LSF_INSTALL_PKG
-              cp $LSF_BIN_PKG lsf10.1_lsfinstall
-              cd lsf10.1_lsfinstall
-
-              # Create LSF installer config file
-              cat << EOF > install.config
-              LSF_TOP="$LSF_INSTALL_DIR"
-              LSF_ADMINS="$LSF_ADMIN"
-              LSF_CLUSTER_NAME="${LSFClusterName}"
-              LSF_MASTER_LIST="${!HOSTNAME%%.*}"
-              SILENT_INSTALL="Y"
-              LSF_SILENT_INSTALL_TARLIST="ALL"
-              ACCEPT_LICENSE="Y"
-              LSF_ENTITLEMENT_FILE="/tmp/$LSF_ENTITLEMENT"
-              EOF
-
-              ./lsfinstall -f install.config
-
-              # Setup LSF environment
-              source $LSF_INSTALL_DIR/conf/profile.lsf
-
-              # Install fix pack
-              cd $LSF_INSTALL_DIR/10.1/install
-              cp /tmp/$LSF_FP_PKG .
-              echo "schmod_demand.so" >> patchlib/daemonlists.tbl
-              ./patchinstall --silent $LSF_FP_PKG
-
-              ## Create Resource Connector config dir
-              mkdir -p $LSF_ENVDIR/resource_connector/aws/conf
-              chown -R lsfadmin:root $LSF_ENVDIR/resource_connector/aws
-
-              # Configure LSF and Resource Connector
-              # Sets AWS as the sole host provider
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/hostProviders.json \
-                -O $LSF_ENVDIR/resource_connector/hostProviders.json
-
-              # awsprov.config.json
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/awsprov_config.json \
-                -O $LSF_ENVDIR/resource_connector/aws/conf/awsprov_config.json
-              sed -i -e "s/_CFN_AWS_REGION_/${AWS::Region}/" $LSF_ENVDIR/resource_connector/aws/conf/awsprov_config.json
-
-              # awsprov.templates.json
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/awsprov_templates.json \
-                -O $LSF_ENVDIR/resource_connector/aws/conf/awsprov_templates.json
-              
-              sed -i -e "s|%CFN_COMPUTE_AMI%|${LSFComputeNodeAmi}|" \
-                     -e "s|%CFN_COMPUTE_NODE_SUBNET%|${LSFComputeNodeSubnet}|" \
-                     -e "s|%CFN_ADMIN_KEYPAIR%|${AdminKeyPair}|" \
-                     -e "s|%CFN_COMPUTE_SECURITY_GROUP_ID%|${LSFComputeNodeSGGroupId}|" \
-                     -e "s|%CFN_LSF_COMPUTE_NODE_INSTANCE_PROFILE_ARN%|${LSFComputeNodeInstanceProfileArn}|" \
-                     -e "s|%CFN_LSF_CLUSTER_NAME%|${LSFClusterName}|" \
-                     -e "s|%CFN_FSXN_SVM_DNS_NAME%|${FSxOntapFS}|" \
-                     -e "s|%CFN_NFS_MOUNT_POINT%|${FileSystemMountPoint}|" \
-                     -e "s|%CFN_LSF_INSTALL_DIR%|$LSF_INSTALL_DIR|" \
-                     -e "s|%CFN_DCV_USER_NAME%|${DCVUserName}|" \
-                     -e "s|%CFN_LSF_COMPUTE_NODE_SPOT_FLEET_ROLE_ARN%|${LSFComputeNodeSpotFleetRoleArn}|" \
-                  $LSF_ENVDIR/resource_connector/aws/conf/awsprov_templates.json
-              
-              # user_data script that RC executes on compute nodes
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/user_data.sh \
-                -O $LSF_INSTALL_DIR/10.1/resource_connector/aws/scripts/user_data.sh
-              chmod +x $LSF_INSTALL_DIR/10.1/resource_connector/aws/scripts/user_data.sh
-
-              # Copy in pre-configured lsf config files
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/lsf.shared \
-                -O $LSF_ENVDIR/lsf.shared
-              sed -i -e "s/^_CFN_LSF_CLUSTER_NAME_/${LSFClusterName}/" $LSF_ENVDIR/lsf.shared
-
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/lsb.queues \
-                -O $LSF_ENVDIR/lsbatch/${LSFClusterName}/configdir/lsb.queues
-
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/lsb.modules \
-                -O $LSF_ENVDIR/lsbatch/${LSFClusterName}/configdir/lsb.modules
-
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/lsb.params\
-                -O $LSF_ENVDIR/lsbatch/${LSFClusterName}/configdir/lsb.params
-
-              # lsf.cluster.*  Uncomment params to support dynamic hosts
-              # TODO: set LSF_HOST_ADDR_RANGE to CIDR block of VPC or compute subnet
-              sed -i -e 's/#\sLSF_HOST_ADDR_RANGE/LSF_HOST_ADDR_RANGE/' \
-                     -e 's/#\sFLOAT_CLIENTS/FLOAT_CLIENTS/' \
-                  $LSF_ENVDIR/lsf.cluster.*
-
-              
               # mosquitto.conf.  Enables mostquitto daemon, which RC uses to show bhosts -rc output.
-              cat << EOF > $LSF_ENVDIR/mosquitto.conf
-              log_dest file /var/log/lsf/mosquitto.log
-              log_type all
-              EOF
-              chown $LSF_ADMIN $LSF_ENVDIR/mosquitto.conf
-
-              # lsf.conf
-              # Set logging to local file system
-              sed -i -e 's|^LSF_LOGDIR.*|LSF_LOGDIR=/var/log/lsf|' $LSF_ENVDIR/lsf.conf
-
-              # lsf.conf. Append RC config to config file that was created by LSF installer.
-              cat << EOF >> $LSF_ENVDIR/lsf.conf
-
-              LSF_STRIP_DOMAIN=.ec2.internal:.${AWS::Region}.compute.internal
-
-              ######################################
-              # LSF RESOURCE CONNECTOR CONFIGURATION
-              ######################################
-
-              LSB_RC_EXTERNAL_HOST_FLAG=aws
-
-              # Adds 'aws' boolean to dynamic hosts
-              LSF_LOCAL_RESOURCES="[resource aws] [type LINUX64]"
-
-              #LSB_RC_MAX_INSTANCES_PER_TEMPLATE=1000
-
-              #LSB_RC_DEFAULT_HOST_TYPE=X86_64
-
-              LSB_RC_UPDATE_INTERVAL=10
-
-              LSB_RC_QUERY_INTERVAL=15
-
-              # Let LSB_RC_EXTERNAL_HOST_IDLE_TIME below shut down idle instances
-              #LSB_RC_EXTERNAL_HOST_MAX_TTL=10
-
-              LSB_RC_EXTERNAL_HOST_IDLE_TIME=10
-
-              # starts the mosquitto daemon, which is required for the bhosts -rc and
-              # bhosts -rconly commands to work.
-              # mosquitto runs on default port 1883.
-              LSF_MQ_BROKER_HOSTS=$HOSTNAME
-              # The params below allow remote clients to query RC status from mosquitto
-              MQTT_BROKER_HOST=$HOSTNAME
-              MQTT_BROKER_PORT=1883
-
-              #EBROKERD_HOST_CLEAN_DELAY=60
-
-              ######################################
-              # DYNAMIC HOST CONFIGURATION
-              ######################################
-
-              # Keep this less than 3 seconds for smooth RC operation.
-              LSF_DYNAMIC_HOST_WAIT_TIME=3
-
-              #LSF_REG_FLOAT_HOSTS=Y
-
-              #LSF_DYNAMIC_HOST_KEEP=y
-
-              #EGO_ENABLE_AUTO_DAEMON_SHUTDOWN=Y
-
-              LSF_DYNAMIC_HOST_TIMEOUT=60m
-
-              EOF
+              aws s3 cp s3://$AWS_S3_BUCKET_NAME/workshops/eda-workshop-lsf/config/mosquitto.conf $LSF_ENVDIR/mosquitto.conf && \
+              chown $LSF_ADMIN $LSF_ENVDIR/mosquitto.conf && \
 
               # Configure system scripts to start LSF at boot time
               # Add cshrc.lsf and profile.lsf to system-wide environment
               # Start LSF daemons
 
-              # FP14 implements a new systemd behavior. 
-              # Enable by copying new lsf_daemons into place or hostsetup will fail.
-              # if fp14; then
-              #   cp $LSF_INSTALL_DIR/10.1/instlib/startup.svr4 to <LSF_SERVERDIR>/lsf_daemons
-              # OR just don't use --boot in hostsetup.
+              source $LSF_INSTALL_DIR/conf/profile.lsf
 
               $LSF_INSTALL_DIR/10.1/install/hostsetup --top="$LSF_INSTALL_DIR" \
                                                       --profile="y" \
-                                                      --start="y"
+                                                      --start="y"  && \
 
               # Verify that LSF is up and send signal to Cloudformation
-              sleep 5
-              lsid
-              /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource LSFMasterInstance --region ${AWS::Region}
+              sleep 5 && lsid
+              /opt/aws/bin/cfn-signal -e $? --stack $AWS_CFN_STACK_NAME \
+                                            --resource LSFMasterInstance \
+                                            --region $AWS_CFN_STACK_REGION
 
               echo "*** END LSF MASTER BOOTSTRAP ***"
+              --//--
 
             - LSFComputeNodeInstanceProfileArn: !GetAtt LSFComputeNodeInstanceProfile.Arn
               LSFComputeNodeSpotFleetRoleArn: !GetAtt LSFSpotFleetRole.Arn
-              LSFComputeNodeAmi: !FindInMap [ RegionMap, !Ref "AWS::Region", !Ref ComputeAMI ]
+              LSFComputeNodeAmi: !If
+                - UseAmazonLinux2AMI
+                - Ref: LatestAmazonLinux2Ami
+                - !FindInMap [ RegionMap, !Ref "AWS::Region", !Ref ComputeAMI ]
               LSFComputeNodeSGGroupId:
                 Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"LSFComputeNodeSG" ] ]
               LSFComputeNodeSubnet:
                 Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"PrivateSubnet" ] ]
-              FSxOntapFS:
-                Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"FSxOntapFS" ] ]
+              NfsDnsName:
+                Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"NfsDnsName" ] ]
 
   LSFMasterRole:
       Type: "AWS::IAM::Role"
@@ -401,7 +278,7 @@ Resources:
               Action:
               - "sts:AssumeRole"
         ManagedPolicyArns:
-          - "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+          - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
           - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
         Policies:
           - PolicyName: LSFResourceConnectorPerms
@@ -410,25 +287,30 @@ Resources:
               Statement:
                 - Effect: Allow
                   Action:
+                    - ec2:AssociateIamInstanceProfile
+                    - ec2:CancelSpotFleetRequests
+                    - ec2:CreateFleet     
+                    - ec2:CreateLaunchTemplateVersion
+                    - ec2:CreateTags
+                    - ec2:DeleteLaunchTemplateVersions
+                    - ec2:DescribeFleetInstances
+                    - ec2:DescribeFleets
                     - ec2:DescribeInstances
                     - ec2:DescribeInstanceStatus
                     - ec2:DescribeKeyPairs
+                    - ec2:DescribeLaunchTemplateVersions
+                    - ec2:DescribeSpotFleetInstances
+                    - ec2:DescribeSpotFleetRequestHistory
+                    - ec2:DescribeSpotFleetRequests
+                    - ec2:DescribeSpotInstanceRequests
+                    - ec2:DescribeTags
+                    - ec2:GetLaunchTemplateData
+                    - ec2:ModifyIdFormat
+                    - ec2:ModifySpotFleetRequest
+                    - ec2:ReplaceIamInstanceProfileAssociation
+                    - ec2:RequestSpotFleet
                     - ec2:RunInstances
                     - ec2:TerminateInstances
-                    - ec2:CreateTags
-                    - ec2:ModifyIdFormat
-                    - ec2:AssociateIamInstanceProfile
-                    - ec2:ReplaceIamInstanceProfileAssociation
-                    - ec2:CancelSpotFleetRequests
-                    - ec2:DescribeSpotFleetInstances
-                    - ec2:DescribeSpotFleetRequests
-                    - ec2:DescribeSpotFleetRequestHistory
-                    - ec2:ModifySpotFleetRequest
-                    - ec2:RequestSpotFleet
-                    - ec2:DescribeSpotInstanceRequests
-                    - ec2:DescribeLaunchTemplateVersions
-                    - ec2:GetLaunchTemplateData
-                    - ec2:CreateLaunchTemplateVersion
                   Resource: '*'
                 - Effect: Allow
                   Action:
@@ -482,7 +364,7 @@ Resources:
               Action:
               - "sts:AssumeRole"
         ManagedPolicyArns:
-          - "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+          - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
           - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
         Policies:
           - PolicyName: DownloadS3Packages
@@ -507,3 +389,152 @@ Resources:
       Path: "/"
       Roles:
         - !Ref LSFComputeNodeRole
+
+  CloudWatchAgentConfiguration:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: SSM Parameter holding CloudWatchAgent configuration
+      Name: !Sub ${AWS::StackName}-AmazonCloudWatch
+      Type: String
+      Value: |
+        {
+          "agent": {
+            "metrics_collection_interval": 60,
+            "logfile": "/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log",
+            "debug": false
+          },
+          "logs": {
+            "logs_collected": {
+              "files": {
+                "collect_list": [
+                  {
+                    "file_path": "/var/log/lsf/aws-provider.log*",
+                    "log_group_name": "/var/log/lsf/rc/aws-provider.log",
+                    "log_stream_name": "{instance_id}"
+                  },
+                  {
+                    "file_path": "/var/log/lsf/aws-provider.log*",
+                    "log_group_name": "/var/log/lsf/rc/ebrokerd",
+                    "log_stream_name": "{instance_id}"
+                  },
+                  {
+                    "file_path": "/var/log/lsf/Install.log*",
+                    "log_group_name": "/var/log/lsf/Install.log",
+                    "log_stream_name": "{instance_id}"
+                  },
+                  {
+                    "file_path": "/var/log/lsf/lim.log*",
+                    "log_group_name": "/var/log/lsf/lim.log",
+                    "log_stream_name": "{instance_id}"
+                  },
+                  {
+                    "file_path": "/var/log/lsf/mbatchd.log*",
+                    "log_group_name": "/var/log/lsf/mbatchd.log",
+                    "log_stream_name": "{instance_id}"
+                  },
+                  {
+                    "file_path": "/var/log/lsf/mbschd.log*",
+                    "log_group_name": "/var/log/lsf/mbschd.log",
+                    "log_stream_name": "{instance_id}"
+                  },
+                  {
+                    "file_path": "/var/log/lsf/mosquitto.log*",
+                    "log_group_name": "/var/log/lsf/mosquitto.log",
+                    "log_stream_name": "{instance_id}"
+                  },
+                  {
+                    "file_path": "/var/log/lsf/pim.log*",
+                    "log_group_name": "/var/log/lsf/pim.log",
+                    "log_stream_name": "{instance_id}"
+                  },
+                  {
+                    "file_path": "/var/log/lsf/res.log*",
+                    "log_group_name": "/var/log/lsf/res.log",
+                    "log_stream_name": "{instance_id}"
+                  },
+                  {
+                    "file_path": "/var/log/lsf/sbatchd.log*",
+                    "log_group_name": "/var/log/lsf/sbatchd.log",
+                    "log_stream_name": "{instance_id}"
+                  },
+                  {
+                    "file_path": "/var/log/user-data.log*",
+                    "log_group_name": "/var/log/lsf/user-data.log",
+                    "log_stream_name": "{instance_id}"
+                  }
+                ]
+              }
+            }
+          },
+          "metrics": {
+            "namespace": "CWAgent",
+            "append_dimensions": {
+              "InstanceId": "${aws:InstanceId}"
+            },
+            "metrics_collected": {
+              "mem": {
+                "measurement": ["mem_used_percent"],
+                "metrics_collection_interval": 60
+              }
+            }
+          }
+        }
+
+  AmazonCloudWatchSetConfig:
+    Type: AWS::SSM::Association
+    Properties:
+      ApplyOnlyAtCronInterval: false
+      AssociationName: AmazonCloudWatchSetConfig
+      Name: AmazonCloudWatch-ManageAgent
+      Parameters:
+        action:
+          - configure
+        mode:
+          - ec2
+        optionalConfigurationLocation:
+          - !Ref CloudWatchAgentConfiguration
+        optionalConfigurationSource:
+          - ssm
+        optionalRestart:
+          - "yes"
+      ScheduleExpression: cron(0 */30 * * * ? *)
+      Targets:
+        - Key: tag:Name
+          Values:
+            - !Join [ '-', [ 'LSF Mgmt Host',!Ref LSFClusterName ] ]
+
+  InstallCloudWatch:
+    Type: AWS::SSM::Association
+    Properties:
+      Name: AWS-ConfigureAWSPackage
+      ApplyOnlyAtCronInterval: false
+      AssociationName: InstallUpgradeCloudWatch
+      Parameters:
+        action:
+          - Install
+        additionalArguments:
+          - "{}"
+        installationType:
+          - Uninstall and reinstall
+        name:
+          - AmazonCloudWatchAgent
+      ScheduleExpression: cron(0 */30 * * * ? *)
+      Targets:
+        - Key: tag:Name
+          Values:
+            - !Join [ '-', [ 'LSF Mgmt Host',!Ref LSFClusterName ] ]
+
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties: 
+      LaunchTemplateName: !Sub ${AWS::StackName}-launch-template
+      LaunchTemplateData: 
+        ImageId: !If
+                - UseAmazonLinux2AMI
+                - Ref: LatestAmazonLinux2Ami
+                - !FindInMap [ RegionMap, !Ref "AWS::Region", !Ref ComputeAMI ]
+        KeyName: !Ref AdminKeyPair
+        IamInstanceProfile:
+          Arn: !GetAtt LSFComputeNodeInstanceProfile.Arn
+        SecurityGroupIds: 
+          - Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"LSFComputeNodeSG" ] ]

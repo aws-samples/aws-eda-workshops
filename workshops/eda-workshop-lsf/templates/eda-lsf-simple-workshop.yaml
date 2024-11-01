@@ -295,7 +295,7 @@ Resources:
 
               ## Mount NFS file system for LSF install
               # Create mount point
-              mkdir $LSF_INSTALL_DIR_ROOT 
+              mkdir -p $LSF_INSTALL_DIR_ROOT 
               
               # Mount FSxN file system
               mount -t nfs -o "rsize=262144,wsize=262144,hard,vers=3,tcp,mountproto=tcp" $FSXN_SVM_DNS_NAME:/vol1 $LSF_INSTALL_DIR_ROOT
@@ -306,7 +306,7 @@ Resources:
               
               mkdir -p {$LSF_INSTALL_DIR,$LSF_INSTALL_DIR_ROOT/proj,$LSF_INSTALL_DIR_ROOT/scratch}
               chmod 777 $LSF_INSTALL_DIR_ROOT/{proj,scratch}
-              mkdir /var/log/lsf && chmod 777 /var/log/lsf
+              mkdir -p /var/log/lsf && chmod 777 /var/log/lsf
 
               # TODO: Setup CloudWatch Logs daemon and send LSF logs to CloudWatch              # See docs
 
@@ -329,7 +329,7 @@ Resources:
               cd lsf10.1_lsfinstall
 
               # Create LSF installer config file
-              cat << EOF > install.config
+              cat <<EOF > install.config
               LSF_TOP="$LSF_INSTALL_DIR"
               LSF_ADMINS="$LSF_ADMIN"
               LSF_CLUSTER_NAME="${LSFClusterName}"
@@ -408,7 +408,7 @@ Resources:
 
               
               # mosquitto.conf.  Enables mostquitto daemon, which RC uses to show bhosts -rc output.
-              cat << EOF > $LSF_ENVDIR/mosquitto.conf
+              cat <<EOF > $LSF_ENVDIR/mosquitto.conf
               log_dest file /var/log/lsf/mosquitto.log
               log_type all
               EOF
@@ -419,7 +419,7 @@ Resources:
               sed -i -e 's|^LSF_LOGDIR.*|LSF_LOGDIR=/var/log/lsf|' $LSF_ENVDIR/lsf.conf
 
               # lsf.conf. Append RC config to config file that was created by LSF installer.
-              cat << EOF >> $LSF_ENVDIR/lsf.conf
+              cat <<EOF >> $LSF_ENVDIR/lsf.conf
 
               LSF_STRIP_DOMAIN=.ec2.internal:.${AWS::Region}.compute.internal
 
@@ -555,7 +555,7 @@ Resources:
 
               ## Mount NFS file system for LSF install
               #mount point
-              mkdir $LSF_INSTALL_DIR_ROOT
+              mkdir -p $LSF_INSTALL_DIR_ROOT
 
                # Mount FSxN file system
               mount -t nfs -o rw,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 $FSXN_SVM_DNS_NAME:/vol1 $LSF_INSTALL_DIR_ROOT
@@ -579,7 +579,7 @@ Resources:
               }
 
               function install_dcv {
-                mkdir /tmp/dcv-inst.d
+                mkdir -p /tmp/dcv-inst.d
                 pushd /tmp/dcv-inst.d
                 rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
                 wget https://d1uj6qtbmh3dt5.cloudfront.net/2022.1/Servers/nice-dcv-2022.1-13300-el7-x86_64.tgz
@@ -607,10 +607,10 @@ Resources:
               function cr_post_reboot {
 
                 if [[ ! -d /opt/dcv-install ]]; then
-                  mkdir /opt/dcv-install
+                  mkdir -p /opt/dcv-install
                 fi
 
-              cat << EOF > /opt/dcv-install/post_reboot.sh
+              cat <<EOF > /opt/dcv-install/post_reboot.sh
               #!/usr/bin/env bash
 
               function stop_disable_svc() {
@@ -648,7 +648,7 @@ Resources:
 
               function cr_service {
 
-              cat << EOF > /etc/systemd/system/post-reboot.service
+              cat <<EOF > /etc/systemd/system/post-reboot.service
               [Unit]
               Description=Post reboot service
 
@@ -706,7 +706,7 @@ Resources:
               Action:
               - "sts:AssumeRole"
         ManagedPolicyArns:
-          - "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+          - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
           - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
           - "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
         Policies:
@@ -764,7 +764,7 @@ Resources:
               Action:
               - "sts:AssumeRole"
         ManagedPolicyArns:
-          - "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+          - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
           - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
         Policies:
           - PolicyName: LSFResourceConnectorPerms
@@ -845,7 +845,7 @@ Resources:
               Action:
               - "sts:AssumeRole"
         ManagedPolicyArns:
-          - "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+          - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
           - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
         Policies:
           - PolicyName: DownloadS3Packages

@@ -26,10 +26,12 @@ Metadata:
       CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.'
 
 Parameters:
-  MasterServerSubnet:
-    Description: "Subnet for the EFS Mount Target. This is the same subnet that the LSF master is in."
-    Type: "String"
-    Default: "subnet-331c276e"
+  LSFClusterName:
+    Default: LSFCluster
+    Description: |- 
+      An environment name that will be prefixed to resource names.
+      Should be equal to the value in the network stack.
+    Type: String
   EFSPerformanceMode:
     Description: "Select the performance mode of the file system."
     Type: "String"
@@ -41,8 +43,9 @@ Parameters:
     Type: "String"
     AllowedValues:
       - bursting
+      - elastic
       - provisioned
-    Default: "bursting"
+    Default: "elastic"
 
 Resources:
   LSFElasticFileSystem:
@@ -58,22 +61,10 @@ Resources:
       Type: "AWS::EFS::MountTarget"
       Properties:
         FileSystemId: !Ref LSFElasticFileSystem
-        SubnetId: !Ref MasterServerSubnet
-        SecurityGroups: !Ref MountTargetSecurityGroup
-
-  MountTargetSG:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: "SG for EFS mount target"
-
-  MountTargetSGRule01:
-    Type: AWS::EC2::SecurityGroupIngress
-    DependsOn: "MountTargetSG"
-    Properties:
-      GroupName: !Ref MountTargetSG
-      Description: "SSH from VPN-SEA"
-      IpProtocol: "tcp"
-      SourceSecurityGroupName: !Ref UGEComputeNodeSG
+        SubnetId: 
+          Fn::ImportValue: !Sub '${LSFClusterName}-PrivateSubnet'
+        SecurityGroups: 
+          - Fn::ImportValue: !Sub '${LSFClusterName}-NfsSG'
 
 Outputs:
   MountTargetID:
@@ -82,6 +73,8 @@ Outputs:
   FileSystemID:
     Description: "File system ID"
     Value: !Ref LSFElasticFileSystem
-
-
-
+  EfsNDnsName:
+    Description: NFS mount command for the EFS filesystem
+    Value: !Sub "${LSFElasticFileSystem}.efs.${AWS::Region}.amazonaws.com"
+    Export:
+      Name: !Join [ '-', [ !Ref LSFClusterName, "NfsDnsName" ] ]

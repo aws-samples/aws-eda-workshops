@@ -1,0 +1,39 @@
+{
+    "templates": [
+        {
+            "templateId": "fleet-template-1",
+            "maxNumber": 100,
+            "attributes": {
+                "type": [
+                    "String",
+                    "X86_64"
+                ],
+                "ncores": [
+                    "Numeric",
+                    "1"
+                ],
+                "ncpus": [
+                    "Numeric",
+                    "2"
+                ],
+                "mem": [
+                    "Numeric",
+                    "512"
+                ],
+                "aws": [
+                    "Boolean",
+                    "1"
+                ],
+                "cpu_type": [
+                    "String",
+                    "intel"
+                ]
+            },
+            "priority": "121",
+            "onDemandTargetCapacityRatio": "0.5",
+            "ec2FleetConfig": "ec2-fleet-config.json",
+            "instanceTags": "Name=fleet-template-1;Cluster=%CFN_LSF_CLUSTER_NAME%;ec2FleetConfig=ec2-fleet-config.json",
+            "userData": "FSXN_SVM_DNS_NAME=%CFN_FSXN_SVM_DNS_NAME%;NFS_MOUNT_POINT=%CFN_NFS_MOUNT_POINT%;LSF_INSTALL_DIR=%CFN_LSF_INSTALL_DIR%;DCV_USER_NAME=%CFN_DCV_USER_NAME%;cpu_type=intel"
+        }
+    ]
+}
