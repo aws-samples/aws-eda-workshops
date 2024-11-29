@@ -1,0 +1,15 @@
+---
+
+- name: Create cron to create/update local users and groups from json
+  template:
+    src:   etc/cron.d/create_users_groups
+    dest: /etc/cron.d/create_users_groups
+    owner: root
+    group: root
+    mode: 0600
+    force: yes
+
+- name: Create/update local users and groups from json
+  shell:
+    cmd: |
+      {{ScriptsDir}}/create_users_groups.py -i {{ConfigDir}}/users_groups.json
