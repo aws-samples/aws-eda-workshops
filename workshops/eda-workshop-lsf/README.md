@@ -15,8 +15,8 @@ The following is required to run this workshop:
 * Licenses for IBM Spectrum LSF 10.1
 * An IBM Passport Advantage account for downloading the installation and full Linux distribution packages for IBM Spectrum LSF 10.1 Standard or Advanced Edition and a corresponding entitlement file.
 * An Amazon EC2 key pair
-* A free subscription to the [AWS FPGA Developer AMI](https://aws.amazon.com/marketplace/pp/B06VVYBLZZ).
-* A free subscription to the [Official CentOS 7 x86_64 HVM AMI](https://aws.amazon.com/marketplace/pp/B00O7WM7QW).
+* A free subscription to the [Rocky Linux 8 (Official)](https://aws.amazon.com/marketplace/pp/prodview-2otariyxb3mqu).
+
 
 ## Tutorials
 
@@ -37,4 +37,4 @@ After you deploy the workshop, we recommend that you enable the AWS Cost and Usa
 ### Clean up
 
 * Delete the parent stack
-* Delete orphaned EBS volumes. The FPGA AMI doesn't delete them on instance termination.
+* Delete orphaned EBS volumes.

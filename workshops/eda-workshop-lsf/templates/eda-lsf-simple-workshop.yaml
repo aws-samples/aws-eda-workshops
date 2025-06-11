@@ -1,49 +1,31 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: |
-  This template deploys a login server, an LSF master server, a supporting NFS file system, 
+  This template deploys a login server, an LSF master server, a supporting NFS file system,
   and installs LSF software that you provide.
-  
-  **WARNING** This template creates Amazon EC2 instances, an FSx for NetApp ONTAP file system, and related resources. 
+
+  **WARNING** This template creates Amazon EC2 instances, an FSx for NetApp ONTAP file system, and related resources.
   You will be billed for the AWS resources used if you create a stack from this template.
 
 Mappings:
   RegionMap:
-    us-east-1:  
-      CentOS75: ami-9887c6e7
-      FPGADev: ami-0cf12acd587e51b42
-      ALinux2: ami-035be7bafff33b6b6
-    us-east-2:  
-      CentOS75: ami-0f2b4fc905b0bd1f1
-      FPGADev: ami-0f522eea547ffbdde
-      ALinux2: ami-04328208f4f0cf1fe
-    us-west-1:
-      CentOS75: ami-074e2d6769f445be5
-      FPGADev: ami-02ed13c760b58790d
-      ALinux2: ami-0799ad445b5727125
-    us-west-2:
-      CentOS75: ami-3ecc8f46
-      FPGADev: ami-00736db43ba03656a
-      ALinux2: ami-032509850cf9ee54e
-    eu-west-1:           # Dublin
-      CentOS75: ami-3548444c
-      FPGADev: ami-01f373e791bb05667
-      ALinux2: ami-0fad7378adf284ce0
-    ap-southeast-1:      # Singapore
-      CentOS75: ami-8e0205f2
-      FPGADev: ami-0d2658414ef6f29cf
-      ALinux2: ami-04677bdaa3c2b6e24
-    ap-southeast-2:      # Sydney
-      CentOS75: ami-d8c21dba
-      FPGADev: ami-0651d0a596bb7c014
-      ALinux2: ami-0c9d48b5db609ad6e
-    ap-northeast-2:      # Seoul
-      CentOS75: ami-06cf2a72dadf92410
-      FPGADev: ami-03162ccf408e174a1
-      ALinux2: ami-018a9a930060d38aa
     ap-northeast-1:      # Tokyo
-      CentOS75: ami-045f38c93733dd48d
-      FPGADev: ami-051c91d3186bfdb7d
-      ALinux2: ami-0d7ed3ddb85b521a6
+      Rocky8: ami-0025f1507e375f161
+    ap-northeast-2:      # Seoul
+      Rocky8: ami-05d54bac15231e6fa
+    ap-southeast-1:      # Singapore
+      Rocky8: ami-0506f2d559a79a962
+    ap-southeast-2:      # Sydney
+      Rocky8: ami-02b9a6992a20eed2b
+    ca-central-1:        # Canada Central
+      Rocky8: ami-0829e4c2a7a2dcce1
+    eu-west-1:           # Dublin
+      Rocky8: ami-0c14153c77f34b870
+    us-east-1:           # N. Virginia
+      Rocky8: ami-011ef2017d41cb239
+    us-east-2:           # Ohio
+      Rocky8: ami-02391db2758465a87
+    us-west-2:           # Oregon
+      Rocky8: ami-0f74cc83310468775
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -53,11 +35,11 @@ Metadata:
           default: "Network configuration"
         Parameters:
           - VpcId
-          - MasterServerSubnet
+          - LoginServerSubnet
           - ComputeNodeSubnet
           - SshSource
           - AdminKeyPair
-      - 
+      -
         Label:
           default: "LSF software configuration"
         Parameters:
@@ -65,8 +47,10 @@ Metadata:
           - LSFClusterName
           - CustomerLSFInstallUri
           - CustomerLSFBinsUri
+          - CustomerLSFArmv8BinsUri
           - CustomerLSFEntitlementUri
           - CustomerLSFFixPackUri
+          - CustomerLSFArmv8FixPackUri
           - ComputeAMI
       -
         Label:
@@ -98,8 +82,8 @@ Metadata:
         default: LSF cluster name
       LSFInstallPath:
         default: LSF install path
-      MasterServerSubnet:
-        default: LSF master subnet
+      LoginServerSubnet:
+        default: Login server subnet
       ComputeNodeSubnet:
         default: Compute node subnet
       LoginServerInstanceType:
@@ -110,10 +94,14 @@ Metadata:
         default: LSF install script location
       CustomerLSFBinsUri:
         default: LSF distribution package location
+      CustomerLSFArmv8BinsUri:
+        default: LSF distribution package location for Armv8
       CustomerLSFEntitlementUri:
         default: LSF entitlement file location
       CustomerLSFFixPackUri:
         default: LSF fix pack
+      CustomerLSFArmv8FixPackUri:
+        default: LSF fix pack for Armv8
 
 Parameters:
   VpcId:
@@ -131,8 +119,8 @@ Parameters:
     Default: 0.0.0.0/32
     AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/32
     ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/32.
-  MasterServerSubnet:
-    Description: The subnet for the LSF master server.  This subnet must have access to the internet.
+  LoginServerSubnet:
+    Description: The subnet for the Login server. This subnet must have access to the internet.
     Type: AWS::EC2::Subnet::Id
   ComputeNodeSubnet:
     Description: The subnet for the LSF compute nodes
@@ -140,36 +128,35 @@ Parameters:
   MasterInstanceType:
     Description: The instance type of the master node of the cluster
     Type: "String"
-    Default: "m5.2xlarge"
-  MasterServerAMI:
-    Description: The AMI (OS image) for the master server. We recommend Amazon Linux 2."
-    Type: "String"
-    Default: "ALinux2"
+    Default: "m6i.2xlarge"
     AllowedValues:
-      - ALinux2
+      - m6i.xlarge
+      - m6i.2xlarge
+      - m6a.xlarge
+      - m6a.2xlarge
+  MasterServerAMI:
+    Description: The AMI (OS image) for the master server."
+    Type: "String"
+    Default: "Rocky8"
+    AllowedValues:
+      - Rocky8
   ComputeAMI:
     Description: >
       The AMI (OS image) for the compute nodes and login servers.
-      NOTE: You must first subscribe to this AMI in the AWS Marketplace 
-      at https://aws.amazon.com/marketplace/pp/B06VVYBLZZ
     Type: "String"
-    Default: "FPGADev"
+    Default: "Rocky8"
     AllowedValues:
-      - FPGADev
+      - Rocky8
   LoginServerInstanceType:
     Description: The instance type for the login server
     Type: "String"
-    Default: "m5.4xlarge"
+    Default: "m6i.xlarge"
     AllowedValues:
-      - t3.medium
       - t3.xlarge
-      - m4.xlarge
-      - m4.2xlarge
-      - m5.xlarge
-      - m5.2xlarge
-      - m5.4xlarge
-      - m5.24xlarge
-      - m5d.2xlarge
+      - m6i.xlarge
+      - m7i.xlarge
+      - m6a.xlarge
+      - m7a.xlarge
   LSFClusterName:
     Description: The LSF cluster name
     Type: "String"
@@ -182,7 +169,7 @@ Parameters:
     Default: "/fsxn/tools/ibm/lsf"
   CustomerLSFInstallUri:
     Description: >
-      The S3 URI to the LSF installer script package. 
+      The S3 URI to the LSF installer script package.
       Select package object in the console and choose Copy Path and paste here.
     Type: "String"
     Default: "s3://<your_bucket>/lsf10.1_lsfinstall_linux_x86_64.tar.Z"
@@ -194,13 +181,27 @@ Parameters:
     Type: "String"
     Default: "s3://<your_bucket>/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z"
     AllowedPattern: ^s3\:\/\/.*\/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z$
+  CustomerLSFArmv8BinsUri:
+    Description: >
+      The S3 URI to the LSF distribution package for Armv8. This must be a full distribution and not a patch or Fix Pack package.
+      Select package object in the console and choose Copy Path and paste here.
+    Type: "String"
+    Default: "s3://<your_bucket>/lsf10.1_lnx312-lib217-armv8.tar.Z"
+    AllowedPattern: ^s3\:\/\/.*\/lsf10.1_lnx312-lib217-armv8.tar.Z$
   CustomerLSFFixPackUri:
     Description: >
       The S3 URI to the LSF Fix Pack package. This must the lastest Fix Pack package.
       Select package object in the console and choose Copy Path and paste here.
     Type: "String"
-    Default: "s3://<your_bucket>/lsf10.1_linux2.6-glibc2.3-x86_64.520009.tar.Z"
-    #AllowedPattern: ^s3\:\/\/.*\/lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z$
+    Default: "s3://<your_bucket>/lsf10.1_linux2.6-glibc2.3-x86_64-601547.tar.Z"
+    #AllowedPattern: ^s3\:\/\/.*\/lsf10.1_linux2.6-glibc2.3-x86_64-601547.tar.Z$
+  CustomerLSFArmv8FixPackUri:
+    Description: >
+      The S3 URI to the LSF Fix Pack package for Armv8. This must the lastest Fix Pack package.
+      Select package object in the console and choose Copy Path and paste here.
+    Type: "String"
+    Default: "s3://<your_bucket>/lsf10.1_lnx312-lib217-armv8-601547.tar.Z"
+    #AllowedPattern: ^s3\:\/\/.*\/lsf10.1_lnx312-lib217-armv8-601547.tar.Z$
   CustomerLSFEntitlementUri:
     Description: >
       The S3 URI to the LSF 10.1 entitlement file, lsf_std_entitlement.dat or lsf_adv_entitlement.dat.
@@ -230,7 +231,7 @@ Resources:
     Type: "AWS::EC2::Instance"
     DependsOn: FSxOntapFS
     CreationPolicy:
-      ResourceSignal:    
+      ResourceSignal:
         Count: 1
         Timeout: PT15M
     Properties:
@@ -240,20 +241,20 @@ Resources:
         - RegionMap
         - !Ref AWS::Region
         - !Ref MasterServerAMI
-      SubnetId: !Ref MasterServerSubnet
-      SecurityGroupIds: 
-        - !Ref LSFMasterSG 
+      SubnetId: !Ref ComputeNodeSubnet
+      SecurityGroupIds:
+        - !Ref LSFMasterSG
       KeyName: !Ref AdminKeyPair
       IamInstanceProfile: !Ref LSFMasterInstanceProfile
       Tags:
-        - 
+        -
           Key: "Name"
           Value: !Join [ '', [ 'LSF Mgmt Host - ',!Ref LSFClusterName ] ]
-        - 
+        -
           Key: "Cluster"
           Value: !Ref LSFClusterName
       UserData:
-        Fn::Base64: 
+        Fn::Base64:
           Fn::Sub:
             - |
               #!/bin/bash
@@ -269,41 +270,53 @@ Resources:
               export LSF_ADMIN=lsfadmin
               export LSF_INSTALL_PKG=`echo ${CustomerLSFInstallUri} | awk -F "/" '{print $NF}'`
               export LSF_BIN_PKG=`echo ${CustomerLSFBinsUri} | awk -F "/" '{print $NF}'`
+              export LSF_ARMV8_BIN_PKG=`echo ${CustomerLSFArmv8BinsUri} | awk -F "/" '{print $NF}'`
               export LSF_FP_PKG=`echo ${CustomerLSFFixPackUri} | awk -F "/" '{print $NF}'`
+              export LSF_ARMV8_FP_PKG=`echo ${CustomerLSFArmv8FixPackUri} | awk -F "/" '{print $NF}'`
               export LSF_ENTITLEMENT=`echo ${CustomerLSFEntitlementUri} | awk -F "/" '{print $NF}'`
-
-              # Disable Hyperthreading
-              echo "Disabling Hyperthreading"
-              for cpunum in $(cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | cut -s -d, -f2- | tr ',' '\n' | sort -un)
-              do
-                echo 0 > /sys/devices/system/cpu/cpu$cpunum/online
-              done
-
-              # Install cfn-signal helper script to signal bootstrap completion to CloudFormation
-              yum update -y aws-cfn-bootstrap
-
-              # Install LSF installer prereqs
-              yum install ed -q -y
-              yum install java-1.8.0-openjdk -q -y
-              yum install wget -q -y
-              yum install vim -q -y
 
               # Install SSM so we can use SSM Session Manager and avoid ssh logins
               yum install -q -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
               systemctl enable amazon-ssm-agent
               systemctl start amazon-ssm-agent
 
+              # Disable Hyperthreading
+              echo "Disabling Hyperthreading"
+              for cpunum in $(awk -F'[,-]' '{print $2}' /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | sort -un);
+              do
+                echo 0 > /sys/devices/system/cpu/cpu$cpunum/online
+              done
+
+              OS_NAME=`awk -F= '/^NAME=/{print $2}' /etc/os-release`
+              OS_VERSION=`awk -F= '/^VERSION_ID=/{print $2}' /etc/os-release`
+              if [ "$OS_NAME" == "\"Rocky Linux\"" ] && [ "$OS_VERSION" == "\"8.9\"" ]; then
+                OS="rocky8"
+                yum clean all
+                yum install -y python3 wget unzip libnsl vim bc
+                pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-2.0-29.tar.gz
+                curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                unzip -q awscliv2.zip
+                ./aws/install
+              elif [ "$OS_NAME" == "\"Amazon Linux\"" ] && [ "$OS_VERSION" == "\"2\"" ]; then
+                OS="amazonlinux2"
+                # Install cfn-signal helper script to signal bootstrap completion to CloudFormation
+                yum update -y aws-cfn-bootstrap
+              fi
+
+              # Install LSF installer prereqs
+              yum install -y ed java-1.8.0-openjdk wget vim
+
               ## Mount NFS file system for LSF install
               # Create mount point
-              mkdir -p $LSF_INSTALL_DIR_ROOT 
-              
+              mkdir -p $LSF_INSTALL_DIR_ROOT
+
               # Mount FSxN file system
               mount -t nfs -o "rsize=262144,wsize=262144,hard,vers=3,tcp,mountproto=tcp" $FSXN_SVM_DNS_NAME:/vol1 $LSF_INSTALL_DIR_ROOT
 
               #add to fstab
               echo "$FSXN_SVM_DNS_NAME:/vol1 $LSF_INSTALL_DIR_ROOT nfs nfsvers=3,rsize=262144,wsize=262144,tcp,hard 0 0" >> \
                 /etc/fstab
-              
+
               mkdir -p {$LSF_INSTALL_DIR,$LSF_INSTALL_DIR_ROOT/proj,$LSF_INSTALL_DIR_ROOT/scratch}
               chmod 777 $LSF_INSTALL_DIR_ROOT/{proj,scratch}
               mkdir -p /var/log/lsf && chmod 777 /var/log/lsf
@@ -320,8 +333,10 @@ Resources:
               # Download customer-provided LSF binaries and entitlement file
               aws --quiet s3 cp ${CustomerLSFInstallUri} /tmp
               aws --quiet s3 cp ${CustomerLSFBinsUri} /tmp
+              aws --quiet s3 cp ${CustomerLSFArmv8BinsUri} /tmp
               aws --quiet s3 cp ${CustomerLSFEntitlementUri} /tmp
               aws --quiet s3 cp ${CustomerLSFFixPackUri} /tmp
+              aws --quiet s3 cp ${CustomerLSFArmv8FixPackUri} /tmp
 
               cd /tmp
               tar xf $LSF_INSTALL_PKG
@@ -329,7 +344,8 @@ Resources:
               cd lsf10.1_lsfinstall
 
               # Create LSF installer config file
-              cat <<EOF > install.config
+              HOSTNAME=$(hostname -s)
+              cat << EOF > install.config
               LSF_TOP="$LSF_INSTALL_DIR"
               LSF_ADMINS="$LSF_ADMIN"
               LSF_CLUSTER_NAME="${LSFClusterName}"
@@ -348,8 +364,10 @@ Resources:
               # Install fix pack
               cd $LSF_INSTALL_DIR/10.1/install
               cp /tmp/$LSF_FP_PKG .
+              cp /tmp/$LSF_ARMV8_FP_PKG .
               echo "schmod_demand.so" >> patchlib/daemonlists.tbl
               ./patchinstall --silent $LSF_FP_PKG
+              ./patchinstall --silent $LSF_ARMV8_FP_PKG
 
               ## Create Resource Connector config dir
               mkdir -p $LSF_ENVDIR/resource_connector/aws/conf
@@ -357,18 +375,18 @@ Resources:
 
               # Configure LSF and Resource Connector
               # Sets AWS as the sole host provider
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/hostProviders.json \
+              wget https://raw.githubusercontent.com/aws-samples/aws-eda-workshops/refs/heads/master/workshops/eda-workshop-lsf/config/lsf/hostProviders.json \
                 -O $LSF_ENVDIR/resource_connector/hostProviders.json
 
-              # awsprov.config.json
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/awsprov_config.json \
+              # awsprov_config.json
+              wget https://raw.githubusercontent.com/aws-samples/aws-eda-workshops/refs/heads/master/workshops/eda-workshop-lsf/config/lsf/awsprov_config.json \
                 -O $LSF_ENVDIR/resource_connector/aws/conf/awsprov_config.json
               sed -i -e "s/_CFN_AWS_REGION_/${AWS::Region}/" $LSF_ENVDIR/resource_connector/aws/conf/awsprov_config.json
 
-              # awsprov.templates.json
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/awsprov_templates.json \
+              # awsprov_templates.json
+              wget https://raw.githubusercontent.com/aws-samples/aws-eda-workshops/refs/heads/master/workshops/eda-workshop-lsf/config/lsf/awsprov_templates.json \
                 -O $LSF_ENVDIR/resource_connector/aws/conf/awsprov_templates.json
-              
+
               sed -i -e "s|%CFN_COMPUTE_AMI%|${LSFComputeNodeAmi}|" \
                      -e "s|%CFN_COMPUTE_NODE_SUBNET%|${ComputeNodeSubnet}|" \
                      -e "s|%CFN_ADMIN_KEYPAIR%|${AdminKeyPair}|" \
@@ -381,24 +399,33 @@ Resources:
                      -e "s|%CFN_DCV_USER_NAME%|${UserName}|" \
                      -e "s|%CFN_LSF_COMPUTE_NODE_SPOT_FLEET_ROLE_ARN%|${LSFComputeNodeSpotFleetRoleArn}|" \
                   $LSF_ENVDIR/resource_connector/aws/conf/awsprov_templates.json
-              
+
+              # ec2-fleet-config.json
+              wget https://raw.githubusercontent.com/aws-samples/aws-eda-workshops/refs/heads/master/workshops/eda-workshop-lsf/config/lsf/ec2-fleet-config.json \
+                 -O $LSF_ENVDIR/resource_connector/aws/conf/ec2-fleet-config.json
+
+              sed -i -e "s|%CFN_COMPUTE_AMI%|${LSFComputeNodeAmi}|" \
+                     -e "s|%CFN_COMPUTE_NODE_SUBNET%|${ComputeNodeSubnet}|" \
+                     -e "s|%CFN_LAUNCH_TEMPLATE_ID%|${LaunchTemplate}|" $LSF_ENVDIR/resource_connector/aws/conf/ec2-fleet-config.json
+
+
               # user_data script that RC executes on compute nodes
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/user_data.sh \
+              wget  https://raw.githubusercontent.com/aws-samples/aws-eda-workshops/refs/heads/master/workshops/eda-workshop-lsf/config/lsf/user_data.sh \
                 -O $LSF_INSTALL_DIR/10.1/resource_connector/aws/scripts/user_data.sh
               chmod +x $LSF_INSTALL_DIR/10.1/resource_connector/aws/scripts/user_data.sh
 
               # Copy in pre-configured lsf config files
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/lsf.shared \
+              wget https://raw.githubusercontent.com/aws-samples/aws-eda-workshops/refs/heads/master/workshops/eda-workshop-lsf/config/lsf/lsf.shared \
                 -O $LSF_ENVDIR/lsf.shared
               sed -i -e "s/^_CFN_LSF_CLUSTER_NAME_/${LSFClusterName}/" $LSF_ENVDIR/lsf.shared
 
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/lsb.queues \
+              wget https://raw.githubusercontent.com/aws-samples/aws-eda-workshops/refs/heads/master/workshops/eda-workshop-lsf/config/lsf/lsb.queues \
                 -O $LSF_ENVDIR/lsbatch/${LSFClusterName}/configdir/lsb.queues
 
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/lsb.modules \
+              wget https://raw.githubusercontent.com/aws-samples/aws-eda-workshops/refs/heads/master/workshops/eda-workshop-lsf/config/lsf/lsb.modules \
                 -O $LSF_ENVDIR/lsbatch/${LSFClusterName}/configdir/lsb.modules
 
-              wget https://s3.amazonaws.com/aws-eda-workshop-files/workshops/eda-workshop-lsf/config/lsf/lsb.params\
+              wget https://raw.githubusercontent.com/aws-samples/aws-eda-workshops/refs/heads/master/workshops/eda-workshop-lsf/config/lsf/lsb.params \
                 -O $LSF_ENVDIR/lsbatch/${LSFClusterName}/configdir/lsb.params
 
               # lsf.cluster.*  Uncomment params to support dynamic hosts
@@ -406,9 +433,9 @@ Resources:
                      -e 's/#\sFLOAT_CLIENTS/FLOAT_CLIENTS/' \
                   $LSF_ENVDIR/lsf.cluster.*
 
-              
+
               # mosquitto.conf.  Enables mostquitto daemon, which RC uses to show bhosts -rc output.
-              cat <<EOF > $LSF_ENVDIR/mosquitto.conf
+              cat << EOF > $LSF_ENVDIR/mosquitto.conf
               log_dest file /var/log/lsf/mosquitto.log
               log_type all
               EOF
@@ -419,7 +446,7 @@ Resources:
               sed -i -e 's|^LSF_LOGDIR.*|LSF_LOGDIR=/var/log/lsf|' $LSF_ENVDIR/lsf.conf
 
               # lsf.conf. Append RC config to config file that was created by LSF installer.
-              cat <<EOF >> $LSF_ENVDIR/lsf.conf
+              cat << EOF >> $LSF_ENVDIR/lsf.conf
 
               LSF_STRIP_DOMAIN=.ec2.internal:.${AWS::Region}.compute.internal
 
@@ -448,9 +475,9 @@ Resources:
               # starts the mosquitto daemon, which is required for the bhosts -rc and
               # bhosts -rconly commands to work.
               # mosquitto runs on default port 1883.
-              LSF_MQ_BROKER_HOSTS=$HOSTNAME
+              LSF_MQ_BROKER_HOSTS=${!HOSTNAME}
               # The params below allow remote clients to query RC status from mosquitto
-              MQTT_BROKER_HOST=$HOSTNAME
+              MQTT_BROKER_HOST=${!HOSTNAME}
               MQTT_BROKER_PORT=1883
 
               #EBROKERD_HOST_CLEAN_DELAY=60
@@ -477,20 +504,37 @@ Resources:
               # Add cshrc.lsf and profile.lsf to system-wide environment
               # Start LSF daemons
 
-              # FP14 implements a new systemd behavior. 
+              # FP14 implements a new systemd behavior.
               # Enable by copying new lsf_daemons into place or hostsetup will fail.
               # if fp14; then
-              #   cp $LSF_INSTALL_DIR/10.1/instlib/startup.svr4 to <LSF_SERVERDIR>/lsf_daemons
+              #   cp $LSF_INSTALL_DIR/10.1/install/instlib/startup.svr4 to <LSF_SERVERDIR>/lsf_daemons
               # OR just don't use --boot in hostsetup.
 
-              $LSF_INSTALL_DIR/10.1/install/hostsetup --top="$LSF_INSTALL_DIR" \
-                                                      --profile="y" \
-                                                      --start="y"
+              patch_version=$(echo $LSF_FP_PKG | sed -E 's/.*-([0-9]+)\.tar\.Z/\1/')
+              if [[ $patch_version -ge 601547 ]]; then
+                cp $LSF_INSTALL_DIR/10.1/linux2.6-glibc2.3-x86_64/etc/lsf_daemons $LSF_INSTALL_DIR/10.1/linux2.6-glibc2.3-x86_64/etc/lsf_daemons.bak
+                cp $LSF_INSTALL_DIR/10.1/install/instlib/startup.svr4 $LSF_INSTALL_DIR/10.1/linux2.6-glibc2.3-x86_64/etc/lsf_daemons
+                sed -i "s,LSF_CONF=@LSF_CONF@,LSF_CONF=$LSF_ENVDIR/lsf.conf," $LSF_INSTALL_DIR/10.1/linux2.6-glibc2.3-x86_64/etc/lsf_daemons
+                # Disable SELinux to enable the hostsetup services to start
+                setenforce 0
+                sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+                $LSF_INSTALL_DIR/10.1/install/hostsetup --top="$LSF_INSTALL_DIR" \
+                                                        --profile="y" \
+                                                        --start="y" --boot="y"
+              else
+                $LSF_INSTALL_DIR/10.1/install/hostsetup --top="$LSF_INSTALL_DIR" \
+                                                        --profile="y" \
+                                                        --start="y" --boot="y"
+              fi
 
               # Verify that LSF is up and send signal to Cloudformation
               sleep 10
               lsid
-              /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource LSFMasterInstance --region ${AWS::Region}
+              if [ "$OS_NAME" == "\"Rocky Linux\"" ] && [ "$OS_VERSION" == "\"8.9\"" ]; then
+                /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource LSFMasterInstance --region ${AWS::Region}
+              elif [ "$OS_NAME" == "\"Amazon Linux\"" ] && [ "$OS_VERSION" == "\"2\"" ]; then
+                /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource LSFMasterInstance --region ${AWS::Region}
+              fi
 
               echo "*** END LSF MASTER BOOTSTRAP ***"
 
@@ -509,24 +553,30 @@ Resources:
         - RegionMap
         - !Ref AWS::Region
         - !Ref ComputeAMI
-      SubnetId: !Ref MasterServerSubnet
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeType: gp3
+            VolumeSize: 12
+            DeleteOnTermination: true
+      SubnetId: !Ref LoginServerSubnet
       SecurityGroupIds:
         - !Ref LoginServerSG
       KeyName: !Ref AdminKeyPair
       IamInstanceProfile: !Ref LoginServerInstanceProfile
       Tags:
-        - 
+        -
           Key: "Name"
           Value: !Join [ '-', [ 'Login Server',!Ref LSFClusterName ] ]
-        - 
+        -
           Key: "Cluster"
           Value: !Ref LSFClusterName
       UserData:
-        Fn::Base64: 
+        Fn::Base64:
           Fn::Sub: |
               #!/bin/bash
 
-              set +x
+              set -x
               exec > >(tee /var/log/user-data.log|logger -t user-data ) 2>&1
 
               echo "*** BEGIN LOGIN SERVER BOOTSTRAP - `/bin/date` ***"
@@ -536,14 +586,24 @@ Resources:
               export FSXN_SVM_DNS_NAME="${FSxOntapStorageVirtualMachine}.${FSxOntapFS}.fsx.${AWS::Region}.amazonaws.com"
               export LSF_ADMIN=lsfadmin
 
-              pip3 -q install awscli
+              OS_NAME=`awk -F= '/^NAME=/{print $2}' /etc/os-release`
+              OS_VERSION=`awk -F= '/^VERSION_ID=/{print $2}' /etc/os-release`
+              if [ "$OS_NAME" == "\"Rocky Linux\"" ] && [ "$OS_VERSION" == "\"8.9\"" ]; then
+                OS="rocky8"
+                yum install -y python3 wget unzip libnsl vim
+                pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-2.0-29.tar.gz
+                cd /tmp
+                curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                unzip -q awscliv2.zip
+                ./aws/install
+              fi
 
               # Set DCV username and password
               export SM_PASSWORD=`/usr/local/bin/aws secretsmanager get-secret-value \
                                     --region ${AWS::Region} \
                                     --secret-id ${DCVCredentialsSecret} \
                                     --output text --query 'SecretString' \
-                                   | python -c 'import json, sys; print(json.load(sys.stdin)["password"])'`
+                                   | python3 -c 'import json, sys; print(json.load(sys.stdin)["password"])'`
 
               user_name="${UserName}"
               user_pass=$SM_PASSWORD
@@ -552,6 +612,10 @@ Resources:
               yum install -q -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
               systemctl enable amazon-ssm-agent
               systemctl start amazon-ssm-agent
+
+              # Install packages needed for the lab
+              dnf config-manager --enable powertools
+              yum install -y make git autoconf gperf flex bison gcc-c++ gcc python3
 
               ## Mount NFS file system for LSF install
               #mount point
@@ -564,27 +628,43 @@ Resources:
               echo "$FSXN_SVM_DNS_NAME:/vol1 $LSF_INSTALL_DIR_ROOT nfs nfsvers=3,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> \
                 /etc/fstab
 
-              # Set up LSF envirionment
+              # Set up LSF envrionment
               echo "source $LSF_INSTALL_DIR/conf/profile.lsf" > /etc/profile.d/lsf.sh
 
               # Install DCV
               echo "Installing DCV..."
 
               function install_prereqs {
-                # Exclude non-responsive mirror.
-                sed -i -e "s/^#exclude.*/exclude=mirror.es.its.nyu.edu/" /etc/yum/pluginconf.d/fastestmirror.conf
                 sudo yum clean all
-                sudo yum -y upgrade                
-                sudo yum -y groupinstall "GNOME Desktop"
+                local MAX_ATTEMPTS=10
+                local ATTEMPT_NUMBER=1
+                local SLEEP_TIME_SECONDS=10
+                while [ ${!ATTEMPT_NUMBER} -le ${!MAX_ATTEMPTS} ]; do
+                   echo "Attempt ${!ATTEMPT_NUMBER} of ${!MAX_ATTEMPTS}"
+                   df -h /
+                   sudo yum -y groupinstall "Server with GUI" --allowerasing
+                   if [ $? -eq 0 ]; then
+                       echo "Command executed successfully after ${!ATTEMPT_NUMBER}/${!MAX_ATTEMPTS}!"
+                       break
+                   else
+                       echo "Command failed. Retrying again in ${!SLEEP_TIME_SECONDS}..."
+                       sleep ${!SLEEP_TIME_SECONDS}
+
+                       ((ATTEMPT_NUMBER++))
+                   fi
+                done
+                sudo yum -y install mesa-dri-drivers xterm gvim
+                sed -i 's/#WaylandEnable=false/WaylandEnable=false/' /etc/gdm/custom.conf
+                systemctl restart gdm
               }
 
               function install_dcv {
                 mkdir -p /tmp/dcv-inst.d
                 pushd /tmp/dcv-inst.d
                 rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
-                wget https://d1uj6qtbmh3dt5.cloudfront.net/2022.1/Servers/nice-dcv-2022.1-13300-el7-x86_64.tgz
+                wget https://d1uj6qtbmh3dt5.cloudfront.net/2024.0/Servers/nice-dcv-2024.0-19030-el8-x86_64.tgz
                 tar -xvzf nice-dcv*.tgz
-                cd nice-dcv*
+                cd $(find . -type d -name "nice-dcv*")
                 yum -y install nice-dcv-server*.rpm \
                                nice-dcv-web-viewer*.rpm \
                                nice-xdcv*.rpm
@@ -597,8 +677,8 @@ Resources:
                 user_name=${!user_name}
                 user_pass=${!user_pass}
 
-                groupadd ${!user_name}
-                useradd ${!user_name} -m -g ${!user_name}
+                groupadd -g 1501 ${!user_name}
+                useradd ${!user_name} -u 1501 -m -g ${!user_name}
                 echo "${!user_name}:${!user_pass}" | chpasswd
                 echo "Created user ${!user_name}"
 
@@ -610,7 +690,7 @@ Resources:
                   mkdir -p /opt/dcv-install
                 fi
 
-              cat <<EOF > /opt/dcv-install/post_reboot.sh
+              cat << EOF > /opt/dcv-install/post_reboot.sh
               #!/usr/bin/env bash
 
               function stop_disable_svc() {
@@ -648,7 +728,7 @@ Resources:
 
               function cr_service {
 
-              cat <<EOF > /etc/systemd/system/post-reboot.service
+              cat << EOF > /etc/systemd/system/post-reboot.service
               [Unit]
               Description=Post reboot service
 
@@ -698,7 +778,7 @@ Resources:
         AssumeRolePolicyDocument:
           Version: '2012-10-17'
           Statement:
-            - 
+            -
               Effect: Allow
               Principal:
                 Service:
@@ -756,7 +836,7 @@ Resources:
         AssumeRolePolicyDocument:
           Version: '2012-10-17'
           Statement:
-            - 
+            -
               Effect: Allow
               Principal:
                 Service:
@@ -773,25 +853,31 @@ Resources:
               Statement:
                 - Effect: Allow
                   Action:
+                    - ec2:AssociateIamInstanceProfile
+                    - ec2:CancelSpotFleetRequests
+                    - ec2:CreateFleet
+                    - ec2:CreateLaunchTemplateVersion
+                    - ec2:CreateTags
+                    - ec2:DeleteFleets
+                    - ec2:DeleteLaunchTemplateVersions
+                    - ec2:DescribeFleetInstances
+                    - ec2:DescribeFleetHistory
+                    - ec2:DescribeFleets
                     - ec2:DescribeInstances
                     - ec2:DescribeInstanceStatus
                     - ec2:DescribeKeyPairs
+                    - ec2:DescribeLaunchTemplateVersions
+                    - ec2:DescribeSpotFleetInstances
+                    - ec2:DescribeSpotFleetRequestHistory
+                    - ec2:DescribeSpotFleetRequests
+                    - ec2:DescribeSpotInstanceRequests
+                    - ec2:GetLaunchTemplateData
+                    - ec2:ModifyIdFormat
+                    - ec2:ModifySpotFleetRequest
+                    - ec2:ReplaceIamInstanceProfileAssociation
+                    - ec2:RequestSpotFleet
                     - ec2:RunInstances
                     - ec2:TerminateInstances
-                    - ec2:CreateTags
-                    - ec2:ModifyIdFormat
-                    - ec2:AssociateIamInstanceProfile
-                    - ec2:ReplaceIamInstanceProfileAssociation
-                    - ec2:CancelSpotFleetRequests
-                    - ec2:DescribeSpotFleetInstances
-                    - ec2:DescribeSpotFleetRequests
-                    - ec2:DescribeSpotFleetRequestHistory
-                    - ec2:ModifySpotFleetRequest
-                    - ec2:RequestSpotFleet
-                    - ec2:DescribeSpotInstanceRequests
-                    - ec2:DescribeLaunchTemplateVersions
-                    - ec2:GetLaunchTemplateData
-                    - ec2:CreateLaunchTemplateVersion
                   Resource: '*'
                 - Effect: Allow
                   Action:
@@ -819,7 +905,7 @@ Resources:
         AssumeRolePolicyDocument:
           Version: '2012-10-17'
           Statement:
-            - 
+            -
               Effect: Allow
               Principal:
                 Service:
@@ -837,7 +923,7 @@ Resources:
         AssumeRolePolicyDocument:
           Version: '2012-10-17'
           Statement:
-            - 
+            -
               Effect: Allow
               Principal:
                 Service:
@@ -913,7 +999,7 @@ Resources:
     Type: "AWS::EC2::SecurityGroupIngress"
     Properties:
       GroupId: !Ref LSFComputeNodeSG
-      Description: "All traffic from LSF Master" 
+      Description: "All traffic from LSF Master"
       IpProtocol: "-1"
       SourceSecurityGroupId: !Ref LSFMasterSG
 
@@ -921,7 +1007,7 @@ Resources:
     Type: "AWS::EC2::SecurityGroupIngress"
     Properties:
       GroupId: !Ref LSFComputeNodeSG
-      Description: "All traffic from other LSF exec hosts" 
+      Description: "All traffic from other LSF exec hosts"
       IpProtocol: "-1"
       SourceSecurityGroupId: !Ref LSFComputeNodeSG
 
@@ -929,7 +1015,7 @@ Resources:
     Type: "AWS::EC2::SecurityGroupIngress"
     Properties:
       GroupId: !Ref LSFComputeNodeSG
-      Description: "SSH Ingress" 
+      Description: "SSH Ingress"
       IpProtocol: "tcp"
       FromPort: 22
       ToPort: 22
@@ -943,14 +1029,14 @@ Resources:
       StorageCapacity: 1024
       SubnetIds:
         - !Ref ComputeNodeSubnet
-      SecurityGroupIds: 
+      SecurityGroupIds:
         - !Ref FSxOntapSG
       OntapConfiguration:
         DeploymentType: "SINGLE_AZ_1"
         PreferredSubnetId: !Ref ComputeNodeSubnet
-        ThroughputCapacity: 512
+        ThroughputCapacity: 128
         DiskIopsConfiguration:
-          Iops: 10000
+          Iops: 3072
           Mode: "USER_PROVISIONED"
       Tags:
         - Key: "Name"
@@ -976,7 +1062,7 @@ Resources:
         StorageEfficiencyEnabled: False
         StorageVirtualMachineId: !Ref FSxOntapStorageVirtualMachine
         TieringPolicy:
-          CoolingPeriod: 41
+          CoolingPeriod: 31
           Name: "AUTO"
       Tags:
         - Key: "Name"
@@ -993,7 +1079,7 @@ Resources:
        ToPort: 22
        SourceSecurityGroupId: !Ref LSFMasterSG
        Description: "SSH from LSF Mgmt Server"
-  
+
   FSxOntapSGRule01:
    Type: AWS::EC2::SecurityGroupIngress
    Properties:
@@ -1001,7 +1087,7 @@ Resources:
      Description: "All traffic from LSF masters"
      IpProtocol: -1
      SourceSecurityGroupId: !Ref LSFMasterSG
-  
+
   FSxOntapSGRule02:
    Type: AWS::EC2::SecurityGroupIngress
    Properties:
@@ -1009,7 +1095,7 @@ Resources:
      Description: "NFS from LSF compute nodes"
      IpProtocol: -1
      SourceSecurityGroupId: !Ref LSFComputeNodeSG
- 
+
   FSxOntapSGRule03:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -1028,11 +1114,22 @@ Resources:
         PasswordLength: 16
         ExcludeCharacters: '"@/\'
 
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub ${AWS::StackName}-launch-template
+      LaunchTemplateData:
+        ImageId: !FindInMap [ RegionMap, !Ref "AWS::Region", !Ref ComputeAMI ]
+        KeyName: !Ref AdminKeyPair
+        IamInstanceProfile:
+          Arn: !GetAtt LSFComputeNodeInstanceProfile.Arn
+        SecurityGroupIds:
+          - !Ref LSFComputeNodeSG
 
 Outputs:
   LoginServerSsh:
     Description: Login server SSH command
-    Value: !Sub 'ssh -i /path/to/${AdminKeyPair}.pem centos@${LoginServerInstance.PublicIp}'
+    Value: !Sub 'ssh -i /path/to/${AdminKeyPair}.pem rocky@${LoginServerInstance.PublicIp}'
   LoginServerRemoteDesktop:
     Description: Connect to the cluster login/remote desktop server with this IP, using the native DCV client.
     Value: !Sub '${LoginServerInstance.PublicIp}:8443'
@@ -1041,6 +1138,7 @@ Outputs:
     Value: !Ref 'UserName'
   SSHTunnelCommand:
     Description: >
-      Command for setting up an SSH tunnel from your local host to the remote desktop. Use "localhost:18443" as 
+      Command for setting up an SSH tunnel from your local host to the remote desktop. Use "localhost:18443" as
       the connection address in the DCV client. This is helpful if outbound port 8443 is blocked by a proxy.
-    Value: !Sub 'ssh -i /path/to/${AdminKeyPair}.pem -L 18443:localhost:8443 -l centos ${LoginServerInstance.PublicIp}'
+    Value: !Sub 'ssh -i /path/to/${AdminKeyPair}.pem -L 18443:localhost:8443 -l rocky ${LoginServerInstance.PublicIp}'
+

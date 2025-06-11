@@ -73,21 +73,19 @@ IBM Spectrum LSF software and licenses are not provided by this tutorial. You mu
 
 This workshop requires a subscription to the following Amazon Machine Images (AMIs) in AWS Marketplace. AMIs are images that are used to boot the instances (virtual servers) in AWS. They also contain software required to run the workshop.  There is no additional cost to use these AMIs.
 
-* **AWS FPGA Developer AMI**. This AMI provides the pre-licensed Xilinx Vivado EDA tool suite running on CentOS 7.7.
-* **CentOS 7 (x86_64) - with Updates HVM AMI**. This is the official CentOS 7 image.
+* **Rocky Linux 8 (Official)**. This is the official Rocky Linux 8 image.
 
 Be sure you are logged into the workshop AWS account, and follow these instructions to subscribe:
 
-1. Open the page for the [AWS FPGA Developer AMI](https://aws.amazon.com/marketplace/pp/B06VVYBLZZ) AMI in AWS Marketplace, and then choose **Continue to Subscribe**.
+1. Open the page for the [Rocky Linux 8 (Official)](https://aws.amazon.com/marketplace/pp/prodview-2otariyxb3mqu) AMI in AWS Marketplace, and then choose **Continue to Subscribe**.
 
 1. Review the terms and conditions for software usage, and then choose **Accept Terms**. You will get a confirmation page, and an email confirmation will be sent to the account owner. For detailed subscription instructions, see the [AWS Marketplace documentation](https://aws.amazon.com/marketplace/help/200799470).
 
 1. When the subscription process is complete, exit out of AWS Marketplace without further action. **Do not** click **Continue to Launch**; the workshop CloudFormation templates will deploy the AMI for you.
 
-1. Repeat the steps 1 through 3 to subscribe to the [CentOS 7 (x86_64) - with Updates HVM](https://aws.amazon.com/marketplace/pp/B00O7WM7QW) AMI.
 
 1. Verify the subscriptions in the [Marketplace dashboard](https://console.aws.amazon.com/marketplace/home) within the AWS Console.
-    * Click on **Manage subscriptions** to confirm that the two AMI subscriptions are active in your account.
+    * Click on **Manage subscriptions** to confirm that the subscription is active in your account.
 
 ### Step 4. Launch the Cluster
 

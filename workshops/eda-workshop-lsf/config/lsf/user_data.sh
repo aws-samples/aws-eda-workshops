@@ -11,9 +11,10 @@ env
 %EXPORT_USER_DATA%
 
 export PATH=/sbin:/usr/sbin:/usr/local/bin:/bin:/usr/bin
-export AWS_DEFAULT_REGION="$( curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed -e 's/[a-z]*$//' )"
-export EC2_INSTANCE_TYPE="$( curl -s http://169.254.169.254/latest/meta-data/instance-type | sed -e 's/\./_/' )"
-export EC2_INSTANCE_LIFE_CYCLE="$( curl -s http://169.254.169.254/latest/meta-data/instance-life-cycle | sed -e 's/\-/_/' )"
+IMDS_TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+export AWS_DEFAULT_REGION="$(curl -H \"X-aws-ec2-metadata-token: $IMDS_TOKEN\" -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed -e 's/[a-z]*$//' )"
+export EC2_INSTANCE_TYPE="$(curl -H \"X-aws-ec2-metadata-token: $IMDS_TOKEN\" -s http://169.254.169.254/latest/meta-data/instance-type | sed -e 's/\./_/' )"
+export EC2_INSTANCE_LIFE_CYCLE="$(curl -H \"X-aws-ec2-metadata-token: $IMDS_TOKEN\" -s http://169.254.169.254/latest/meta-data/instance-life-cycle | sed -e 's/\-/_/' )"
 export CPU_ARCHITECTURE="$(lscpu | awk '/Architecture/ {print toupper($2)}')"
 export LSF_ADMIN=lsfadmin
 
@@ -23,13 +24,20 @@ useradd -m -u 1500 $LSF_ADMIN
 useradd -m -u 1501 $DCV_USER_NAME
 
 # Install SSM so we can use SSM Session Manager and avoid ssh logins.
-yum install -q -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
-systemctl enable amazon-ssm-agent
-systemctl start amazon-ssm-agent
+machine=$(uname -m)
+if ! systemctl status amazon-ssm-agent; then
+    if [[ $machine == "x86_64" ]]; then
+        yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+    elif [[ $machine == "aarch64" ]]; then
+        yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_arm64/amazon-ssm-agent.rpm
+    fi
+    systemctl enable amazon-ssm-agent || true
+    systemctl restart amazon-ssm-agent
+fi
 
 # Disable Hyperthreading
 echo "Disabling Hyperthreading"
-for cpunum in $(cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | cut -s -d, -f2- | tr ',' '\n' | sort -un)
+for cpunum in $(awk -F'[,-]' '{print $2}' /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | sort -un);
 do
     echo 0 > /sys/devices/system/cpu/cpu${cpunum}/online
 done
@@ -102,6 +110,13 @@ if [ -n "${ssd}" ]; then
    sed -i "s/\(LSF_LOCAL_RESOURCES=.*\)\"/\1 [resource ${ssd}]\"/" $LSF_ENVDIR/lsf.conf
    echo "Updated LSF_LOCAL_RESOURCES lsf.conf with [resource ${ssd}]"
 fi
+
+# Install LSF depdendencies
+yum install -y libnsl
+
+# Install workshop dependencies
+dnf config-manager --enable powertools
+yum install -y make git autoconf gperf flex bison gcc-c++ gcc python3
 
 # Start LSF Daemons
 lsadmin limstartup

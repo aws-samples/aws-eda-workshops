@@ -26,43 +26,24 @@ Metadata:
 
 Mappings:
   RegionMap:
-    us-east-1:  
-      CentOS75: ami-9887c6e7
-      FPGADev: ami-0cf12acd587e51b42
-      ALinux2: not-used-dynamic-lookup-via-ssm
-    us-east-2:  
-      CentOS75: ami-0f2b4fc905b0bd1f1
-      FPGADev: ami-0f522eea547ffbdde
-      ALinux2: not-used-dynamic-lookup-via-ssm
-    us-west-1:
-      CentOS75: ami-074e2d6769f445be5
-      FPGADev: ami-02ed13c760b58790d
-      ALinux2: not-used-dynamic-lookup-via-ssm
-    us-west-2:
-      CentOS75: ami-3ecc8f46
-      FPGADev: ami-00736db43ba03656a
-      ALinux2: not-used-dynamic-lookup-via-ssm
-    eu-west-1:           # Dublin
-      CentOS75: ami-3548444c
-      FPGADev: ami-01f373e791bb05667
-      ALinux2: not-used-dynamic-lookup-via-ssm
-    ap-southeast-1:      # Singapore
-      CentOS75: ami-8e0205f2
-      FPGADev: ami-0d2658414ef6f29cf
-      ALinux2: not-used-dynamic-lookup-via-ssm
-    ap-southeast-2:      # Sydney
-      CentOS75: ami-d8c21dba
-      FPGADev: ami-0651d0a596bb7c014
-      ALinux2: not-used-dynamic-lookup-via-ssm
-      ALinux2: not-used-dynamic-lookup-via-ssm
-    ap-northeast-2:      # Seoul
-      CentOS75: ami-06cf2a72dadf92410
-      FPGADev: ami-03162ccf408e174a1
-      ALinux2: not-used-dynamic-lookup-via-ssm
     ap-northeast-1:      # Tokyo
-      CentOS75: ami-045f38c93733dd48d
-      FPGADev: ami-051c91d3186bfdb7d
-      ALinux2: not-used-dynamic-lookup-via-ssm
+      Rocky8: ami-0025f1507e375f161
+    ap-northeast-2:      # Seoul
+      Rocky8: ami-05d54bac15231e6fa
+    ap-southeast-1:      # Singapore
+      Rocky8: ami-0506f2d559a79a962
+    ap-southeast-2:      # Sydney
+      Rocky8: ami-02b9a6992a20eed2b
+    ca-central-1:        # Canada Central
+      Rocky8: ami-0829e4c2a7a2dcce1
+    eu-west-1:           # Dublin
+      Rocky8: ami-0c14153c77f34b870
+    us-east-1:           # N. Virginia
+      Rocky8: ami-011ef2017d41cb239
+    us-east-2:           # Ohio
+      Rocky8: ami-02391db2758465a87
+    us-west-2:           # Oregon
+      Rocky8: ami-0f74cc83310468775
 
 
 Parameters:
@@ -76,22 +57,19 @@ Parameters:
     Type: "String"
     Default: "m5.xlarge"
     AllowedValues:
-      - t3.medium
       - t3.xlarge
-      - m4.xlarge
-      - m4.2xlarge
       - m5.xlarge
       - m5.2xlarge
-      - m5.4xlarge
-      - c5d.9xlarge
+      - m6i.xlarge
+      - m7i.xlarge
+      - m6a.xlarge
+      - m7a.xlarge
   LoginServerAMI:
     Description: "This should be the same AMI that is used for the compute nodes."
     Type: "String"
-    Default: FPGADev
+    Default: Rocky8
     AllowedValues:
-      - ALinux2
-      - CentOS75
-      - FPGADev
+      - Rocky8
   LSFClusterName:
     Default: LSFCluster
     Description: An environment name that will be prefixed to resource names
@@ -120,15 +98,6 @@ Parameters:
     Description: User name for DCV remote desktop login. Default is "simuser".
     MinLength: '4'
     Type: String
-  LatestAmazonLinux2Ami:
-    Description: AMI (OS image) for the master server.
-    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
-    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
-
-Conditions:
-  UseAmazonLinux2AMI: !Equals
-    - !Ref LoginServerAMI
-    - ALinux2
 
 Resources:
   InstanceWaitHandle:
@@ -155,10 +124,7 @@ Resources:
     Type: "AWS::EC2::Instance"
     Properties:
       InstanceType: !Ref LoginServerInstanceType
-      ImageId: !If
-          - UseAmazonLinux2AMI
-          - Ref: LatestAmazonLinux2Ami
-          - !FindInMap [ RegionMap, !Ref "AWS::Region", !Ref LoginServerAMI ]
+      ImageId: !FindInMap [ RegionMap, !Ref "AWS::Region", !Ref LoginServerAMI ]
       SubnetId:
           Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"PublicSubnet" ] ]
       SecurityGroupIds:
@@ -185,8 +151,17 @@ Resources:
 
               export LSF_INSTALL_DIR="${FileSystemMountPoint}${LSFInstallPath}/${LSFClusterName}"
 
-              # Update AWS CLI
-              pip3 -q install awscli
+              OS_NAME=`awk -F= '/^NAME=/{print $2}' /etc/os-release`
+              OS_VERSION=`awk -F= '/^VERSION_ID=/{print $2}' /etc/os-release`
+              if [ "$OS_NAME" == "\"Rocky Linux\"" ] && [ "$OS_VERSION" == "\"8.9\"" ]; then
+                OS="rocky8"
+                yum install -y python3 wget unzip libnsl vim
+                pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-2.0-29.tar.gz
+                cd /tmp
+                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                unzip -q awscliv2.zip
+                ./aws/install
+              fi
 
               # Set DCV username and password
               export SM_PASSWORD=`/usr/local/bin/aws secretsmanager get-secret-value \
@@ -205,6 +180,10 @@ Resources:
               yum install -q -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
               systemctl enable amazon-ssm-agent
               systemctl start amazon-ssm-agent
+
+              # Install packages needed for the lab
+              dnf config-manager --enable powertools
+              yum install -y make git autoconf gperf flex bison gcc-c++ gcc python3
 
               ## Mount NFS file system for LSF install
               ## and create working directories
@@ -233,14 +212,33 @@ Resources:
                 sed -i -e "s/^#exclude.*/exclude=mirror.es.its.nyu.edu/" /etc/yum/pluginconf.d/fastestmirror.conf
                 sudo yum clean all
                 sudo yum -y upgrade                
-                sudo yum -y groupinstall "GNOME Desktop"
+                sudo yum install -y wget vim libnsl
+                local MAX_ATTEMPTS=10
+                local ATTEMPT_NUMBER=1
+                local SLEEP_TIME_SECONDS=10
+                while [ ${!ATTEMPT_NUMBER} -le ${!MAX_ATTEMPTS} ]; do
+                   echo "Attempt ${!ATTEMPT_NUMBER} of ${!MAX_ATTEMPTS}"
+                   sudo yum -y groupinstall "Server with GUI" --allowerasing
+                   if [ $? -eq 0 ]; then
+                       echo "Command executed successfully after ${!ATTEMPT_NUMBER}/${!MAX_ATTEMPTS}!"
+                       break
+                   else
+                       echo "Command failed. Retrying again in ${!SLEEP_TIME_SECONDS}..."
+                       sleep ${!SLEEP_TIME_SECONDS}
+
+                       ((ATTEMPT_NUMBER++))
+                   fi
+                done
+                sudo yum -y install mesa-dri-drivers xterm gvim
+                sed -i 's/#WaylandEnable=false/WaylandEnable=false/' /etc/gdm/custom.conf
+                systemctl restart gdm
               }
 
               function install_dcv {
                 mkdir -p /tmp/dcv-inst.d
                 pushd /tmp/dcv-inst.d
                 rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
-                wget https://d1uj6qtbmh3dt5.cloudfront.net/2022.1/Servers/nice-dcv-2022.1-13300-el7-x86_64.tgz
+                wget https://d1uj6qtbmh3dt5.cloudfront.net/2022.1/Servers/nice-dcv-2024.0-19030-el8-x86_64.tgz
                 tar -xvzf nice-dcv*.tgz
                 cd nice-dcv*
                 yum -y install nice-dcv-server*.rpm \
@@ -279,9 +277,6 @@ Resources:
               stop_disable_svc firewalld
               stop_disable_svc libvirtd
               sudo systemctl set-default multi-user.target
-              #systemctl isolate multi-user.target
-              #systemctl isolate graphical.target
-              #DISPLAY=:0 XAUTHORITY=\$(ps aux | grep "X.*\\-auth" | grep -v grep | awk -F"-auth " '{print \$2}' | awk '{print \$1}') xhost | grep "SI:localuser:dcv$"
               dcv create-session --type=virtual --owner ${!user_name} --user ${!user_name} --gl off simuser
               dcv list-sessions
 

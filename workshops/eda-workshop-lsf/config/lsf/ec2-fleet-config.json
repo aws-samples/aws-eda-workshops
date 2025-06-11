@@ -19,6 +19,12 @@
                     "Priority": 72
                 },
                 {
+                    "InstanceType": "m7i.2xlarge",
+                    "SubnetId": "%CFN_COMPUTE_NODE_SUBNET%",
+                    "WeightedCapacity": 4,
+                    "Priority": 73
+                },
+                {
                     "InstanceType": "m6i.large",
                     "SubnetId": "%CFN_COMPUTE_NODE_SUBNET%",
                     "WeightedCapacity": 1,
@@ -31,6 +37,12 @@
                     "Priority": 62
                 },
                 {
+                    "InstanceType": "m6i.2xlarge",
+                    "SubnetId": "%CFN_COMPUTE_NODE_SUBNET%",
+                    "WeightedCapacity": 4,
+                    "Priority": 63
+                },
+                {
                     "InstanceType": "m5.large",
                     "SubnetId": "%CFN_COMPUTE_NODE_SUBNET%",
                     "WeightedCapacity": 1,
@@ -41,6 +53,12 @@
                     "SubnetId": "%CFN_COMPUTE_NODE_SUBNET%",
                     "WeightedCapacity": 2,
                     "Priority": 52
+                },
+                {
+                    "InstanceType": "m5.2xlarge",
+                    "SubnetId": "%CFN_COMPUTE_NODE_SUBNET%",
+                    "WeightedCapacity": 4,
+                    "Priority": 53
                 }
             ]
         }

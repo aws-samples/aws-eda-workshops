@@ -122,21 +122,18 @@ This tutorial provides separate CloudFormation templates for these options. It a
 
 This workshop requires a subscription to the following AMIs in AWS Marketplace. AMIs are images that are used to boot the instances (virtual servers) in AWS. They also contain software required to run the workshop.  There is no additional cost to use these AMIs.
 
-- AWS FPGA Developer AMI
-- CentOS 7 (x86_64) - with Updates HVM AMI
+- Rocky Linux 8 (Official)
 
 Sign in to your AWS account, and follow these instructions to subscribe:
 
-1. Open the page for the [AWS FPGA Developer AMI](https://aws.amazon.com/marketplace/pp/B06VVYBLZZ) AMI in AWS Marketplace, and then choose **Continue to Subscribe**.
+1. Open the page for the [Rocky Linux 8 (Official)](https://aws.amazon.com/marketplace/pp/prodview-2otariyxb3mqu) AMI in AWS Marketplace, and then choose **Continue to Subscribe**.
 
 1. Review the terms and conditions for software usage, and then choose **Accept Terms**. You will get a confirmation page, and an email confirmation will be sent to the account owner. For detailed subscription instructions, see the [AWS Marketplace documentation](https://aws.amazon.com/marketplace/help/200799470).
 
 1. When the subscription process is complete, exit out of AWS Marketplace without further action. **Do not** click **Continue to Launch**; the workshop CloudFormation templates will deploy the AMI for you.
 
-1. Repeat the steps 1 through 3 to subscribe to the [CentOS 7 (x86_64) - with Updates HVM](https://aws.amazon.com/marketplace/pp/B00O7WM7QW) AMI.
-
-1. Verify the subscriptions in the [Marketplace dashboard](https://console.aws.amazon.com/marketplace/home) within the AWS Console.
-    - Click on **Manage subscriptions** to confirm that the two AMI subscriptions are active in your account.
+1. Verify the subscription in the [Marketplace dashboard](https://console.aws.amazon.com/marketplace/home) within the AWS Console.
+    - Click on **Manage subscriptions** to confirm that the subscription is active in your account.
 
 ### Step 4. Launch the Cluster
 
@@ -194,9 +191,9 @@ Sign in to your AWS account, and follow these instructions to subscribe:
 
 ### Step 5. Test the Deployment
 
-1. Log into the login server via SSH as `centos` user using the private key from the key pair you provided in the Cloudformation stack and the IP address found in **LoginServerPublicIp** under the stack's **Outputs** tab.
+1. Log into the login server via SSH as `rocky` user using the private key from the key pair you provided in the Cloudformation stack and the IP address found in **LoginServerPublicIp** under the stack's **Outputs** tab.
 
-   `ssh -i /path/to/private_key centos@<host_ip>`
+   `ssh -i /path/to/private_key rocky@<host_ip>`
 
    >NOTE: If you have trouble connecting, ensure the security group on the login server includes the IP address of your client.
 

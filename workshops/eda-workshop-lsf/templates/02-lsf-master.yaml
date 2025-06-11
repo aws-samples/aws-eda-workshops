@@ -8,43 +8,24 @@ Description: |
 
 Mappings:
   RegionMap:
-    us-east-1:  
-      CentOS75: ami-9887c6e7
-      FPGADev: ami-0cf12acd587e51b42
-      ALinux2: not-used-dynamic-lookup-via-ssm
-    us-east-2:  
-      CentOS75: ami-0f2b4fc905b0bd1f1
-      FPGADev: ami-0f522eea547ffbdde
-      ALinux2: not-used-dynamic-lookup-via-ssm
-    us-west-1:
-      CentOS75: ami-074e2d6769f445be5
-      FPGADev: ami-02ed13c760b58790d
-      ALinux2: not-used-dynamic-lookup-via-ssm
-    us-west-2:
-      CentOS75: ami-3ecc8f46
-      FPGADev: ami-00736db43ba03656a
-      ALinux2: not-used-dynamic-lookup-via-ssm
-    eu-west-1:           # Dublin
-      CentOS75: ami-3548444c
-      FPGADev: ami-01f373e791bb05667
-      ALinux2: not-used-dynamic-lookup-via-ssm
-    ap-southeast-1:      # Singapore
-      CentOS75: ami-8e0205f2
-      FPGADev: ami-0d2658414ef6f29cf
-      ALinux2: not-used-dynamic-lookup-via-ssm
-    ap-southeast-2:      # Sydney
-      CentOS75: ami-d8c21dba
-      FPGADev: ami-0651d0a596bb7c014
-      ALinux2: not-used-dynamic-lookup-via-ssm
-      ALinux2: not-used-dynamic-lookup-via-ssm
-    ap-northeast-2:      # Seoul
-      CentOS75: ami-06cf2a72dadf92410
-      FPGADev: ami-03162ccf408e174a1
-      ALinux2: not-used-dynamic-lookup-via-ssm
     ap-northeast-1:      # Tokyo
-      CentOS75: ami-045f38c93733dd48d
-      FPGADev: ami-051c91d3186bfdb7d
-      ALinux2: not-used-dynamic-lookup-via-ssm
+      Rocky8: ami-0025f1507e375f161
+    ap-northeast-2:      # Seoul
+      Rocky8: ami-05d54bac15231e6fa
+    ap-southeast-1:      # Singapore
+      Rocky8: ami-0506f2d559a79a962
+    ap-southeast-2:      # Sydney
+      Rocky8: ami-02b9a6992a20eed2b
+    ca-central-1:        # Canada Central
+      Rocky8: ami-0829e4c2a7a2dcce1
+    eu-west-1:           # Dublin
+      Rocky8: ami-0c14153c77f34b870
+    us-east-1:           # N. Virginia
+      Rocky8: ami-011ef2017d41cb239
+    us-east-2:           # Ohio
+      Rocky8: ami-02391db2758465a87
+    us-west-2:           # Oregon
+      Rocky8: ami-0f74cc83310468775
 
 Parameters:
   TemplateSourceBucketEndpoint:
@@ -54,30 +35,22 @@ Parameters:
   AdminKeyPair:
     Description: "Name of an existing EC2 KeyPair to enable SSH access to the master server."
     Type: "AWS::EC2::KeyPair::KeyName"
-    Default: "morrmt"
     AllowedPattern: ".+"
   MasterInstanceType:
     Description: "The desired instance type for the master node of the cluster."
     Type: "String"
-    Default: "m5.2xlarge"
-  LatestAmazonLinux2Ami:
-    Description: AMI (OS image) for the master server.
-    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
-    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+    Default: "m6i.2xlarge"
   MasterServerAMI:
     Type: "String"
-    Default: ALinux2
+    Default: Rocky8
     AllowedValues:
-      - ALinux2
+      - Rocky8
   ComputeAMI:
     Description: AMI (OS image) for the compute nodes.  
-      NOTE - You must first subscribe to this AMI in the AWS Marketplace at https://aws.amazon.com/marketplace/pp/B00O7WM7QW"
     Type: "String"
-    Default: "FPGADev"
+    Default: "Rocky8"
     AllowedValues:
-      - ALinux2
-      - CentOS75
-      - FPGADev
+      - Rocky8
   LSFClusterName:
     Description: "The name of the LSF cluster."
     Type: "String"
@@ -109,7 +82,7 @@ Parameters:
       The S3 URI to the LSF 10.1 Fix Pack package. This must the lastest cumulative Fix Pack package.
       Select package object in the console and choose Copy Path and paste here.
     Type: "String"
-    Default: "s3://<your_bucket>/lsf10.1_linux2.6-glibc2.3-x86_64.520009.tar.Z"
+    Default: "s3://<your_bucket>/lsf10.1_linux2.6-glibc2.3-x86_64-601547.tar.Z"
   CustomerLSFEntitlementUri:
     Description: The S3 URI to the LSF entitlement file, lsf_std_entitlement.dat or lsf_adv_entitlement.dat.
       Select object in the S3 console and choose Copy Path and paste here.
@@ -118,11 +91,6 @@ Parameters:
   DCVUserName:
     Type: String
     Default: simuser
-
-Conditions:
-  UseAmazonLinux2AMI: !Equals
-    - !Ref ComputeAMI
-    - ALinux2
 
 Resources:
   LSFMasterInstance:
@@ -133,10 +101,7 @@ Resources:
         Timeout: PT15M
     Properties:
       InstanceType: !Ref MasterInstanceType
-      ImageId: !If
-                - UseAmazonLinux2AMI
-                - Ref: LatestAmazonLinux2Ami
-                - !FindInMap [ RegionMap, !Ref "AWS::Region", !Ref MasterServerAMI ] 
+      ImageId: !FindInMap [ RegionMap, !Ref "AWS::Region", !Ref MasterServerAMI ] 
       SubnetId:
           Fn::ImportValue: !Sub '${LSFClusterName}-PrivateSubnet'
       SecurityGroupIds:
@@ -179,7 +144,8 @@ Resources:
               exec > >(tee /var/log/user-data.log|logger -t user-data ) 2>&1
 
               # Print user data
-              INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+              TOKEN=$(curl --silent -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 300")
+              INSTANCE_ID=$(curl -s -H "X-aws-ec2-metadata-token: ${TOKEN}" http://169.254.169.254/latest/meta-data/instance-id)
               cat /var/lib/cloud/instances/$INSTANCE_ID/user-data.txt
 
               echo "*** BEGIN LSF MASTER BOOTSTRAP ***"
@@ -214,8 +180,23 @@ Resources:
               EOF
               export $(grep -v '^#' /root/bootstrap.env | xargs)
 
-              # Install cfn-signal helper script to signal bootstrap completion to CloudFormation
-              yum install aws-cfn-bootstrap ed java-1.8.0-openjdk wget vim -q -y && \
+              OS_NAME=`awk -F= '/^NAME=/{print $2}' /etc/os-release`
+              OS_VERSION=`awk -F= '/^VERSION_ID=/{print $2}' /etc/os-release`
+              if [ "$OS_NAME" == "\"Rocky Linux\"" ] && [ "$OS_VERSION" == "\"8.9\"" ]; then
+                OS="rocky8"
+                yum clean all
+                yum install -y python3 wget unzip libnsl vim
+                pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-2.0-29.tar.gz
+                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                unzip -q awscliv2.zip
+                ./aws/install
+              elif [ "$OS_NAME" == "\"Amazon Linux\"" ] && [ "$OS_VERSION" == "\"2\"" ]; then
+                OS="amazonlinux2"
+                # Install cfn-signal helper script to signal bootstrap completion to CloudFormation
+                yum update -y aws-cfn-bootstrap
+              fi
+
+              yum install ed java-1.8.0-openjdk wget vim -q -y && \
 
               # Prepare NFS
               aws s3 cp s3://$AWS_S3_BUCKET_NAME/workshops/eda-workshop-lsf/scripts/nfs-bootstrap-master.sh  - | bash && \
@@ -236,25 +217,37 @@ Resources:
 
               source $LSF_INSTALL_DIR/conf/profile.lsf
 
-              $LSF_INSTALL_DIR/10.1/install/hostsetup --top="$LSF_INSTALL_DIR" \
-                                                      --profile="y" \
-                                                      --start="y"  && \
+              patch_version=$(echo $LSF_FP_PKG | sed -E 's/.*-([0-9]+)\.tar\.Z/\1/')
+              if [[ $patch_version -ge 601547 ]]; then
+                cp $LSF_INSTALL_DIR/10.1/linux2.6-glibc2.3-x86_64/etc/lsf_daemons $LSF_INSTALL_DIR/10.1/linux2.6-glibc2.3-x86_64/etc/lsf_daemons.bak
+                cp $LSF_INSTALL_DIR/10.1/install/instlib/startup.svr4 $LSF_INSTALL_DIR/10.1/linux2.6-glibc2.3-x86_64/etc/lsf_daemons
+                sed -i "s,LSF_CONF=@LSF_CONF@,LSF_CONF=$LSF_ENVDIR/lsf.conf," $LSF_INSTALL_DIR/10.1/linux2.6-glibc2.3-x86_64/etc/lsf_daemons
+                # Disable SELinux to enable the hostsetup services to start
+                setenforce 0
+                sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+                $LSF_INSTALL_DIR/10.1/install/hostsetup --top="$LSF_INSTALL_DIR" \
+                                                        --profile="y" \
+                                                        --start="y" --boot="y" && \
+              else
+                $LSF_INSTALL_DIR/10.1/install/hostsetup --top="$LSF_INSTALL_DIR" \
+                                                        --profile="y" \
+                                                        --start="y" --boot="y" && \
+              fi
 
               # Verify that LSF is up and send signal to Cloudformation
               sleep 5 && lsid
-              /opt/aws/bin/cfn-signal -e $? --stack $AWS_CFN_STACK_NAME \
-                                            --resource LSFMasterInstance \
-                                            --region $AWS_CFN_STACK_REGION
+              if [ "$OS_NAME" == "\"Rocky Linux\"" ] && [ "$OS_VERSION" == "\"8.9\"" ]; then
+                /usr/local/bin/cfn-signal -e $? --stack $AWS_CFN_STACK_NAME --resource LSFMasterInstance --region $AWS_CFN_STACK_REGION
+              elif [ "$OS_NAME" == "\"Amazon Linux\"" ] && [ "$OS_VERSION" == "\"2\"" ]; then
+                /opt/aws/bin/cfn-signal -e $? --stack $AWS_CFN_STACK_NAME --resource LSFMasterInstance --region $AWS_CFN_STACK_REGION
+              fi
 
               echo "*** END LSF MASTER BOOTSTRAP ***"
               --//--
 
             - LSFComputeNodeInstanceProfileArn: !GetAtt LSFComputeNodeInstanceProfile.Arn
               LSFComputeNodeSpotFleetRoleArn: !GetAtt LSFSpotFleetRole.Arn
-              LSFComputeNodeAmi: !If
-                - UseAmazonLinux2AMI
-                - Ref: LatestAmazonLinux2Ami
-                - !FindInMap [ RegionMap, !Ref "AWS::Region", !Ref ComputeAMI ]
+              LSFComputeNodeAmi: !FindInMap [ RegionMap, !Ref "AWS::Region", !Ref ComputeAMI ]
               LSFComputeNodeSGGroupId:
                 Fn::ImportValue: !Join [ '-', [ !Ref LSFClusterName,"LSFComputeNodeSG" ] ]
               LSFComputeNodeSubnet:
@@ -529,10 +522,7 @@ Resources:
     Properties: 
       LaunchTemplateName: !Sub ${AWS::StackName}-launch-template
       LaunchTemplateData: 
-        ImageId: !If
-                - UseAmazonLinux2AMI
-                - Ref: LatestAmazonLinux2Ami
-                - !FindInMap [ RegionMap, !Ref "AWS::Region", !Ref ComputeAMI ]
+        ImageId: !FindInMap [ RegionMap, !Ref "AWS::Region", !Ref ComputeAMI ]
         KeyName: !Ref AdminKeyPair
         IamInstanceProfile:
           Arn: !GetAtt LSFComputeNodeInstanceProfile.Arn
