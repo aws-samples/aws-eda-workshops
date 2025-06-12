@@ -16,12 +16,6 @@ This workshop shows you how to deploy a fully functional compute cluster based o
 - **EDA Workshop with AWS ParallelCluster**
 This workshop shows you how to deploy an EDA computing cluster using AWS ParallelCluster. AWS ParallelCluster is an AWS supported Open Source cluster management tool that makes it easy for you to deploy and manage High Performance Computing (HPC) clusters in the AWS cloud.
 
-- **EDA Workshop with AWS Batch**
-This workshop demonstrates how to run EDA workloads using AWS Batch, a fully managed AWS workload and resource management service. In this workshop, you'll learn how to submit and mananage EDA workloads with AWS Batch.
-
-- **EDA Workflows with AWS Step Functions**] 
-This workshop shows you how to build a cloud-native, visual EDA workflow using AWS Step Functions.  
-
 ## License Summary
 
 This sample code is made available under the MIT-0 license. See the LICENSE file.

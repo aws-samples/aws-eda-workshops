@@ -134,16 +134,11 @@ Parameters:
 
   ComputeAMI:
     Description: |-
-      'FPGADev' provides access to the Xilinx Vivado EDA software. Use this when
-      deploying the AWS EDA workshop. Choose 'CentOS' if you intend to run your
-      own workloads in this environment. NOTE: You must first subscribe to these
-      AMIs in the AWS Marketplace.  See included documentation for details.
+      The AMI (OS image) for the compute nodes and login servers.
     Type: String
-    Default: FPGADev
+    Default: Rocky8
     AllowedValues:
-      - FPGADev
-      - CentOS75
-      - ALinux2
+      - Rocky8
 
   LSFClusterName:
     Description: The name of the computing environment.  This will also be the name of the LSF cluster.
@@ -198,14 +193,12 @@ Parameters:
 
   LoginServerAMI:
     Description: This should be the same AMI that is used for the compute nodes. 
-      AMI (OS image) for the master server.  NOTE You must first subscribe to this 
-      AMI in the AWS Marketplace at https://aws.amazon.com/marketplace/pp/B06VVYBLZZ"
+      AMI (OS image) for the master server.  NOTE You must first subscribe to this
+      AMI in the AWS Marketplace at https://aws.amazon.com/marketplace/pp/prodview-2otariyxb3mqu
     Type: String
-    Default: FPGADev
+    Default: Rocky8
     AllowedValues:
-      - CentOS75
-      - FPGADev
-      - ALinux2
+      - Rocky8
 
   VpcAz:
     Description: The availability zone for this compute environment

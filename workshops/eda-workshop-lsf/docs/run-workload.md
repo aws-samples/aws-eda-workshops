@@ -2,57 +2,144 @@
 
 ## Overview
 
-This tutorial provides instructions for running an example logic simulation workload in the EDA computing envronment created in the [deployment tutorial](deploy-environment.md) included in this workshop.  The example workload uses the designs and IP contained in the public **AWS F1 FPGA Development Kit** and the **Xilinx Vivado** EDA software suite provided by the **AWS FPGA Developer AMI** that you subscribed to in the first tutorial. Although you'll be using data and tools from AWS FPGA developer resources, you will not be running on the F1 FPGA instance or executing any type of FPGA workload; we're simply running software simulations on EC2 compute instances using the design data, IP, and software that these kits provide for no additional charge.
-
-**Note** there are no additional charges to use the AWS F1 FPGA Development Kit or the  **Xilinx Vivado** tools in the AWS FPGA Developer AMI.  You are only charged for the underlying AWS resources consumed by running the AMI and included software.
+This tutorial provides instructions for running an example logic simulation workload in the EDA computing environment created in the [deployment tutorial](deploy-simple.md) included in this workshop. The example workload relies on creating sample verilog test cases and submission scripts using Amazon Q CLI.
 
 ### Step 1. Log into the DCV remote desktop session
 
 1. Download and install the [NICE DCV remote desktop native client](https://download.nice-dcv.com) on your local laptop/desktop computer.
 1. Launch the DCV client application. 
 1. Paste the public IP address of the **Login Server** into the field. Click "Trust & Connect" when prompted. 
-1. Enter the Username and Password.  You can find these credentials in **AWS Secrets Manager** in the AWS Console:
-   1. Go to the Secrets Manager service and select the ***/DCVCredentialsSecret** secret.
+1. Enter the Username and Password.  You can find these credentials in AWS Secrets Manager in the AWS Console:
+   1. Go to the Secrets Manager service and select the **DCVCredentialsSecret** secret.
    1. Click on the **Retrieve secret value** button.
    1. Copy the **username** and **password** and paste them into the appropriate DCV client fields.
 1. If you have trouble connecting, ensure the security group on the login server includes the IP address of your client.
 
-### Step 2. Clone the AWS F1 FPGA Development Kit repo
+### Step 2. Submit a job to download, compile, and install icarus Verilog
 
+* Create a directory under `/fsxn/scratch/` for your user id `simuser` then change the working directory to that path using the following commands:
 
-1. Open a new terminal in the DCV remote desktop session and clone the example workload from the `aws-fpga-sa-demo` Github repo into the `proj` directory on the NFS file system. The default location is `/fsxn/proj`.
+```
+mkdir -p /fsxn/scratch/simuser
+cd /fsxn/scratch/simuser
 
-   ```bash
-   cd /fsxn/proj
-   git clone https://github.com/morrmt/aws-fpga-sa-demo.git
-   ```
+```
+* Use any editor to create a new file named `compiler_iverilog.sh` under `/fsxn/scratch/simuser`
 
-1. Change into the repo's workshop directory
+```#!/bin/bash
 
-   `cd /fsxn/proj/aws-fpga-sa-demo/eda-workshop`
+set -x
 
-### Step 3. Run setup job
+cd /tmp
+git clone https://github.com/steveicarus/iverilog.git
+cd iverilog
+/bin/sh autoconf.sh
+mkdir -p /fsxn/scratch
+./configure --prefix=/fsxn/scratch/iverilog
+make
+make install
+```
 
-This first job will set up the runtime environment for the simulations that you will submit to LSF in Step 3 below.
+Next, change the permissions on compile_iverilog.sh using: `chmod +x compile_iverilog.sh`. You can run this script directly within the DCV remote desktop session or you can submit this script to LSF so it would start a separate compute node to run this script. You can submit this script to LSF using `bsub ./compile_iverilog.sh`. Note that it would take a few minutes for LSF to provision a new host and execute the initializtion scripts to join the LSF cluster. You can monitor the status of the job using `bjobs` and the hosts in the cluster using `bhosts`
 
-1. **Submit the setup job into LSF**. The `--scratch-dir` should be the path to the scratch directory you defined when launching the CloudFormation stack in the previous tutorial.  The default is `/fsxn/scratch`.
+After the compilation completes successfully, verify that iverilog is now installed under `/fsxn/scratch/iverilog` as expected. After confirming this, then you'll need to add `/fsxn/scratch/iverilog/bin` to the PATH environment variable using this command
 
-   `bsub -R aws -J "setup" ./run-sim.sh --scratch-dir /fsxn/scratch`
+```
+echo "export PATH=/fsxn/scratch/iverilog/bin:${PATH}" >> ~/.bashrc; source ~/.bashrc
+```
 
-1. **Watch job status**. This job will generate demand to LSF Resource Connector for an EC2 instance.  Shortly after you submit the job, you should see a new "LSF Exec Host" instance in the EC2 Dashboard in the AWS console. It should take 2-5 minutes for this new instance to join the cluster and accept the job.  Use the `bjobs` command to watch the status of the job.  Once it enters the `RUN` state, move on to the next step.
+### Step 3. Download and install Amazon Q CLI
 
-### Step 4. Run verification tests at scale
+Access the login server via SSH.
 
-Now we are ready to scale out the simulations.  Like with the setup job above, when these jobs hit the queue LSF will generate demand for EC2 instances, and Resource Connector will start up the appropriate number and type of instances to satisfy the pending jobs in the queue.
+* Go back to AWS EC2 console
+* Select the EC2 instance named `Login Server` and click **Connect**
+* Select Session Manager tab then click **Connect**
+* `sudo su` then `su -l simuser`
 
-1. **Submit a large job array**. This job array will spawn 100 verification jobs.  These jobs will be dispatched only after the setup job above completes successfully. Again, The `--scratch-dir` should be the path to the scratch directory you used above.
+```
+curl --proto '=https' --tlsv1.2 -sSf "https://desktop-release.q.us-east-1.amazonaws.com/latest/q-x86_64-linux-musl.zip" -o "q.zip"
+unzip q.zip
 
-   `bsub -R aws -J "regress[1-100]" -w "done(setup)" ./run-sim.sh --scratch-dir /fsxn/scratch`
+```
 
-   **Option: Specify an instance type**
+Now, we've download the Amazon Q CLI installer and unpacked it. Let's run `./q/install.sh` to start the installation. 
+
+For the first question:
+`Do you want q to modify your shell config (you will have to manually do this otherwise)?`
+Select No
+
+For the second question `Select login method ›`, select `❯ Use for Free with Builder ID` if you don't have Amazon Q Pro License or select `Use with Pro license` if you have one.
+
+If you selected `❯ Use for Free with Builder ID`, this will give you a user code and a URL to open in your browser to complete the sign-in process if you have an existing Builder ID or you can sign-up for one. The URL should look similar to this: 
+`https://view.awsapps.com/start/#/device?user_code=ABCD-EFDH`
+
+Open this URL directly in your browser and follow the sign-in or sign-up process.
+
+Once completed, you should see a message such as this in the SSH terminal where you started the installation process:
+```
+Device authorized
+Logged in successfully
+```
+
+* After you're done with the steps in this section, close the Session Manager tab, and go back to the DCV remote desktop session
+
+### Step 4. Prompt Amazon Q CLI to create verilog models, tests, and scripts to simulate the models using IBM LSF Scheduler
+
+Create a new directory for this section called `amazon_q_verilog` under `/fsxn/scratch/simuser/` using the following commands:
+```
+mkdir -p /fsxn/scratch/simuser/amazon_q_verilog
+cd /fsxn/scratch/simuser/amazon_q_verilog
+```
+
+Then start chatting with Amazon Q by typing `q chat`.
+
+Amazon Q chat should start with a blank prompt. Use the following prompt as a starting point but feel free to make changes if you like
+
+```
+Create a python script to generate verilog models for 10 standard cells and the corresponding verilog tests. Make sure the python script doesn't use backslash in f-string expressions as this requires python3.12 but my environment uses an older python version. Also, ensure the verilog tests exhaustively exercise all possible input combinations for each cell.  Next, create another shell script to compile and simulate the verilog models using icarus verilog. Create the python and all shell scripts under a "scripts" folder. Next, create a makefile in the current directory with the following targets: 1) "clean" which would remove everything generated by the scripts and all simulation results and logs, 2) "generate" which would generate verilog models under "models" directory in the current directory and verilog tests under "tests/verilog" directory in the current directory, and 3) "iverilog" to compile and simulate the verilog models and verilog tests using icarus verilog. The simulation logs, VCD waveform files, and iverilog binary models should be created under "results". Make sure to use full path for the various directories instead of relative path to avoid creating files outside the current directory. Finally, create a submit_lsf_job.sh script under the "scripts" directory to submit a job to IBM LSF scheduler "verif" queue which would execute "make iverilog" on a remote compute node. The LSF job submission script should propagate the user's environment variables defined prior to running the simulations. The simulation script should include a summary to indicate the total number of cells, how many passed simulations and how many failed. Start creating these files one at a time instead of attempting to create all of them at once.
+```
+
+Accept the prompts to create the directory structure, and each of the scripts accordingly. Amazon Q will also update the file permissions for the script and will display a summary of the steps it did.
+
+### Step 5. Test
+
+Keep the terminal where you started Amazon Q chat running then open a new terminal so you can start testing the scripts.
+
+First run `make clean generate` and verify that the models and tests are generated in the expected folders. If you observe errors, prompt Amazon Q CLI and inform it about the error and what you were expecting.
+
+For example, you can use the following prompt to have Amazon Q CLI identify the error
+
+```
+make is not working as expected. Run it, read the output and log files, identify the root cause, and update the scripts accordingly. Don't make changes to the generated verilog models or tests but update the python script that generates these files.
+```
+
+Accept the changes that Amazon Q would make to the various scripts. Note: it could take Amazon Q CLI a few iterations till it identifies the root cause and fixes the scripts accordingly.
+
+Finally, let's run the submit_lsf_job.sh script which should be executed as `./scripts/submit_lsf_job.sh`. Run the `bjobs` command and notice that the jobs is submitted to the "verif" queue as expected. You can wait for the job to complete the execution on the remote host or you can skip to the next section.
+
+### Step 6. Test with parallel simulations
+
+Go back to Amazon Q CLI, and prompt it as follows:
+
+```
+Modify the submit_lsf_job.sh script such that it would take a number parameter (defaults to 1) for parallel simulations then it submit a job array to lsf so that it would run "make iverilog" a corresponding number of parallel simulations and create the results in a corresponding number of results directories. Modify other scripts as needed.
+```
+
+Accept the changes that Amazon Q CLI makes to the various scripts. After it is done, then start testing with 4 parallel simulations using `./scripts/submit_lsf_job.sh 4` then increase the number to 10 parallel simulations using `./scripts/submit_lsf_job.sh 10`.
+
+Observe that the updated scripts would indeed submit a job array instead of single job. In the `bjobs` output, you can see that the JOB_NAME column has multiple jobs with the same name but with a different array index between square brackets. This is the LSF notation for job arrays.
+
+   **Optional task: Specify an instance type**
    LSF will choose the best instance type based on the LSF Resource Connector configuration, but there may be situations where you may want to target a particular instance type for a workload. This workshop has been configured to allow you to overide the default behavior and specify the desired instance type. The following instance types are supported in this workshop: `z1d_2xlarge`, `m5_xlarge`, `m5_2xlarge`, `c5_2xlarge`, `z1d_2xlarge`, `r5_12xlarge`, and `r5_24xlarge`.  Use the `instance_type` resource in the `bsub` resource requirement string to request one of these instances. For example:
 
-   `bsub -R "select[aws && instance_type==z1d_2xlarge]" -J "regress[1-100]" -w "done(setup)" ./run-sim.sh --scratch-dir /fsxn/scratch`
+   Edit submit_lsf_job.sh or the script it creates to submit the simulation jobs to include the following header:
+
+   `#BSUB -R "select[aws && instance_type==m5_2xlarge]"`
+
+### Useful LSF commands
+
+1. Run the `bhosts` command to see how many hosts in the cluster
 
 1. Check job status
 
@@ -68,21 +155,7 @@ Now we are ready to scale out the simulations.  Like with the setup job above, w
 
 1. Check LSF Resource Connector status
 
-
     `badmin rc view`
-
     `badmin rc error`
 
-1. View LSF Resource Connector template configuration
-
-    `badmin rc view -c templates`
-
 About 10 minutes after the jobs complete, LSF Resource Connector will begin terminating the idle EC2 instances.
-
-### Step 5: Clean up
-
-To help prevent unwanted charges to your AWS account, you can delete the AWS resources that you used for this tutorial.
-
-1. Delete the parent stack
-
-1. Delete orphaned EBS volumes.  The FPGA AMI doesn't delete them on instance termination.
