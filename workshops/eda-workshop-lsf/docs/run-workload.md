@@ -22,11 +22,11 @@ This tutorial provides instructions for running an example logic simulation work
 ```
 mkdir -p /fsxn/scratch/simuser
 cd /fsxn/scratch/simuser
-
 ```
 * Use any editor to create a new file named `compiler_iverilog.sh` under `/fsxn/scratch/simuser`
 
-```#!/bin/bash
+```
+#!/bin/bash
 
 set -x
 
@@ -60,7 +60,6 @@ Access the login server via SSH.
 ```
 curl --proto '=https' --tlsv1.2 -sSf "https://desktop-release.q.us-east-1.amazonaws.com/latest/q-x86_64-linux-musl.zip" -o "q.zip"
 unzip q.zip
-
 ```
 
 Now, we've download the Amazon Q CLI installer and unpacked it. Let's run `./q/install.sh` to start the installation. 
