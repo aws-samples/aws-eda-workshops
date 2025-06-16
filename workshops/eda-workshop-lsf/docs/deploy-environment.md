@@ -46,14 +46,14 @@ This deployment guide also requires a moderate level of familiarity with AWS ser
 
 ### IBM LSF Software
 
-The IBM Spectrum LSF software is not provided in this workshop; you will need to download LSF 10.1 Fix Pack 8 and an associated entitlement file from your IBM Passport Advantage portal to complete this tutorial.  Download the following packages from IBM:
+The IBM Spectrum LSF software is not provided in this workshop; you will need to download LSF 10.1 Fix Pack 14 and an associated entitlement file from your IBM Passport Advantage portal to complete this tutorial.  Download the following packages from IBM:
 
 |Kind|IBM Download Source|Description|Package Name|
 |:---|:-----|:----------|------------|
 |Install script|Passport Advantage|--|`lsf10.1_lsfinstall_linux_x86_64.tar.Z` 
 |Base distribution|Passport Advantage|--|`lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z`
 |Entitlement file|Passport Advantage|--|`lsf_std_entitlement.dat` or `lsf_adv_entitlement.dat`
-|Fix Pack 10|Fix Central|lsf-10.1.0.10-spk build545500|`lsf10.1_linux2.6-glibc2.3-x86_64-545500.tar.Z`|
+|Fix Pack 14|Fix Central|lsf-10.1.0.10-spk build545500|`lsf10.1_linux2.6-glibc2.3-x86_64-545500.tar.Z`|
 |Patch|Fix Central|LSF Resource Connector patch to address Log4J CVE-2021-44228 security vulnerability.|`lsf10.1_linux2.6-glibc2.3-x86_64-600877.tar.Z`|
 
 ### NICE DCV Remote Desktop Client
