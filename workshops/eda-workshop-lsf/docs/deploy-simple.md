@@ -49,10 +49,11 @@ IBM Spectrum LSF software and licenses are not provided by this tutorial. You mu
     The IBM Spectrum LSF software is not provided in this workshop; you will need to download LSF 10.1 Fix Pack 14 or newer and an associated entitlement file from your IBM Passport Advantage portal to complete this tutorial.  Download the following packages from the web portal:
 
    * `lsf10.1_lsfinstall_linux_x86_64.tar.Z`
-   * `lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z`
+   * `lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z` (Base distribution for x86_64)
+   * `lsf10.1_lnx312-lib217-armv8.tar.Z` (Base distribution for aarch64)
    * `lsf_std_entitlement.dat` or `lsf_adv_entitlement.dat`
-   * `lsf10.1_linux2.6-glibc2.3-x86_64-xxxxxx.tar.Z` (latest Fix Pack)
-   * `lsf10.1_linux2.6-glibc2.3-x86_64-600877.tar.Z` (patch to address Log4J CVE-2021-44228 security vulnerability)
+   * `lsf10.1_linux2.6-glibc2.3-x86_64-601547.tar.Z` (FP14 or latest Fix Pack)
+   * `lsf10.1_lnx312-lib217-armv8-601547.tar.Z` (FP14 or latest Fix Pack for aarch64)
 
 1. Download and install the [NICE DCV remote desktop native client](https://download.nice-dcv.com) on the computer you will be using for this workshop.
 
