@@ -46,7 +46,7 @@ IBM Spectrum LSF software and licenses are not provided by this tutorial. You mu
 
 1. Download the IBM Spectrum LSF software and associated entitlement file.
 
-    The IBM Spectrum LSF software is not provided in this workshop; you will need to download LSF 10.1 Fix Pack 8 or newer and an associated entitlement file from your IBM Passport Advantage portal to complete this tutorial.  Download the following packages from the web portal:
+    The IBM Spectrum LSF software is not provided in this workshop; you will need to download LSF 10.1 Fix Pack 14 or newer and an associated entitlement file from your IBM Passport Advantage portal to complete this tutorial.  Download the following packages from the web portal:
 
    * `lsf10.1_lsfinstall_linux_x86_64.tar.Z`
    * `lsf10.1_linux2.6-glibc2.3-x86_64.tar.Z`
