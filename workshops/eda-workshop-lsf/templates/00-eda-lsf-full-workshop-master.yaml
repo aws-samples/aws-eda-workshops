@@ -128,9 +128,9 @@ Parameters:
   MasterServerAMI:
     Description: AMI (OS image) for the master server.
     Type: String
-    Default: ALinux2
+    Default: Rocky8
     AllowedValues:
-      - ALinux2
+      - Rocky8
 
   ComputeAMI:
     Description: |-
