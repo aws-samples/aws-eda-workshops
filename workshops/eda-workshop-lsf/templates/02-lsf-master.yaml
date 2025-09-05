@@ -145,8 +145,8 @@ Resources:
 
               # Print user data
               TOKEN=$(curl --silent -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 300")
-              INSTANCE_ID=$(curl -s -H "X-aws-ec2-metadata-token: ${TOKEN}" http://169.254.169.254/latest/meta-data/instance-id)
-              cat /var/lib/cloud/instances/$INSTANCE_ID/user-data.txt
+              INSTANCE_ID=$(curl -s -H "X-aws-ec2-metadata-token: $${TOKEN}" http://169.254.169.254/latest/meta-data/instance-id)
+              cat /var/lib/cloud/instances/$${INSTANCE_ID}/user-data.txt
 
               echo "*** BEGIN LSF MASTER BOOTSTRAP ***"
 
