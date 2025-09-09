@@ -180,6 +180,20 @@ Resources:
               EOF
               export $(grep -v '^#' /root/bootstrap.env | xargs)
 
+              # Install SSM so we can use SSM Session Manager and avoid ssh logins
+              yum install -q -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+              systemctl enable amazon-ssm-agent
+              systemctl start amazon-ssm-agent
+
+              # Install and configure Amazon CloudWatch Agent
+              echo "Install and configure Amazon CloudWatch Agent"
+              machine=$(uname -m)
+              if [[ $machine == "x86_64" ]]; then
+                yum install -y https://s3.amazonaws.com/amazoncloudwatch-agent/redhat/amd64/latest/amazon-cloudwatch-agent.rpm
+              elif [[ $machine == "aarch64" ]]; then
+                yum install -y https://s3.amazonaws.com/amazoncloudwatch-agent/redhat/arm64/latest/amazon-cloudwatch-agent.rpm
+              fi
+
               OS_NAME=`awk -F= '/^NAME=/{print $2}' /etc/os-release`
               OS_VERSION=`awk -F= '/^VERSION_ID=/{print $2}' /etc/os-release`
               if [ "$OS_NAME" == "\"Rocky Linux\"" ] && [ "$OS_VERSION" == "\"8.9\"" ]; then
@@ -387,7 +401,7 @@ Resources:
     Type: AWS::SSM::Parameter
     Properties:
       Description: SSM Parameter holding CloudWatchAgent configuration
-      Name: !Sub ${AWS::StackName}-AmazonCloudWatch
+      Name: !Sub ${LSFClusterName}-AmazonCloudWatch
       Type: String
       Value: |
         {
@@ -490,27 +504,6 @@ Resources:
           - ssm
         optionalRestart:
           - "yes"
-      ScheduleExpression: cron(0 */30 * * * ? *)
-      Targets:
-        - Key: tag:Name
-          Values:
-            - !Join [ '-', [ 'LSF Mgmt Host',!Ref LSFClusterName ] ]
-
-  InstallCloudWatch:
-    Type: AWS::SSM::Association
-    Properties:
-      Name: AWS-ConfigureAWSPackage
-      ApplyOnlyAtCronInterval: false
-      AssociationName: InstallUpgradeCloudWatch
-      Parameters:
-        action:
-          - Install
-        additionalArguments:
-          - "{}"
-        installationType:
-          - Uninstall and reinstall
-        name:
-          - AmazonCloudWatchAgent
       ScheduleExpression: cron(0 */30 * * * ? *)
       Targets:
         - Key: tag:Name
