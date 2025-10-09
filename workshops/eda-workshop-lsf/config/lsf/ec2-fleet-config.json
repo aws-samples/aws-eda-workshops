@@ -76,5 +76,5 @@
     "OnDemandOptions": {
         "AllocationStrategy": "prioritized"
     },
-    "Type": "instant"
+    "Type": "request"
 }
