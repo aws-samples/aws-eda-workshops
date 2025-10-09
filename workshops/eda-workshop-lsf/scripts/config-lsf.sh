@@ -63,7 +63,7 @@ aws s3 cp s3://$AWS_S3_BUCKET_NAME/workshops/eda-workshop-lsf/config/lsf/awsprov
 sed -i -e "s/_CFN_AWS_REGION_/$AWS_CFN_STACK_REGION/" $LSF_ENVDIR/resource_connector/aws/conf/awsprov_config.json && \
 
 # awsprov.templates.json
-aws s3 cp s3://$AWS_S3_BUCKET_NAME/workshops/eda-workshop-lsf/config/lsf/awsprov_templates_fleet.json \
+aws s3 cp s3://$AWS_S3_BUCKET_NAME/workshops/eda-workshop-lsf/config/lsf/awsprov_templates.json \
         $LSF_ENVDIR/resource_connector/aws/conf/awsprov_templates.json && \
 
 sed -i -e "s|%CFN_COMPUTE_AMI%|$CFN_COMPUTE_NODE_AMI|" \

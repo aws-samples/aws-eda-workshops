@@ -70,8 +70,11 @@
         "DefaultTargetCapacityType": "on-demand"
     },
     "SpotOptions": {
-        "AllocationStrategy": "diversified",
+        "AllocationStrategy": "capacity-optimized-prioritized",
         "InstanceInterruptionBehavior": "terminate"
+    },
+    "OnDemandOptions": {
+        "AllocationStrategy": "prioritized"
     },
     "Type": "instant"
 }
