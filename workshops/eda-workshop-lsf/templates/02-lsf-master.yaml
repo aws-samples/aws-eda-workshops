@@ -241,11 +241,11 @@ Resources:
                 sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
                 $LSF_INSTALL_DIR/10.1/install/hostsetup --top="$LSF_INSTALL_DIR" \
                                                         --profile="y" \
-                                                        --start="y" --boot="y" && \
+                                                        --start="y" --boot="y"
               else
                 $LSF_INSTALL_DIR/10.1/install/hostsetup --top="$LSF_INSTALL_DIR" \
                                                         --profile="y" \
-                                                        --start="y" --boot="y" && \
+                                                        --start="y" --boot="y"
               fi
 
               # Verify that LSF is up and send signal to Cloudformation
