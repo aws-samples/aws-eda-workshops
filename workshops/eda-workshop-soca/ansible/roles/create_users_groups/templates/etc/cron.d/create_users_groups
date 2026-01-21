@@ -1,0 +1,3 @@
+MAILTO=''
+PATH="{{ScriptsDir}}:/sbin:/bin:/usr/sbin:/usr/bin"
+*/5 * * * * root {{ScriptsDir}}/create_users_groups.py -i {{ConfigDir}}/users_groups.json

@@ -1,0 +1,36 @@
+---
+
+# Create a crontab to regularly update the users/groups json file with latest user and group information.
+# This is used to create matching local users on all compute node instances and
+# Should only be installed on 1 instance.
+- name: Create /etc/cron.d/create_users_groups_json
+  template:
+    dest: /etc/cron.d/create_users_groups_json
+    src:   etc/cron.d/create_users_groups_json
+    owner: root
+    group: root
+    mode: 0600
+    force: yes
+
+- name: Create {{ScriptsDir}}/create_users_groups_json.py
+  template:
+    src:  scripts/create_users_groups_json.py
+    dest: "{{ScriptsDir}}/create_users_groups_json.py"
+    owner: root
+    group: root
+    mode: 0700
+
+- name: Create {{ScriptsDir}}/create_users_groups.py
+  template:
+    src:   scripts/create_users_groups.py
+    dest: "{{ScriptsDir}}/create_users_groups.py"
+    owner: root
+    group: root
+    mode: 0700
+
+- name: Create/update {{ConfigDir}}/users_groups.json
+  args:
+    creates: '{{ConfigDir}}/users_groups.json'
+  shell:
+    cmd: |
+      {{ScriptsDir}}/create_users_groups_json.py -o {{ConfigDir}}/users_groups.json
